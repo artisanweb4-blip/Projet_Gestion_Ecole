@@ -1,0 +1,161 @@
+from django.db import models
+
+
+class GeneralSetting(models.Model):
+    """Configuration générale du système scolaire (Singleton)."""
+
+    country_name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Nom du Pays",
+    )
+    motto = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name="Devise du Pays",
+    )
+    ministry = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name="Ministère tutelle",
+    )
+    directorate = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name="Direction tutelle",
+    )
+    director_name = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name="Nom du Directeur",
+    )
+    current_academic_year = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name="Année scolaire actuelle",
+    )
+    is_bilingual = models.BooleanField(
+        default=False,
+        verbose_name="Système bilingue (support français-arabe)",
+    )
+
+    class Meta:
+        verbose_name = "Paramètre Général"
+        verbose_name_plural = "Paramètres Généraux"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return "Configuration Générale"
+
+
+class SchoolSetting(models.Model):
+    """Informations sur l'établissement scolaire (Singleton)."""
+
+    logo = models.ImageField(
+        upload_to='school/',
+        blank=True,
+        null=True,
+        verbose_name="Logo de l'établissement",
+        help_text="Format recommandé: PNG ou JPG, dimensions carrées",
+    )
+    school_name = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name="Nom de l'école",
+    )
+    address = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Adresse",
+    )
+    phone = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name="Téléphone",
+    )
+    email = models.EmailField(
+        blank=True,
+        null=True,
+        verbose_name="Email",
+    )
+
+    class Meta:
+        verbose_name = "Information de l'école"
+        verbose_name_plural = "Informations de l'école"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return self.school_name or "Configuration de l'école"
+
+
+class NotificationSetting(models.Model):
+    """Paramètres des notifications (Singleton)."""
+
+    email_notifications = models.BooleanField(
+        default=True, verbose_name="Notifications par email"
+    )
+    sms_notifications = models.BooleanField(
+        default=False, verbose_name="Notifications SMS"
+    )
+
+    class Meta:
+        verbose_name = "Paramètre de notification"
+        verbose_name_plural = "Paramètres de notification"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+class BackupSetting(models.Model):
+    """Paramètres des sauvegardes (Singleton)."""
+
+    auto_backup = models.BooleanField(
+        default=True, verbose_name="Sauvegarde automatique"
+    )
+    last_backup_date = models.DateTimeField(
+        blank=True, null=True, verbose_name="Dernière sauvegarde"
+    )
+
+    class Meta:
+        verbose_name = "Paramètre de sauvegarde"
+        verbose_name_plural = "Paramètres de sauvegarde"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj

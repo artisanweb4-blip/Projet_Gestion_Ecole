@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Fiche de {{ student.first_name }} {{ student.last_name }}{% endblock %}
+
+{% block content %}
+<style>
+    .student-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 100%;
+    }
+
+    .top-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .action-btns {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-custom-edit {
+        background-color: #f59e0b;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-custom-back {
+        background-color: #64748b;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Grille principale : Carte profil fixée à 280px, la donnée prend tout le reste (1fr) */
+    .main-grid {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 20px;
+        width: 100%;
+    }
+
+    @media (max-width: 992px) {
+        .main-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .profile-card, .data-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .profile-card {
+        text-align: center;
+    }
+
+    .avatar-box {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        margin: 0 auto 15px auto;
+        overflow: hidden;
+        border: 3px solid #059669;
+    }
+
+    .avatar-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 48px;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 8px;
+    }
+
+    .status-badge.active {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-badge.inactive {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* Stat Cards en haut du bloc droit */
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: #ecfdf5;
+        color: #059669;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #059669;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 8px;
+        margin-bottom: 16px;
+        margin-top: 24px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-title:first-of-type {
+        margin-top: 0;
+    }
+
+    /* Grille d'informations à 3 colonnes pour occuper tout l'espace */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    @media (max-width: 1200px) {
+        .info-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 600px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-item {
+        background: #f8fafc;
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid #f1f5f9;
+    }
+
+    .info-item .label {
+        display: block;
+        font-size: 11px;
+        color: #64748b;
+        margin-bottom: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-item .value {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .span-2 {
+        grid-column: span 2;
+    }
+
+    .full-width {
+        grid-column: 1 / -1;
+    }
+</style>
+
+<div class="student-container">
+    <!-- En-tête -->
+    <div class="top-header">
+        <div>
+            <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #0f172a;">{{ student.first_name }} {{ student.last_name }}</h1>
+            <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Matricule : <strong style="color: #0f172a;">{{ student.student_id }}</strong></p>
+        </div>
+        <div class="action-btns">
+            <a href="{% url 'students:edit' student.pk %}" class="btn-custom-edit">
+                <i class="fa-solid fa-pen-to-square"></i> Modifier
+            </a>
+            <a href="{% url 'students:list' %}" class="btn-custom-back">
+                <i class="fa-solid fa-arrow-left"></i> Retour
+            </a>
+        </div>
+    </div>
+
+    <!-- Layout principal -->
+    <div class="main-grid">
+        <!-- Colonne Gauche : Identité & QR Code -->
+        <div class="profile-card">
+            <div class="avatar-box">
+                {% if student.photo %}
+                    <img src="{{ student.photo.url }}" alt="Photo de {{ student.first_name }}">
+                {% else %}
+                    <div class="avatar-placeholder">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                {% endif %}
+            </div>
+
+            <h3 style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: #1e293b;">{{ student.first_name }} {{ student.last_name }}</h3>
+            <p style="margin: 0; font-size: 13px; color: #64748b;">{{ student.student_id }}</p>
+
+            {% if student.is_active %}
+                <span class="status-badge active">● Compte Actif</span>
+            {% else %}
+                <span class="status-badge inactive">● Compte Inactif</span>
+            {% endif %}
+
+            {% if student.qr_code %}
+                <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                    <img src="{{ student.qr_code.url }}" alt="QR Code" style="width: 120px; height: 120px;">
+                    <p style="margin: 6px 0 0 0; font-size: 11px; color: #94a3b8;">Scanner pour vérification</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Colonne Droite : TOUTES LES INFORMATIONS -->
+        <div class="data-card">
+            
+            <!-- Cartes de résumé rapide -->
+            <div class="quick-stats">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <div>
+                        <span style="font-size: 11px; color: #64748b; display: block;">Classe</span>
+                        <strong style="font-size: 15px; color: #059669;">{{ student.class_group.name|default:"Non assigné" }}</strong>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #eff6ff; color: #2563eb;"><i class="fa-solid fa-calendar"></i></div>
+                    <div>
+                        <span style="font-size: 11px; color: #64748b; display: block;">Date d'inscription</span>
+                        <strong style="font-size: 14px; color: #1e293b;">{{ student.enrollment_date|default:"-" }}</strong>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: #fef2f2; color: #dc2626;"><i class="fa-solid fa-droplet"></i></div>
+                    <div>
+                        <span style="font-size: 11px; color: #64748b; display: block;">Groupe Sanguin</span>
+                        <strong style="font-size: 14px; color: #dc2626;">{{ student.blood_group|default:"Non renseigné" }}</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SECTION 1 : INFORMATIONS PERSONNELLES -->
+            <div class="section-title">
+                <i class="fa-solid fa-address-card"></i> Informations Personnelles
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">Sexe</span>
+                    <span class="value">{{ student.get_gender_display|default:"Masculin" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Date de naissance</span>
+                    <span class="value">{{ student.date_of_birth|default:"-" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Lieu de naissance</span>
+                    <span class="value">{{ student.place_of_birth|default:"-" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Nationalité</span>
+                    <span class="value">{{ student.nationality|default:"Mali" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Religion</span>
+                    <span class="value">{{ student.religion|default:"-" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Téléphone</span>
+                    <span class="value">{{ student.phone|default:"-" }}</span>
+                </div>
+                <div class="info-item span-2">
+                    <span class="label">Email</span>
+                    <span class="value">{{ student.email|default:"-" }}</span>
+                </div>
+                <div class="info-item span-2">
+                    <span class="label">Adresse</span>
+                    <span class="value">{{ student.address|default:"-" }}</span>
+                </div>
+                <div class="info-item full-width" style="border-left: 3px solid #ef4444; background: #fef2f2;">
+                    <span class="label" style="color: #991b1b;">Contact d'urgence</span>
+                    <span class="value" style="color: #991b1b;">
+                        {{ student.emergency_contact_name|default:"-" }} 
+                        {% if student.emergency_contact_phone %}({{ student.emergency_contact_phone }}){% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- SECTION 2 : SCOLARITÉ -->
+            <div class="section-title">
+                <i class="fa-solid fa-graduation-cap"></i> Scolarité
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">Classe actuelle</span>
+                    <span class="value" style="color: #059669;">{{ student.class_group.name|default:"Non assigné" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Date d'inscription</span>
+                    <span class="value">{{ student.enrollment_date|default:"-" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Statut</span>
+                    <span class="value">{% if student.is_active %}Actif{% else %}Inactif{% endif %}</span>
+                </div>
+                {% if student.documents %}
+                <div class="info-item full-width">
+                    <span class="label">Documents du dossier</span>
+                    <a href="{{ student.documents.url }}" target="_blank" style="color: #2563eb; font-weight: 600; text-decoration: underline;">
+                        <i class="fa-solid fa-file-arrow-down"></i> Télécharger le document
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- SECTION 3 : SANTÉ -->
+            <div class="section-title">
+                <i class="fa-solid fa-heart-pulse"></i> Informations Médicales
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">Groupe sanguin</span>
+                    <span class="value" style="color: #dc2626;">{{ student.blood_group|default:"Non renseigné" }}</span>
+                </div>
+                <div class="info-item span-2">
+                    <span class="label">Allergies</span>
+                    <span class="value">{{ student.allergies|default:"Aucune" }}</span>
+                </div>
+                <div class="info-item full-width">
+                    <span class="label">Antécédents médicaux</span>
+                    <span class="value">{{ student.medical_notes|default:"Aucun antécédent particulier." }}</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <title>Programme {{ program.code }} - {{ program.name }}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 1.5cm;
+            @bottom-right {
+                content: "Page " counter(page) " / " counter(pages);
+                font-size: 8pt;
+                color: #64748b;
+            }
+            @bottom-left {
+                content: "Document généré le {% now 'd/m/Y' %}";
+                font-size: 8pt;
+                color: #64748b;
+            }
+        }
+
+        body { 
+            font-family: 'Helvetica', 'Arial', sans-serif; 
+            color: #1e293b; 
+            font-size: 10pt;
+            line-height: 1.4;
+        }
+        
+        /* En-tête */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 12px;
+        }
+        
+        .logo-img {
+            max-height: 65px;
+            max-width: 180px;
+            object-fit: contain;
+        }
+
+        .school-info {
+            text-align: right;
+            font-size: 8.5pt;
+            color: #64748b;
+        }
+
+        .school-title {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        /* Titre & Metas du programme */
+        .program-header {
+            margin-bottom: 16px;
+        }
+
+        .program-title {
+            font-size: 16pt;
+            color: #1e3a8a;
+            margin: 0 0 6px 0;
+        }
+
+        .program-description {
+            font-size: 9.5pt;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+
+        /* Cartouche de statistiques */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .stats-table td {
+            padding: 8px 12px;
+            font-size: 9pt;
+            text-align: center;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .stats-table td:last-child {
+            border-right: none;
+        }
+
+        .stats-label {
+            color: #64748b;
+            font-size: 8pt;
+            text-transform: uppercase;
+            display: block;
+        }
+
+        .stats-value {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        /* Tableau des Matières */
+        .section-title {
+            font-size: 11pt;
+            color: #0f172a;
+            text-transform: uppercase;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 4px;
+            margin-bottom: 10px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        .data-table th {
+            background-color: #2563eb;
+            color: #ffffff;
+            font-size: 8.5pt;
+            text-transform: uppercase;
+            padding: 7px 8px;
+            text-align: left;
+        }
+
+        .data-table td {
+            padding: 7px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 9.5pt;
+            vertical-align: middle;
+        }
+
+        .data-table tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        
+        .badge-optional {
+            color: #d97706;
+            font-size: 8pt;
+            font-weight: bold;
+        }
+
+        /* Pied de page */
+        .footer-note {
+            margin-top: 30px;
+            font-size: 8pt;
+            color: #94a3b8;
+            text-align: center;
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- EN-TÊTE AVEC LOGO ET INFOS ÉCOLE -->
+    <table class="header-table">
+        <tr>
+            <td width="45%">
+                {% if school_logo %}
+                    <img src="{{ school_logo }}" class="logo-img" alt="Logo École">
+                {% else %}
+                    <img src="{% static 'images/logo_default.png' %}" class="logo-img" alt="Logo">
+                {% endif %}
+            </td>
+            <td width="55%" class="school-info">
+                <div class="school-title">Institut Académique de Gestion</div>
+                <div>123, Avenue de la Formation, Bamako</div>
+                <div>Email : contact@ecole.edu | Tél : +223 00 00 00 00</div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- INFORMATIONS DU PROGRAMME -->
+    <div class="program-header">
+        <h1 class="program-title">{{ program.name }} ({{ program.code }})</h1>
+        {% if program.description %}
+            <div class="program-description">{{ program.description }}</div>
+        {% endif %}
+    </div>
+
+    <!-- CARTOUCHE RECAPITULATIF -->
+    <table class="stats-table">
+        <tr>
+            <td>
+                <span class="stats-label">Total Matières</span>
+                <span class="stats-value">{{ stats.total_subjects|default:program_subjects.count }}</span>
+            </td>
+            <td>
+                <span class="stats-label">Volume Horaire</span>
+                <span class="stats-value">{{ stats.total_hours|default:"-" }} hrs</span>
+            </td>
+            <td>
+                <span class="stats-label">Total Coefficients</span>
+                <span class="stats-value">{{ stats.total_coef|default:"-" }}</span>
+            </td>
+        </tr>
+    </table>
+
+    <!-- LISTE DES MATIÈRES ET ENSEIGNANTS -->
+    <div class="section-title">Programme d'Enseignement & Corps Professoral</div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th width="15%">Code</th>
+                <th width="32%">Matière</th>
+                <th width="28%">Enseignant Titulaire</th>
+                <th width="10%" class="text-center">Coeff</th>
+                <th width="15%" class="text-right">Vol. Hor.</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in program_subjects %}
+            <tr>
+                <td><strong>{{ item.subject.code }}</strong></td>
+                <td>
+                    {{ item.subject.name }}
+                    {% if item.is_optional %}
+                        <br><span class="badge-optional">(Optionnelle)</span>
+                    {% endif %}
+                </td>
+                <td>
+                  {% if item.teacher %}
+                        {% if item.teacher.get_full_name %}
+                              {{ item.teacher.get_full_name }}
+                        {% else %}
+                              {{ item.teacher }}
+                        {% endif %}
+                  {% else %}
+                        <span style="color: #94a3b8; font-style: italic;">Non attribué</span>
+                  {% endif %}
+                  </td>
+                <td class="text-center">{{ item.coefficient }}</td>
+                <td class="text-right">
+                    {{ item.total_hours }} h
+                    {% if item.hours_per_week %}
+                        <br><small style="color: #64748b;">({{ item.hours_per_week }}h/sem)</small>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center" style="padding: 20px; color: #64748b;">
+                    Aucune matière n'a encore été rattachée à ce programme.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer-note">
+        Ce document est une fiche officielle du programme académique générée par le système de gestion scolaire.
+    </div>
+
+</body>
+</html>

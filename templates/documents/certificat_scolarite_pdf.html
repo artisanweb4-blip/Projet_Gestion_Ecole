@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Certificat de Scolarité - {{ eleve.nom }} {{ eleve.prenom }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: #1E293B;
+            font-size: 14pt;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* En-tête officiel */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+
+        .header-table td {
+            vertical-align: top;
+        }
+
+        .school-info {
+            width: 60%;
+        }
+
+        .school-name {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #0F172A;
+            text-transform: uppercase;
+            margin: 0 0 5px 0;
+        }
+
+        .school-details {
+            font-size: 10pt;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .republic-info {
+            width: 40%;
+            text-align: right;
+            font-size: 10pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #334155;
+        }
+
+        .republic-motto {
+            font-size: 9pt;
+            font-weight: normal;
+            font-style: italic;
+            text-transform: none;
+            margin-top: 4px;
+        }
+
+        /* Ligne de séparation decorative */
+        .divider {
+            border-bottom: 2px solid #0F172A;
+            margin-bottom: 50px;
+        }
+
+        /* Titre du document */
+        .document-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .document-title h1 {
+            font-size: 22pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #0F172A;
+            margin: 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #CBD5E1;
+            display: inline-block;
+        }
+
+        .document-number {
+            font-size: 10pt;
+            color: #64748B;
+            margin-top: 8px;
+        }
+
+        /* Corps du certificat */
+        .cert-body {
+            text-align: justify;
+            margin-bottom: 60px;
+        }
+
+        .cert-body p {
+            margin-bottom: 20px;
+        }
+
+        .student-details {
+            background-color: #F8FAFC;
+            border-left: 4px solid #10B981;
+            padding: 15px 20px;
+            margin: 25px 0;
+            font-size: 13pt;
+        }
+
+        .student-details table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .student-details td {
+            padding: 4px 0;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #475569;
+            width: 35%;
+        }
+
+        .value {
+            color: #0F172A;
+            font-weight: 600;
+        }
+
+        /* Pied de page et Signature */
+        .signature-section {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 40px;
+        }
+
+        .signature-section td {
+            vertical-align: top;
+            width: 50%;
+        }
+
+        .date-location {
+            font-size: 11pt;
+            margin-bottom: 15px;
+        }
+
+        .signature-box {
+            text-align: center;
+        }
+
+        .signature-title {
+            font-weight: bold;
+            font-size: 12pt;
+            color: #0F172A;
+            margin-bottom: 80px; /* Espace pour le cachet et la signature */
+        }
+
+        .signature-name {
+            font-weight: bold;
+            font-size: 11pt;
+            text-decoration: underline;
+        }
+
+        /* Notice de bas de page */
+        .footer-note {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 8pt;
+            color: #94A3B8;
+            border-top: 1px solid #E2E8F0;
+            padding-top: 10px;
+        }
+
+        /* Styles d'impression direct par le navigateur */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                padding: 0;
+            }
+        }
+
+        .btn-print {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #10B981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Bouton d'impression écran -->
+    <button onclick="window.print()" class="btn-print no-print">
+        🖨️ Imprimer / Sauvegarder en PDF
+    </button>
+
+    <!-- En-tête -->
+    <table class="header-table">
+        <tr>
+            <td class="school-info">
+                <div class="school-name">{{ ecole.nom|default:"COMPLEXE SCOLAIRE EXCELLENCE" }}</div>
+                <div class="school-details">
+                    {{ ecole.adresse|default:"Rue du Savoir, Quartier Scolaire" }}<br>
+                    Téléphone : {{ ecole.telephone|default:"+223 20 00 00 00" }}<br>
+                    Email : {{ ecole.email|default:"contact@ecole-excellence.com" }}
+                </div>
+            </td>
+            <td class="republic-info">
+                République du Mali<br>
+                <div class="republic-motto">Un Peuple - Un But - Une Foi</div>
+                <div style="margin-top: 10px; font-size: 8pt; font-weight: normal;">
+                    Ministère de l'Éducation Nationale
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="divider"></div>
+
+    <!-- Titre -->
+    <div class="document-title">
+        <h1>Certificat de Scolarité</h1>
+        <div class="document-number">N° Réf : {{ numero_reference|default:"2026/CS-0042" }}</div>
+    </div>
+
+    <!-- Corps -->
+    <div class="cert-body">
+        <p>
+            Je soussigné(e), <strong>{{ directeur.nom|default:"M. Le Directeur Général" }}</strong>, Directeur de l'établissement <strong>{{ ecole.nom|default:"COMPLEXE SCOLAIRE EXCELLENCE" }}</strong>, certifie par la présente que :
+        </p>
+
+        <div class="student-details">
+            <table>
+                <tr>
+                    <td class="label">Nom & Prénom :</td>
+                    <td class="value">{{ eleve.nom|default:"DIARRA" }} {{ eleve.prenom|default:"Amadou" }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Né(e) le :</td>
+                    <td class="value">{{ eleve.date_naissance|default:"15 Mars 2012" }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Matricule :</td>
+                    <td class="value">{{ eleve.matricule|default:"MAT-2024-890" }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Classe :</td>
+                    <td class="value">{{ eleve.classe|default:"6ème Année A" }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <p>
+            est régulièrement inscrit(e) et fréquente régulièrement cet établissement au cours de l'année scolaire <strong>{{ annee_scolaire|default:"2025 - 2026" }}</strong>.
+        </p>
+
+        <p>
+            En foi de quoi, ce certificat lui est délivré pour servir et valoir ce que de droit.
+        </p>
+    </div>
+
+    <!-- Signature -->
+    <table class="signature-section">
+        <tr>
+            <td></td>
+            <td class="signature-box">
+                <div class="date-location">
+                    Fait à Bamako, le {% now "j F Y" %}
+                </div>
+                <div class="signature-title">
+                    Le Directeur Général
+                </div>
+                <!-- Emplacement Signature/Cachet -->
+                <div class="signature-name">
+                    {{ directeur.nom|default:"M. Ousmane COULIBALY" }}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Pied de page -->
+    <div class="footer-note">
+        Ce document est délivré en exemplaire unique. Toute rature ou surcharge le rend caduc.
+    </div>
+
+</body>
+</html>

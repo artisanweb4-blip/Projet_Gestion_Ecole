@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Sélection du Bulletin{% endblock %}
+
+{% block content %}
+<style>
+    .bulletin-card-container {
+        padding: 30px 20px;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .bulletin-header {
+        margin-bottom: 25px;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 10px;
+    }
+
+    .bulletin-header h2 {
+        font-size: 1.6rem;
+        color: #1d3557;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .bulletin-card {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-group-custom {
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-group-custom label {
+        font-weight: 600;
+        color: #2b2d42;
+        font-size: 0.95rem;
+    }
+
+    .form-select-custom {
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background-color: #fff;
+        color: #334155;
+        outline: none;
+        transition: border-color 0.2s ease-in-out;
+        box-sizing: border-box;
+    }
+
+    .form-select-custom:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+    }
+
+    .btn-submit-custom {
+        width: 100%;
+        background-color: #10b981;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: background-color 0.2s ease;
+        margin-top: 10px;
+    }
+
+    .btn-submit-custom:hover {
+        background-color: #059669;
+    }
+
+    .btn-submit-custom:disabled {
+        background-color: #9ca3af;
+        cursor: not-allowed;
+    }
+</style>
+
+<div class="bulletin-card-container">
+    <div class="bulletin-header">
+        <h2><i class="fa-solid fa-file-lines"></i> Consulter un Bulletin</h2>
+    </div>
+    
+    <div class="bulletin-card">
+        <form method="GET" action="{% url 'grades:bulletin_select' %}">
+            
+            <div class="form-group-custom">
+                <label for="student">Sélectionner un Élève :</label>
+                <select name="student" id="student" class="form-select-custom" required>
+                    <option value="">-- Choisir un élève --</option>
+                    {% for student in students %}
+                        <option value="{{ student.id }}">
+                            {{ student.first_name }} {{ student.last_name }} {% if student.class_group %}({{ student.class_group.name }}){% endif %}
+                        </option>
+                    {% empty %}
+                        <option value="" disabled>Aucun élève enregistré dans la base</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group-custom">
+                <label for="period">Sélectionner la Période :</label>
+                <select name="period" id="period" class="form-select-custom" required>
+                    <option value="">-- Choisir une période --</option>
+                    {% for period in periods %}
+                        <option value="{{ period.id }}">{{ period.name }}</option>
+                    {% empty %}
+                        <option value="" disabled>Aucune période enregistrée dans la base</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn-submit-custom" {% if not students or not periods %}disabled{% endif %}>
+                <i class="fa-solid fa-magnifying-glass"></i> Afficher le bulletin
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

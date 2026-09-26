@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Profil de {{ parent.first_name }} {{ parent.last_name }} - Gestion École{% endblock %}
+
+{% block content %}
+<!-- En-tête de la page -->
+<div class="header-top">
+    <div class="page-title">
+        <h1>Fiche Parent</h1>
+        <p>Informations complètes du responsable légal.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'parents:list' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i> Retour
+        </a>
+        <a href="{% url 'parents:edit' parent.pk %}" class="btn btn-warning">
+            <i class="fa-regular fa-pen-to-square" style="margin-right: 8px;"></i> Modifier
+        </a>
+    </div>
+</div>
+
+<!-- Conteneur Profil -->
+<div class="profile-container">
+    <!-- Colonne Gauche: Résumé -->
+    <div class="dashboard-card profile-sidebar">
+        <div class="profile-avatar-circle">
+            <i class="fa-solid fa-user-tie"></i>
+        </div>
+        <h2 class="profile-name">{{ parent.get_civility_display }} {{ parent.first_name }} {{ parent.last_name }}</h2>
+        <span class="badge-profession">{{ parent.profession|default:"Responsable Légal" }}</span>
+    </div>
+
+    <!-- Colonne Droite: Détails -->
+    <div class="dashboard-card profile-content">
+        <h3 class="section-title">
+            <i class="fa-solid fa-address-card" style="margin-right: 8px; color: var(--primary-dark);"></i>
+            Coordonnées
+        </h3>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Email</span>
+                <span class="info-value">
+                    <i class="fa-regular fa-envelope" style="margin-right: 6px; color: var(--text-muted);"></i>
+                    {{ parent.email|default:"Non renseigné" }}
+                </span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Téléphone</span>
+                <span class="info-value">
+                    <i class="fa-solid fa-phone" style="margin-right: 6px; color: var(--text-muted);"></i>
+                    {{ parent.phone|default:"Non renseigné" }}
+                </span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Profession</span>
+                <span class="info-value">
+                    <i class="fa-solid fa-briefcase" style="margin-right: 6px; color: var(--text-muted);"></i>
+                    {{ parent.profession|default:"Non renseignée" }}
+                </span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Date de création</span>
+                <span class="info-value">
+                    <i class="fa-regular fa-calendar" style="margin-right: 6px; color: var(--text-muted);"></i>
+                    {{ parent.created_at|date:"d/m/Y"|default:"-" }}
+                </span>
+            </div>
+
+            <div class="info-item full-width" style="margin-top: 8px;">
+                <span class="info-label">Adresse Domicile</span>
+                <span class="info-value">
+                    <i class="fa-solid fa-location-dot" style="margin-right: 6px; color: var(--text-muted);"></i>
+                    {{ parent.address|default:"Aucune adresse renseignée."|linebreaksbr }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 24px;
+        margin-top: 20px;
+    }
+    .profile-sidebar {
+        text-align: center;
+        padding: 32px 20px;
+    }
+    .profile-avatar-circle {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background-color: #E0F2FE;
+        color: #0284C7;
+        font-size: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px auto;
+    }
+    .profile-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0 0 8px 0;
+    }
+    .badge-profession {
+        background-color: #F1F5F9;
+        color: var(--text-main);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .profile-content {
+        padding: 28px;
+    }
+    .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-top: 0;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px 24px;
+    }
+    .info-grid .full-width {
+        grid-column: span 2;
+    }
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .info-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+    .info-value {
+        font-size: 14px;
+        color: var(--text-main);
+        font-weight: 500;
+    }
+    .btn-secondary {
+        background-color: #F1F5F9;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+    .btn-warning {
+        background-color: #FEF3C7;
+        color: #D97706;
+        border: 1px solid #FDE68A;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+    @media (max-width: 768px) {
+        .profile-container { grid-template-columns: 1fr; }
+        .info-grid { grid-template-columns: 1fr; }
+        .info-grid .full-width { grid-column: span 1; }
+    }
+</style>
+{% endblock %}

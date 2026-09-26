@@ -1,0 +1,573 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion des Notes - Administration{% endblock %}
+
+{% block content %}
+<!-- Inclusion des bibliothèques externes pour l'importation/exportation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+    /* Content Layout & Controls */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .filter-card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-card);
+        padding: 20px;
+        box-shadow: var(--shadow-card);
+        margin-bottom: 24px;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        align-items: end;
+    }
+
+    .data-table-card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+    }
+
+    .table-header-toolbar {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #FAFAFA;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .export-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-export {
+        display: inline-flex;
+        align-items: center;
+        padding: 7px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: 1px solid var(--border-color);
+        background-color: #FFFFFF;
+        color: var(--text-main);
+    }
+
+    .btn-import-excel {
+        color: #2563EB;
+        border-color: #BFDBFE;
+        background-color: #EFF6FF;
+    }
+
+    .btn-import-excel:hover {
+        background-color: #DBEAFE;
+    }
+
+    .btn-export-excel {
+        color: #16A34A;
+        border-color: #A7F3D0;
+        background-color: #ECFDF5;
+    }
+
+    .btn-export-excel:hover {
+        background-color: #D1FAE5;
+    }
+
+    .btn-export-pdf {
+        color: #DC2626;
+        border-color: #FECACA;
+        background-color: #FEF2F2;
+    }
+
+    .btn-export-pdf:hover {
+        background-color: #FEE2E2;
+    }
+
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .grades-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    .grades-table th {
+        background-color: #F8FAFC;
+        padding: 12px 16px;
+        font-weight: 600;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        white-space: nowrap;
+    }
+
+    .grades-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+    }
+
+    .grades-table tbody tr:hover {
+        background-color: #F8FAFC;
+    }
+
+    /* Student Info Cell */
+    .student-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .student-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: var(--primary-light);
+        color: var(--primary-dark);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 12px;
+    }
+
+    .student-name {
+        font-weight: 600;
+        color: var(--text-main);
+    }
+
+    /* Input styling for grades */
+    .grade-input {
+        width: 80px;
+        padding: 8px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-family: var(--font-family);
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
+        transition: border-color 0.15s ease;
+    }
+
+    .grade-input:focus {
+        outline: none;
+        border-color: var(--primary-dark);
+        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    }
+
+    /* Status Badges */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-success {
+        background-color: #ECFDF5;
+        color: #059669;
+    }
+
+    .badge-warning {
+        background-color: #FFFBEB;
+        color: #D97706;
+    }
+
+    .badge-danger {
+        background-color: #FEF2F2;
+        color: #DC2626;
+    }
+
+    .action-bar {
+        padding: 16px 20px;
+        border-top: 1px solid var(--border-color);
+        background-color: #FAFAFA;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+</style>
+
+<!-- En-tête de page -->
+<div class="page-header">
+    <div class="page-title">
+        <h1>Gestion des Notes</h1>
+        <p>Saisie, importation, consultation et exportation des notes par classe et évaluation.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn btn-primary" onclick="submitGrades()">
+            <i class="fa-solid fa-floppy-disk" style="margin-right: 8px;"></i> Enregistrer les notes
+        </button>
+    </div>
+</div>
+
+<!-- Filtres de sélection -->
+<div class="filter-card">
+    <form id="filterForm" class="filter-grid" onsubmit="event.preventDefault();">
+        <div class="form-group">
+            <label for="selectClass">Classe</label>
+            <select class="form-control" id="selectClass">
+                <option value="6a">6ème A</option>
+                <option value="5a">5ème A</option>
+                <option value="4a">4ème A</option>
+                <option value="3a" selected>3ème A</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="selectSubject">Matière</label>
+            <select class="form-control" id="selectSubject">
+                <option value="math">Mathématiques</option>
+                <option value="fr">Français</option>
+                <option value="pc">Physique-Chimie</option>
+                <option value="ang">Anglais</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="selectPeriod">Période / Évaluation</label>
+            <select class="form-control" id="selectPeriod">
+                <option value="t1_dev1">Trimestre 1 - Devoir 1</option>
+                <option value="t1_dev2">Trimestre 1 - Devoir 2</option>
+                <option value="t1_exam">Trimestre 1 - Composition</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <button type="button" class="btn btn-primary" style="width: 100%;">
+                <i class="fa-solid fa-filter" style="margin-right: 8px;"></i> Charger la liste
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Tableau de Saisie des Notes -->
+<div class="data-table-card">
+    <div class="table-header-toolbar">
+        <div>
+            <strong id="tableTitleInfo">3ème A — Mathématiques (Composition T1)</strong>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Barème : <strong>/ 20</strong> | Coeff : <strong>4</strong>
+            </div>
+        </div>
+
+        <!-- Boutons d'Importation / Exportation -->
+        <div class="export-actions">
+            <!-- Champ d'import caché -->
+            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleFileImport(event)">
+            
+            <button type="button" class="btn-export btn-import-excel" onclick="document.getElementById('excelFileInput').click()">
+                <i class="fa-solid fa-file-import" style="margin-right: 6px;"></i> Importer Excel
+            </button>
+            <button type="button" class="btn-export btn-export-excel" onclick="exportToExcel()">
+                <i class="fa-solid fa-file-excel" style="margin-right: 6px;"></i> Exporter Excel
+            </button>
+            <button type="button" class="btn-export btn-export-pdf" onclick="exportToPDF()">
+                <i class="fa-solid fa-file-pdf" style="margin-right: 6px;"></i> Exporter PDF
+            </button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="grades-table" id="gradesTable">
+            <thead>
+                <tr>
+                    <th>Matricule</th>
+                    <th>Élève</th>
+                    <th style="text-align: center;">Note (/20)</th>
+                    <th style="text-align: center;">Appréciation</th>
+                    <th style="text-align: center;">Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>MAT-2026-001</td>
+                    <td>
+                        <div class="student-cell">
+                            <div class="student-avatar">AD</div>
+                            <div>
+                                <div class="student-name">Amadou Diallo</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="number" class="grade-input" min="0" max="20" step="0.25" value="15.5" onchange="updateRowStatus(this)">
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="text" class="form-control grade-appreciation" style="font-size: 13px;" value="Très bon travail, continuez ainsi.">
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="badge badge-success">Admis</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>MAT-2026-002</td>
+                    <td>
+                        <div class="student-cell">
+                            <div class="student-avatar">FK</div>
+                            <div>
+                                <div class="student-name">Fatoumata Koné</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="number" class="grade-input" min="0" max="20" step="0.25" value="08.0" onchange="updateRowStatus(this)">
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="text" class="form-control grade-appreciation" style="font-size: 13px;" value="Des efforts nécessaires en géométrie.">
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="badge badge-warning">Rattrapage</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>MAT-2026-003</td>
+                    <td>
+                        <div class="student-cell">
+                            <div class="student-avatar">IT</div>
+                            <div>
+                                <div class="student-name">Ibrahim Traoré</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="number" class="grade-input" min="0" max="20" step="0.25" value="04.5" onchange="updateRowStatus(this)">
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="text" class="form-control grade-appreciation" style="font-size: 13px;" value="Insuffisant. Travail non assimilé.">
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="badge badge-danger">Ajourné</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="action-bar">
+        <button class="btn" style="background: #E2E8F0; color: var(--text-main);">Annuler</button>
+        <button class="btn btn-primary" onclick="submitGrades()">
+            <i class="fa-solid fa-floppy-disk" style="margin-right: 8px;"></i> Enregistrer les notes
+        </button>
+    </div>
+</div>
+
+<script>
+    // Obtention des initiales d'un élève pour l'avatar
+    function getInitials(name) {
+        if (!name) return "??";
+        const parts = name.trim().split(" ");
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    }
+
+    // Génération HTML pour le badge selon la note
+    function getStatusBadgeHtml(val) {
+        if (isNaN(val) || val === null || val === "") {
+            return `<span class="badge" style="background:#E2E8F0; color:#64748B;">Non noté</span>`;
+        }
+        if (val >= 10) {
+            return `<span class="badge badge-success">Admis</span>`;
+        } else if (val >= 8) {
+            return `<span class="badge badge-warning">Rattrapage</span>`;
+        } else {
+            return `<span class="badge badge-danger">Ajourné</span>`;
+        }
+    }
+
+    // Mise à jour automatique du badge lors de la saisie manuelle
+    function updateRowStatus(input) {
+        const row = input.closest('tr');
+        const val = parseFloat(input.value);
+        const statusTd = row.querySelector('td:last-child');
+        statusTd.innerHTML = getStatusBadgeHtml(val);
+    }
+
+    function submitGrades() {
+        alert('Les notes ont été enregistrées avec succès.');
+    }
+
+    // Importer et remplir le tableau automatiquement depuis un fichier Excel
+    function handleFileImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+
+            // Lecture de la première feuille du fichier Excel
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // Convertir la feuille en tableau JSON
+            const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            if (jsonRows.length <= 1) {
+                alert("Le fichier sélectionné semble vide ou ne contient aucune ligne de données.");
+                return;
+            }
+
+            // Ignorer la première ligne (en-têtes : Matricule, Élève, Note, Appréciation, Statut)
+            const dataRows = jsonRows.slice(1);
+            const tbody = document.querySelector("#gradesTable tbody");
+            tbody.innerHTML = ""; // Vider le tableau existant
+
+            dataRows.forEach((row) => {
+                if (!row || row.length === 0) return;
+
+                const mat = row[0] || "MAT-0000";
+                const name = row[1] || "Élève Inconnu";
+                const noteVal = (row[2] !== undefined && row[2] !== null) ? parseFloat(row[2]) : "";
+                const appreciation = row[3] || "";
+                const initials = getInitials(name);
+                const badgeHtml = getStatusBadgeHtml(noteVal);
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${mat}</td>
+                    <td>
+                        <div class="student-cell">
+                            <div class="student-avatar">${initials}</div>
+                            <div>
+                                <div class="student-name">${name}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="number" class="grade-input" min="0" max="20" step="0.25" value="${isNaN(noteVal) ? '' : noteVal}" onchange="updateRowStatus(this)">
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="text" class="form-control grade-appreciation" style="font-size: 13px;" value="${appreciation}">
+                    </td>
+                    <td style="text-align: center;">
+                        ${badgeHtml}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            alert(`${dataRows.length} élève(s) importé(s) avec succès !`);
+            event.target.value = ""; // Réinitialiser le fichier sélectionné
+        };
+
+        reader.readAsArrayBuffer(file);
+    }
+
+    // Extraction des données du tableau pour l'exportation
+    function getTableData() {
+        const rows = document.querySelectorAll("#gradesTable tbody tr");
+        const data = [];
+
+        rows.forEach(row => {
+            const mat = row.cells[0].innerText.trim();
+            const name = row.querySelector(".student-name").innerText.trim();
+            const noteInput = row.querySelector(".grade-input");
+            const note = noteInput ? noteInput.value : "";
+            const appInput = row.querySelector(".grade-appreciation");
+            const appreciation = appInput ? appInput.value : "";
+            const status = row.querySelector(".badge") ? row.querySelector(".badge").innerText.trim() : "";
+
+            data.push([mat, name, note, appreciation, status]);
+        });
+
+        return data;
+    }
+
+    // Exportation vers Excel
+    function exportToExcel() {
+        const headers = [["Matricule", "Élève", "Note (/20)", "Appréciation", "Statut"]];
+        const rowsData = getTableData();
+        const fullSheetData = headers.concat(rowsData);
+
+        const ws = XLSX.utils.aoa_to_sheet(fullSheetData);
+        
+        ws['!cols'] = [
+            { wch: 16 },
+            { wch: 24 },
+            { wch: 12 },
+            { wch: 35 },
+            { wch: 14 }
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Notes");
+
+        XLSX.writeFile(wb, "notes_3emeA_mathematiques.xlsx");
+    }
+
+    // Exportation vers PDF
+    function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        doc.setFontSize(16);
+        doc.setTextColor(15, 23, 42);
+        doc.text("Relevé de Notes — 3ème A", 14, 18);
+
+        doc.setFontSize(11);
+        doc.setTextColor(100, 116, 139);
+        doc.text("Matière : Mathématiques | Évaluation : Composition T1", 14, 25);
+
+        const headers = [["Matricule", "Élève", "Note (/20)", "Appréciation", "Statut"]];
+        const rowsData = getTableData();
+
+        doc.autoTable({
+            startY: 32,
+            head: headers,
+            body: rowsData,
+            theme: 'striped',
+            headStyles: {
+                fillColor: [5, 150, 105],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold'
+            },
+            styles: {
+                fontSize: 10,
+                cellPadding: 4
+            },
+            columnStyles: {
+                2: { halign: 'center' },
+                4: { halign: 'center' }
+            }
+        });
+
+        doc.save("notes_3emeA_mathematiques.pdf");
+    }
+</script>
+{% endblock %}

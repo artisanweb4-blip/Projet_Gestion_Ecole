@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% load static %}
+{% include "school_settings/tabs.html" %}
+{% block title %}Paramètres - Utilisateurs{% endblock %}
+
+{% block content %}
+<!-- En-tête -->
+<div class="header-top" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+    <div class="page-title">
+        <h1 style="font-size: 24px; font-weight: 700; color: #0F172A; margin: 0 0 4px 0;">Paramètres</h1>
+        <p style="font-size: 14px; color: #64748B; margin: 0;">Configuration du système scolaire</p>
+    </div>
+    <div>
+        <button type="button" class="btn btn-success" style="background-color: #10B981; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600; color: white; display: flex; align-items: center; gap: 8px; cursor: pointer; opacity: 0.85;">
+            <i class="fa-solid fa-floppy-disk"></i> Sauvegarder maintenant
+        </button>
+    </div>
+</div>
+
+<!-- Navigation par Onglets -->
+<div class="settings-tabs-container">
+    <a href="{% url 'school_settings:general' %}" class="tab-item"><i class="fa-solid fa-gear"></i> Général</a>
+    <a href="{% url 'school_settings:school' %}" class="tab-item"><i class="fa-solid fa-building-columns"></i> École</a>
+    <a href="{% url 'school_settings:notifications' %}" class="tab-item"><i class="fa-regular fa-bell"></i> Notifications</a>
+    <a href="{% url 'school_settings:users' %}" class="tab-item active"><i class="fa-solid fa-user-group"></i> Utilisateurs</a>
+    <a href="{% url 'school_settings:backup' %}" class="tab-item"><i class="fa-solid fa-database"></i> Sauvegarde</a>
+    <a href="{% url 'school_settings:security' %}" class="tab-item"><i class="fa-regular fa-circle-check"></i> Sécurité</a>
+</div>
+
+<!-- Carte Gestion des Utilisateurs -->
+<div class="settings-card">
+    <h2 class="card-section-title">Gestion des utilisateurs</h2>
+
+    <!-- Grille des statistiques des rôles -->
+    <div class="users-grid">
+        <div class="role-card">
+            <span class="role-title">Administrateurs</span>
+            <span class="role-count">{{ admin_count|default:"2" }}</span>
+            <span class="role-access">Accès complet</span>
+        </div>
+
+        <div class="role-card">
+            <span class="role-title">Enseignants</span>
+            <span class="role-count">{{ teacher_count|default:"15" }}</span>
+            <span class="role-access">Accès pédagogique</span>
+        </div>
+
+        <div class="role-card">
+            <span class="role-title">Parents</span>
+            <span class="role-count">{{ parent_count|default:"120" }}</span>
+            <span class="role-access">Accès consultation</span>
+        </div>
+
+        <div class="role-card">
+            <span class="role-title">Comptables</span>
+            <span class="role-count">{{ accountant_count|default:"1" }}</span>
+            <span class="role-access">Accès financier</span>
+        </div>
+    </div>
+
+    <!-- Bouton Gérer les rôles et permissions -->
+    <a href="#" class="btn-manage-roles">
+        <i class="fa-solid fa-user-gear"></i> Gérer les rôles et permissions
+    </a>
+</div>
+
+<style>
+    /* Structure globale & onglets */
+    .settings-tabs-container {
+        display: flex;
+        align-items: center;
+        background-color: #F1F5F9;
+        border-radius: 8px;
+        padding: 4px;
+        gap: 4px;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 16px;
+    }
+
+    .tab-item {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #64748B;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.15s ease-in-out;
+        white-space: nowrap;
+    }
+
+    .tab-item.active {
+        background-color: #FFFFFF;
+        color: #0F172A;
+        font-weight: 600;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .tab-item i { font-size: 14px; }
+
+    .settings-card {
+        background-color: #FFFFFF;
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid #E2E8F0;
+    }
+
+    .card-section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0 0 20px 0;
+    }
+
+    /* Grille 2x2 des Rôles */
+    .users-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .role-card {
+        border: 1px solid #E2E8F0;
+        border-radius: 8px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        background-color: #FFFFFF;
+    }
+
+    .role-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0F172A;
+    }
+
+    .role-count {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 2px 0;
+    }
+
+    .role-access {
+        font-size: 12px;
+        color: #94A3B8;
+    }
+
+    /* Bouton d'action principal */
+    .btn-manage-roles {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 10px 16px;
+        background-color: #10B981;
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 6px;
+        text-decoration: none;
+        box-sizing: border-box;
+        transition: background-color 0.15s ease;
+    }
+
+    .btn-manage-roles:hover {
+        background-color: #059669;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Classes - Gestion École{% endblock %}
+
+{% block content %}
+<!-- En-tête de la page -->
+<div class="header-top">
+    <div class="page-title">
+        <h1>Classes</h1>
+        <p>Gérez les classes, les niveaux et les enseignants responsables.</p>
+    </div>
+    <div>
+        <a href="{% url 'school_classes:add' %}" class="btn btn-primary">
+            <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Nouvelle classe
+        </a>
+    </div>
+</div>
+
+<!-- Barre de recherche et filtres -->
+<div class="dashboard-card" style="padding: 20px; margin-bottom: 24px;">
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+        <div style="flex: 1; min-width: 280px; max-width: 500px;">
+            <input type="text" class="form-control" placeholder="Rechercher par nom de classe, niveau..." id="classSearchInput" value="{{ search|default:'' }}">
+        </div>
+        <div style="color: var(--text-muted); font-size: 14px; font-weight: 600;">
+            Total : {{ classes|length }} classe(s)
+        </div>
+    </div>
+</div>
+
+<!-- Tableau des classes -->
+<div class="dashboard-card" style="padding: 0; overflow: hidden;">
+    <div style="overflow-x: auto;">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Classe</th>
+                    <th>Niveau</th>
+                    <th>Section</th>
+                    <th>Capacité</th>
+                    <th>Responsable</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for class in classes %}
+                <tr>
+                    <td><strong style="color: var(--primary-dark); font-size: 15px;">{{ class.name }}</strong></td>
+                    <td>
+                        <span class="badge-level">{{ class.get_level_display|default:class.level|default:"-" }}</span>
+                    </td>
+                    <td>
+                        <span class="badge-section">{{ class.get_section_display|default:class.section|default:"Général" }}</span>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-users" style="color: var(--text-muted); font-size: 12px;"></i>
+                            <span>{{ class.capacity|default:"-" }} élèves max</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if class.responsible %}
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                {% if class.responsible.photo %}
+                                    <img src="{{ class.responsible.photo.url }}" alt="photo" class="avatar-img-sm">
+                                {% else %}
+                                    <div class="avatar-circle-sm">
+                                        {{ class.responsible.first_name|first|upper }}{{ class.responsible.last_name|first|upper }}
+                                    </div>
+                                {% endif %}
+                                <span style="font-weight: 500;">{{ class.responsible.first_name }} {{ class.responsible.last_name }}</span>
+                            </div>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-style: italic;">Non assigné</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right;">
+                        <div class="action-buttons">
+                            <a href="{% url 'school_classes:detail' class.pk %}" class="btn-action btn-view" title="Voir les détails">
+                                <i class="fa-regular fa-eye"></i>
+                            </a>
+                            <a href="{% url 'school_classes:edit' class.pk %}" class="btn-action btn-edit" title="Modifier">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="{% url 'school_classes:delete' class.pk %}" class="btn-action btn-delete" title="Supprimer">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i class="fa-solid fa-chalkboard" style="font-size: 32px; margin-bottom: 12px; color: var(--text-light); display: block;"></i>
+                        Aucune classe trouvée.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Styles CSS spécifiques pour la liste des classes -->
+<style>
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 14px;
+    }
+    .custom-table thead tr {
+        background-color: #F8FAFC;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .custom-table th {
+        padding: 14px 20px;
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .custom-table td {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+        color: var(--text-main);
+    }
+    .custom-table tbody tr:hover { background-color: #F8FAFC; }
+
+    /* Avatars réduits */
+    .avatar-img-sm {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .avatar-circle-sm {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background-color: var(--primary-light);
+        color: var(--primary-dark);
+        font-weight: 700;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Badges */
+    .badge-level {
+        background-color: #EFF6FF;
+        color: #1D4ED8;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid #BFDBFE;
+    }
+    .badge-section {
+        background-color: #F1F5F9;
+        color: var(--text-main);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--border-color);
+    }
+
+    /* Boutons d'action */
+    .action-buttons { display: inline-flex; gap: 8px; }
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 13px;
+        transition: all 0.15s ease;
+    }
+    .btn-view { background-color: #F1F5F9; color: var(--text-muted); }
+    .btn-view:hover { background-color: var(--primary-light); color: var(--primary-dark); }
+    .btn-edit { background-color: #FEF3C7; color: #D97706; }
+    .btn-edit:hover { background-color: #FDE68A; }
+    .btn-delete { background-color: #FEE2E2; color: #DC2626; }
+    .btn-delete:hover { background-color: #FCA5A5; color: #7F1D1D; }
+</style>
+
+<!-- Script de recherche -->
+<script>
+    let classSearchTimeout;
+    const classSearchInput = document.getElementById('classSearchInput');
+
+    classSearchInput.addEventListener('keyup', function() {
+        clearTimeout(classSearchTimeout);
+        classSearchTimeout = setTimeout(() => {
+            const search = classSearchInput.value;
+            let url = window.location.pathname + '?';
+            if (search) url += `search=${encodeURIComponent(search)}`;
+            window.location.href = url;
+        }, 400);
+    });
+</script>
+{% endblock %}

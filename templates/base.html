@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}Gestion École{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}" />
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header class="header">
+        <h1>Gestion École</h1>
+        <nav class="top-nav">
+            <!-- Top navigation items, e.g., user profile, logout -->
+        </nav>
+    </header>
+    <aside class="sidebar">
+        <ul class="menu">
+            {% for item in menu_items %}
+                <li><a href="{{ item.url }}" class="{% if request.path == item.url %}active{% endif %}">{{ item.label }}</a></li>
+            {% endfor %}
+        </ul>
+    </aside>
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="footer">
+        <p>&copy; {{ year }} Gestion École. Tous droits réservés.</p>
+    </footer>
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

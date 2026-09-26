@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Bulletin de Notes - {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<style>
+    .report-card {
+        background: #FFFFFF;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-card);
+        padding: 32px;
+        max-width: 900px;
+        margin: 0 auto;
+        box-shadow: var(--shadow-card);
+    }
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+    }
+    .summary-box {
+        background-color: #F8FAFC;
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        display: flex;
+        justify-content: space-around;
+        text-align: center;
+        margin-top: 24px;
+    }
+    .summary-score {
+        font-size: 28px;
+        font-weight: bold;
+        color: var(--primary-dark);
+    }
+</style>
+
+<div class="report-card">
+    <div class="report-header">
+        <div>
+            <h2>Bulletin de Notes</h2>
+            <p><strong>{{ student.full_name }}</strong> (Matricule: {{ student.matricule }})</p>
+            <p>Classe : {{ student.classroom.name }}</p>
+        </div>
+        <div style="text-align: right;">
+            <h4>{{ period.name }}</h4>
+            <p>Année : {{ period.academic_year.name }}</p>
+        </div>
+    </div>
+
+    <table class="grades-table" style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background: #F1F5F9;">
+                <th style="padding: 10px; border: 1px solid #CBD5E1;">Matière</th>
+                <th style="padding: 10px; border: 1px solid #CBD5E1; text-align: center;">Total Coeff.</th>
+                <th style="padding: 10px; border: 1px solid #CBD5E1; text-align: center;">Moyenne (/20)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in subject_averages %}
+            <tr>
+                <td style="padding: 10px; border: 1px solid #CBD5E1;"><strong>{{ item.subject_name }}</strong></td>
+                <td style="padding: 10px; border: 1px solid #CBD5E1; text-align: center;">{{ item.total_coeff }}</td>
+                <td style="padding: 10px; border: 1px solid #CBD5E1; text-align: center;">
+                    <strong>{{ item.average }}</strong>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" style="text-align: center; padding: 15px;">Aucune note enregistrée pour cette période.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="summary-box">
+        <div>
+            <div>Moyenne Générale</div>
+            <div class="summary-score">
+                {% if overall_average != None %}
+                    {{ overall_average }} / 20
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <div>Mention du Conseil</div>
+            <div style="font-size: 18px; font-weight: 600; margin-top: 8px;">
+                {{ mention }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if object.pk %}Modifier {{ object.name }}{% else %}Nouvelle classe{% endif %} - Gestion École
+{% endblock %}
+
+{% block content %}
+<!-- En-tête de la page -->
+<div class="header-top">
+    <div class="page-title">
+        <h1>{% if object.pk %}Modifier la classe{% else %}Ajouter une classe{% endif %}</h1>
+        <p>{% if object.pk %}Mettez à jour les informations de la classe {{ object.name }}.{% else %}Remplissez les informations ci-dessous pour créer une nouvelle classe.{% endif %}</p>
+    </div>
+    <div>
+        <a href="{% url 'school_classes:list' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i> Retour à la liste
+        </a>
+    </div>
+</div>
+
+<!-- Carte de formulaire -->
+<div class="dashboard-card" style="max-width: 800px; margin: 0 auto; padding: 32px;">
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" style="margin-bottom: 24px; padding: 12px 16px; border-radius: 8px; background-color: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5;">
+                {% for error in form.non_field_errors %}
+                    <p style="margin: 0; font-size: 14px;">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="form-grid">
+            <!-- Nom de la classe -->
+            <div class="form-group full-width">
+                <label for="{{ form.name.id_for_label }}" class="form-label">
+                    Nom de la classe <span style="color: #DC2626;">*</span>
+                </label>
+                <input type="text" 
+                       name="{{ form.name.name }}" 
+                       id="{{ form.name.id_for_label }}" 
+                       class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                       placeholder="Ex: 6ème A, Terminale S2, L1 Génie Info..." 
+                       value="{{ form.name.value|default:'' }}" 
+                       required>
+                {% if form.name.errors %}
+                    <div class="error-feedback">{{ form.name.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Niveau -->
+            <div class="form-group">
+                <label for="{{ form.level.id_for_label }}" class="form-label">
+                    Niveau <span style="color: #DC2626;">*</span>
+                </label>
+                {{ form.level }}
+                {% if form.level.errors %}
+                    <div class="error-feedback">{{ form.level.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Programme / Filière (Nouveau champ ajouté) -->
+            <div class="form-group">
+                <label for="{{ form.program.id_for_label }}" class="form-label">
+                    Programme / Filière
+                </label>
+                {{ form.program }}
+                {% if form.program.errors %}
+                    <div class="error-feedback">{{ form.program.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Section -->
+            <div class="form-group">
+                <label for="{{ form.section.id_for_label }}" class="form-label">
+                    Section
+                </label>
+                {{ form.section }}
+                {% if form.section.errors %}
+                    <div class="error-feedback">{{ form.section.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Capacité maximale -->
+            <div class="form-group">
+                <label for="{{ form.capacity.id_for_label }}" class="form-label">
+                    Capacité maximale (Élèves)
+                </label>
+                <input type="number" 
+                       name="{{ form.capacity.name }}" 
+                       id="{{ form.capacity.id_for_label }}" 
+                       class="form-control {% if form.capacity.errors %}is-invalid{% endif %}" 
+                       placeholder="Ex: 35" 
+                       value="{{ form.capacity.value|default:'' }}" 
+                       min="1">
+                {% if form.capacity.errors %}
+                    <div class="error-feedback">{{ form.capacity.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Enseignant responsable (occupant toute la largeur pour maintenir la grille propre) -->
+            <div class="form-group full-width">
+                <label for="{{ form.responsible.id_for_label }}" class="form-label">
+                    Enseignant responsable
+                </label>
+                {{ form.responsible }}
+                {% if form.responsible.errors %}
+                    <div class="error-feedback">{{ form.responsible.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions / Boutons de soumission -->
+        <div class="form-actions">
+            <a href="{% url 'school_classes:list' %}" class="btn btn-secondary">Annuler</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-floppy-disk" style="margin-right: 8px;"></i>
+                {% if object.pk %}Enregistrer les modifications{% else %}Créer la classe{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Styles CSS spécifiques pour le formulaire -->
+<style>
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    .full-width {
+        grid-column: span 2;
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .form-label {
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text-main);
+    }
+    .form-control, select {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background-color: #FFFFFF;
+        font-size: 14px;
+        color: var(--text-main);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        box-sizing: border-box;
+    }
+    .form-control:focus, select:focus {
+        outline: none;
+        border-color: var(--primary-dark);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    .form-control.is-invalid, select.is-invalid {
+        border-color: #DC2626;
+    }
+    .error-feedback {
+        color: #DC2626;
+        font-size: 12px;
+        margin-top: 2px;
+    }
+    .btn-secondary {
+        background-color: #F1F5F9;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+    .btn-secondary:hover {
+        background-color: #E2E8F0;
+    }
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 32px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    @media (max-width: 640px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        .full-width {
+            grid-column: span 1;
+        }
+    }
+</style>
+
+<!-- Script pour appliquer dynamiquement les classes CSS aux balises <select> générées par Django -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const selects = document.querySelectorAll('.dashboard-card select');
+        selects.forEach(select => {
+            select.classList.add('form-control');
+        });
+    });
+</script>
+{% endblock %}

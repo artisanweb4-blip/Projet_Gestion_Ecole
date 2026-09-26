@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Supprimer {{ object.name }} - Gestion École{% endblock %}
+
+{% block content %}
+<!-- En-tête de la page -->
+<div class="header-top">
+    <div class="page-title">
+        <h1>Suppression de classe</h1>
+        <p>Veuillez confirmer la suppression définitive de cette classe.</p>
+    </div>
+    <div>
+        <a href="{% url 'school_classes:list' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i> Annuler
+        </a>
+    </div>
+</div>
+
+<!-- Carte d'avertissement et de confirmation -->
+<div class="dashboard-card delete-card">
+    <div class="warning-icon-wrapper">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+
+    <h2 class="confirm-title">Êtes-vous sûr de vouloir supprimer cette classe ?</h2>
+    <p class="confirm-subtitle">
+        Cette action est irrémédiable. La classe sera définitivement retirée de la base de données.
+    </p>
+
+    <!-- Résumé de la classe à supprimer -->
+    <div class="class-summary">
+        <div class="summary-item">
+            <span class="summary-label">Nom de la classe</span>
+            <span class="summary-value" style="font-weight: 700; color: var(--primary-dark);">{{ object.name }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Niveau</span>
+            <span class="summary-value">{{ object.get_level_display|default:object.level|default:"Non spécifié" }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Section</span>
+            <span class="summary-value">{{ object.get_section_display|default:object.section|default:"Général" }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Responsable</span>
+            <span class="summary-value">
+                {% if object.responsible %}
+                    {{ object.responsible.first_name }} {{ object.responsible.last_name }}
+                {% else %}
+                    <em style="color: var(--text-muted);">Aucun</em>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Formulaire de confirmation -->
+    <form method="post" class="delete-actions">
+        {% csrf_token %}
+        <a href="{% url 'school_classes:list' %}" class="btn btn-secondary">
+            Annuler
+        </a>
+        <button type="submit" class="btn btn-danger">
+            <i class="fa-regular fa-trash-can" style="margin-right: 8px;"></i>
+            Confirmer la suppression
+        </button>
+    </form>
+</div>
+
+<!-- Styles CSS pour la confirmation de suppression -->
+<style>
+    .delete-card {
+        max-width: 580px;
+        margin: 20px auto;
+        padding: 40px 32px;
+        text-align: center;
+    }
+
+    .warning-icon-wrapper {
+        width: 64px;
+        height: 64px;
+        background-color: #FEF2F2;
+        color: #DC2626;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin: 0 auto 20px auto;
+        border: 1px solid #FCA5A5;
+    }
+
+    .confirm-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 8px;
+    }
+
+    .confirm-subtitle {
+        font-size: 14px;
+        color: var(--text-muted);
+        margin-bottom: 24px;
+        line-height: 1.5;
+    }
+
+    /* Carte de résumé des données */
+    .class-summary {
+        background-color: #F8FAFC;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 28px;
+        text-align: left;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px 16px;
+    }
+
+    .summary-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .summary-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    .summary-value {
+        font-size: 14px;
+        color: var(--text-main);
+    }
+
+    /* Boutons de confirmation */
+    .delete-actions {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .btn-secondary {
+        background-color: #F1F5F9;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        transition: background-color 0.15s ease;
+    }
+
+    .btn-secondary:hover {
+        background-color: #E2E8F0;
+    }
+
+    .btn-danger {
+        background-color: #DC2626;
+        color: #FFFFFF;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        transition: background-color 0.15s ease;
+    }
+
+    .btn-danger:hover {
+        background-color: #B91C1C;
+    }
+
+    @media (max-width: 480px) {
+        .class-summary {
+            grid-template-columns: 1fr;
+        }
+        .delete-actions {
+            flex-direction: column-reverse;
+        }
+        .btn-secondary, .btn-danger {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}

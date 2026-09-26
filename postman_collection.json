@@ -1,0 +1,149 @@
+{
+	"info": {
+		"_postman_id": "sms-africa-collection-2026",
+		"name": "SMS Africa - API Système de Gestion d'École",
+		"description": "Collection d'API REST pour le Système de Gestion d'École monolithique (Django REST Framework + JWT)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentification & JWT",
+			"item": [
+				{
+					"name": "Connexion (Token Obtain)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@ecole.africa\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/login/",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "login", ""]
+						}
+					}
+				},
+				{
+					"name": "Profil Utilisateur Connecté",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/profile/",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "profile", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Gestion des Élèves & Bulletins",
+			"item": [
+				{
+					"name": "Liste des Étudiants",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/students/",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "students", ""]
+						}
+					}
+				},
+				{
+					"name": "Générer Bulletin Scolaire d'un élève",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/students/1/bulletin/",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "students", "1", "bulletin", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Emploi du Temps (TRS)",
+			"item": [
+				{
+					"name": "Consulter les Emplois du Temps",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/schedules/",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "schedules", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Présences & Export CSV",
+			"item": [
+				{
+					"name": "Exporter Présences en CSV",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/records/export-csv/",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "records", "export-csv", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Finance & Mobile Money",
+			"item": [
+				{
+					"name": "Rapport Financier Global (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/reports/",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "payments", "reports", ""]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

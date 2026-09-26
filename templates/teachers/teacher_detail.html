@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Profil de {{ teacher.first_name }} {{ teacher.last_name }} - Gestion École{% endblock %}
+
+{% block content %}
+<!-- En-tête de la page -->
+<div class="header-top">
+    <div class="page-title">
+        <h1>Profil Enseignant</h1>
+        <p>Fiche d'information détaillée de l'enseignant.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'teachers:list' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i> Retour
+        </a>
+        <a href="{% url 'teachers:edit' teacher.pk %}" class="btn btn-warning">
+            <i class="fa-regular fa-pen-to-square" style="margin-right: 8px;"></i> Modifier
+        </a>
+    </div>
+</div>
+
+<!-- Profil Enseignant -->
+<div class="profile-container">
+    <!-- Sidebar avec Photo et infos de base -->
+    <div class="dashboard-card profile-sidebar">
+        <div class="avatar-wrapper">
+            {% if teacher.photo %}
+                <img src="{{ teacher.photo.url }}" alt="Photo de {{ teacher.first_name }}" class="profile-avatar-img">
+            {% else %}
+                <div class="profile-avatar-circle">
+                    {{ teacher.first_name|first|upper }}{{ teacher.last_name|first|upper }}
+                </div>
+            {% endif %}
+        </div>
+        <h2 class="profile-name">{{ teacher.first_name }} {{ teacher.last_name }}</h2>
+        <span class="badge-subject">{{ teacher.subject|default:"Enseignant" }}</span>
+    </div>
+
+    <!-- Informations détaillées -->
+    <div class="dashboard-card profile-content">
+        <h3 class="section-title"><i class="fa-solid fa-user" style="margin-right: 8px; color: var(--primary-dark);"></i> Coordonnées & Informations</h3>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Email professionnel</span>
+                <span class="info-value">
+                    <i class="fa-regular fa-envelope" style="margin-right: 6px; color: var(--text-muted);"></i>
+                    {{ teacher.email|default:"Non renseigné" }}
+                </span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Téléphone</span>
+                <span class="info-value">
+                    <i class="fa-solid fa-phone" style="margin-right: 6px; color: var(--text-muted);"></i>
+                    {{ teacher.phone|default:"Non renseigné" }}
+                </span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Matière / Discipline</span>
+                <span class="info-value">
+                    <i class="fa-solid fa-book-open" style="margin-right: 6px; color: var(--text-muted);"></i>
+                    {{ teacher.subject|default:"Non spécifiée" }}
+                </span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Date d'inscription</span>
+                <span class="info-value">
+                    <i class="fa-regular fa-calendar" style="margin-right: 6px; color: var(--text-muted);"></i>
+                    {{ teacher.created_at|date:"d/m/Y"|default:"-" }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 24px;
+        margin-top: 20px;
+    }
+    .profile-sidebar {
+        text-align: center;
+        padding: 32px 20px;
+    }
+    .avatar-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 16px;
+    }
+    .profile-avatar-img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-light);
+    }
+    .profile-avatar-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background-color: var(--primary-light);
+        color: var(--primary-dark);
+        font-weight: 700;
+        font-size: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .profile-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0 0 8px 0;
+    }
+    .badge-subject {
+        background-color: #EEF2FF;
+        color: #4F46E5;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .profile-content {
+        padding: 28px;
+    }
+    .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-top: 0;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px 24px;
+    }
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .info-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+    .info-value {
+        font-size: 14px;
+        color: var(--text-main);
+        font-weight: 500;
+    }
+    .btn-secondary {
+        background-color: #F1F5F9;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+    .btn-warning {
+        background-color: #FEF3C7;
+        color: #D97706;
+        border: 1px solid #FDE68A;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+    @media (max-width: 768px) {
+        .profile-container { grid-template-columns: 1fr; }
+        .info-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% load static %}
+{% include "school_settings/tabs.html" %}
+{% block title %}Paramètres - Sécurité{% endblock %}
+
+{% block content %}
+<!-- En-tête -->
+<div class="header-top" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+    <div class="page-title">
+        <h1 style="font-size: 24px; font-weight: 700; color: #0F172A; margin: 0 0 4px 0;">Paramètres</h1>
+        <p style="font-size: 14px; color: #64748B; margin: 0;">Configuration du système scolaire</p>
+    </div>
+    <div>
+        <button type="button" class="btn btn-success" style="background-color: #10B981; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600; color: white; display: flex; align-items: center; gap: 8px; cursor: pointer; opacity: 0.85;">
+            <i class="fa-solid fa-floppy-disk"></i> Sauvegarder maintenant
+        </button>
+    </div>
+</div>
+
+<!-- Navigation par Onglets -->
+<div class="settings-tabs-container">
+    <a href="{% url 'school_settings:general' %}" class="tab-item"><i class="fa-solid fa-gear"></i> Général</a>
+    <a href="{% url 'school_settings:school' %}" class="tab-item"><i class="fa-solid fa-building-columns"></i> École</a>
+    <a href="{% url 'school_settings:notifications' %}" class="tab-item"><i class="fa-regular fa-bell"></i> Notifications</a>
+    <a href="{% url 'school_settings:users' %}" class="tab-item"><i class="fa-solid fa-user-group"></i> Utilisateurs</a>
+    <a href="{% url 'school_settings:backup' %}" class="tab-item"><i class="fa-solid fa-database"></i> Sauvegarde</a>
+    <a href="{% url 'school_settings:security' %}" class="tab-item active"><i class="fa-regular fa-circle-check"></i> Sécurité</a>
+</div>
+
+<!-- Carte Paramètres de sécurité -->
+<div class="settings-card">
+    <h2 class="card-section-title">Paramètres de sécurité</h2>
+
+    <div class="security-sections-list">
+        <!-- Section 2FA -->
+        <div class="security-item">
+            <div class="security-info">
+                <span class="security-title">Authentification à deux facteurs</span>
+                <span class="security-description">Ajouter une couche de sécurité supplémentaire</span>
+            </div>
+            <a href="#" class="btn-security-action">Configurer 2FA</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Section Sessions actives -->
+        <div class="security-item">
+            <div class="security-info">
+                <span class="security-title">Sessions actives</span>
+                <span class="security-description">Gérer les connexions actives</span>
+            </div>
+            <a href="#" class="btn-security-action">Voir les sessions</a>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Section Politique de mot de passe -->
+        <div class="security-item">
+            <div class="security-info">
+                <span class="security-title">Politique de mot de passe</span>
+                <span class="security-description">Configurer les exigences de mot de passe</span>
+            </div>
+            <a href="#" class="btn-security-action">Modifier la politique</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Structure onglets et cartes */
+    .settings-tabs-container {
+        display: flex;
+        align-items: center;
+        background-color: #F1F5F9;
+        border-radius: 8px;
+        padding: 4px;
+        gap: 4px;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 16px;
+    }
+
+    .tab-item {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #64748B;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.15s ease-in-out;
+        white-space: nowrap;
+    }
+
+    .tab-item.active {
+        background-color: #FFFFFF;
+        color: #0F172A;
+        font-weight: 600;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .tab-item i { font-size: 14px; }
+
+    .settings-card {
+        background-color: #FFFFFF;
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid #E2E8F0;
+    }
+
+    .card-section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0 0 24px 0;
+    }
+
+    /* Listes des options de sécurité */
+    .security-sections-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .security-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .security-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .security-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0F172A;
+    }
+
+    .security-description {
+        font-size: 13px;
+        color: #64748B;
+    }
+
+    .btn-security-action {
+        padding: 6px 14px;
+        border: 1px solid #E2E8F0;
+        border-radius: 6px;
+        background-color: #FFFFFF;
+        color: #0F172A;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background-color 0.15s ease;
+    }
+
+    .btn-security-action:hover {
+        background-color: #F8FAFC;
+    }
+
+    .divider {
+        border: none;
+        border-top: 1px solid #F1F5F9;
+        margin: 0;
+    }
+</style>
+{% endblock %}

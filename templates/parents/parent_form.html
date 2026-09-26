@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if object.pk %}Modifier {{ object.first_name }} {{ object.last_name }}{% else %}Nouveau Parent{% endif %} - Gestion École
+{% endblock %}
+
+{% block content %}
+<!-- En-tête de la page -->
+<div class="header-top">
+    <div class="page-title">
+        <h1>{% if object.pk %}Modifier le parent{% else %}Ajouter un parent{% endif %}</h1>
+        <p>{% if object.pk %}Mettez à jour les coordonnées du parent.{% else %}Saisissez les informations du nouveau responsable légal.{% endif %}</p>
+    </div>
+    <div>
+        <a href="{% url 'parents:list' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i> Retour à la liste
+        </a>
+    </div>
+</div>
+
+<!-- Carte du formulaire -->
+<div class="dashboard-card" style="max-width: 850px; margin: 0 auto; padding: 32px;">
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" style="margin-bottom: 24px; padding: 12px 16px; border-radius: 8px; background-color: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5;">
+                {% for error in form.non_field_errors %}
+                    <p style="margin: 0; font-size: 14px;">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="form-grid">
+            <!-- Civilité -->
+            <div class="form-group">
+                <label for="{{ form.civility.id_for_label }}" class="form-label">
+                    Civilité <span style="color: #DC2626;">*</span>
+                </label>
+                {{ form.civility }}
+                {% if form.civility.errors %}
+                    <div class="error-feedback">{{ form.civility.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Prénom -->
+            <div class="form-group">
+                <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                    Prénom <span style="color: #DC2626;">*</span>
+                </label>
+                <input type="text" 
+                       name="{{ form.first_name.name }}" 
+                       id="{{ form.first_name.id_for_label }}" 
+                       class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" 
+                       value="{{ form.first_name.value|default:'' }}" 
+                       required>
+                {% if form.first_name.errors %}
+                    <div class="error-feedback">{{ form.first_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Nom -->
+            <div class="form-group">
+                <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                    Nom <span style="color: #DC2626;">*</span>
+                </label>
+                <input type="text" 
+                       name="{{ form.last_name.name }}" 
+                       id="{{ form.last_name.id_for_label }}" 
+                       class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" 
+                       value="{{ form.last_name.value|default:'' }}" 
+                       required>
+                {% if form.last_name.errors %}
+                    <div class="error-feedback">{{ form.last_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}" class="form-label">
+                    Adresse Email <span style="color: #DC2626;">*</span>
+                </label>
+                <input type="email" 
+                       name="{{ form.email.name }}" 
+                       id="{{ form.email.id_for_label }}" 
+                       class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+                       value="{{ form.email.value|default:'' }}" 
+                       required>
+                {% if form.email.errors %}
+                    <div class="error-feedback">{{ form.email.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Téléphone -->
+            <div class="form-group">
+                <label for="{{ form.phone.id_for_label }}" class="form-label">
+                    Téléphone <span style="color: #DC2626;">*</span>
+                </label>
+                <input type="text" 
+                       name="{{ form.phone.name }}" 
+                       id="{{ form.phone.id_for_label }}" 
+                       class="form-control {% if form.phone.errors %}is-invalid{% endif %}" 
+                       value="{{ form.phone.value|default:'' }}"
+                       required>
+                {% if form.phone.errors %}
+                    <div class="error-feedback">{{ form.phone.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Profession -->
+            <div class="form-group">
+                <label for="{{ form.profession.id_for_label }}" class="form-label">
+                    Profession
+                </label>
+                <input type="text" 
+                       name="{{ form.profession.name }}" 
+                       id="{{ form.profession.id_for_label }}" 
+                       class="form-control {% if form.profession.errors %}is-invalid{% endif %}" 
+                       value="{{ form.profession.value|default:'' }}">
+                {% if form.profession.errors %}
+                    <div class="error-feedback">{{ form.profession.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Adresse complète (prend 2 colonnes) -->
+            <div class="form-group full-width">
+                <label for="{{ form.address.id_for_label }}" class="form-label">
+                    Adresse postale
+                </label>
+                <textarea name="{{ form.address.name }}" 
+                          id="{{ form.address.id_for_label }}" 
+                          rows="3" 
+                          class="form-control {% if form.address.errors %}is-invalid{% endif %}">{{ form.address.value|default:'' }}</textarea>
+                {% if form.address.errors %}
+                    <div class="error-feedback">{{ form.address.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="form-actions">
+            <a href="{% url 'parents:list' %}" class="btn btn-secondary">Annuler</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-floppy-disk" style="margin-right: 8px;"></i>
+                {% if object.pk %}Enregistrer les modifications{% else %}Créer le parent{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    .full-width {
+        grid-column: span 2;
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .form-label {
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--text-main);
+    }
+    .form-control, select, textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background-color: #FFFFFF;
+        font-size: 14px;
+        color: var(--text-main);
+        transition: border-color 0.2s ease;
+        box-sizing: border-box;
+    }
+    .form-control:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: var(--primary-dark);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    .form-control.is-invalid, select.is-invalid, textarea.is-invalid {
+        border-color: #DC2626;
+    }
+    .error-feedback {
+        color: #DC2626;
+        font-size: 12px;
+        margin-top: 2px;
+    }
+    .btn-secondary {
+        background-color: #F1F5F9;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+    .btn-secondary:hover { background-color: #E2E8F0; }
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 32px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+    @media (max-width: 640px) {
+        .form-grid { grid-template-columns: 1fr; }
+        .full-width { grid-column: span 1; }
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const selects = document.querySelectorAll('.dashboard-card select');
+        selects.forEach(select => select.classList.add('form-control'));
+    });
+</script>
+{% endblock %}

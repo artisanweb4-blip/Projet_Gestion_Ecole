@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Enseignants - Gestion École{% endblock %}
+
+{% block content %}
+<!-- En-tête de la page -->
+<div class="header-top">
+    <div class="page-title">
+        <h1>Enseignants</h1>
+        <p>Gérez le corps professoral et leurs spécialités.</p>
+    </div>
+    <div>
+        <!-- APRÈS (Correction) -->
+            <a href="{% url 'teachers:add' %}" class="btn btn-primary">
+            <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Nouvel enseignant
+        </a>
+    </div>
+</div>
+
+<!-- Barre de recherche et filtres -->
+<div class="dashboard-card" style="padding: 20px; margin-bottom: 24px;">
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+        <div style="flex: 1; min-width: 280px; max-width: 500px;">
+            <input type="text" class="form-control" placeholder="Rechercher par nom, spécialité, matricule..." id="teacherSearchInput" value="{{ search|default:'' }}">
+        </div>
+        <div style="color: var(--text-muted); font-size: 14px; font-weight: 600;">
+            Total : {{ teachers|length }} enseignant(s)
+        </div>
+    </div>
+</div>
+
+<!-- Tableau des enseignants -->
+<div class="dashboard-card" style="padding: 0; overflow: hidden;">
+    <div style="overflow-x: auto;">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Matricule</th>
+                    <th>Enseignant</th>
+                    <th>Spécialité</th>
+                    <th>Téléphone</th>
+                    <th>Statut</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for teacher in teachers %}
+                <tr>
+                    <td><strong style="color: var(--primary-dark);">{{ teacher.employee_id|default:"N/A" }}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            {% if teacher.photo %}
+                                <img src="{{ teacher.photo.url }}" alt="photo" class="avatar-img">
+                            {% else %}
+                                <div class="avatar-circle">
+                                    {{ teacher.first_name|first|upper }}{{ teacher.last_name|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <div style="font-weight: 600;">{{ teacher.first_name }} {{ teacher.last_name }}</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">{{ teacher.email|default:"" }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge-classe">{{ teacher.specialization|default:"Général" }}</span>
+                    </td>
+                    <td>{{ teacher.phone|default:"-" }}</td>
+                    <td>
+                        {% if teacher.is_active|default:True %}
+                            <span class="status-badge status-active">Actif</span>
+                        {% else %}
+                            <span class="status-badge status-inactive">Inactif</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right;">
+                        <div class="action-buttons">
+                            <a href="{% url 'teachers:detail' teacher.pk %}" class="btn-action btn-view" title="Voir le profil">
+                                <i class="fa-regular fa-eye"></i>
+                            </a>
+                            <a href="{% url 'teachers:edit' teacher.pk %}" class="btn-action btn-edit" title="Modifier">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="{% url 'teachers:delete' teacher.pk %}" class="btn-action btn-delete" title="Supprimer">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i class="fa-solid fa-chalkboard-user" style="font-size: 32px; margin-bottom: 12px; color: var(--text-light); display: block;"></i>
+                        Aucun enseignant trouvé.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Styles CSS réutilisés -->
+<style>
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 14px;
+    }
+    .custom-table thead tr {
+        background-color: #F8FAFC;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .custom-table th {
+        padding: 14px 20px;
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .custom-table td {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+        color: var(--text-main);
+    }
+    .custom-table tbody tr:hover { background-color: #F8FAFC; }
+
+    /* Avatars */
+    .avatar-img {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .avatar-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: var(--primary-light);
+        color: var(--primary-dark);
+        font-weight: 700;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Badges & Statuts */
+    .badge-classe {
+        background-color: #F1F5F9;
+        color: var(--text-main);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--border-color);
+    }
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    .status-active { background-color: #ECFDF5; color: #059669; }
+    .status-inactive { background-color: #FEF2F2; color: #DC2626; }
+
+    /* Actions */
+    .action-buttons { display: inline-flex; gap: 8px; }
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 13px;
+        transition: all 0.15s ease;
+    }
+    .btn-view { background-color: #F1F5F9; color: var(--text-muted); }
+    .btn-view:hover { background-color: var(--primary-light); color: var(--primary-dark); }
+    .btn-edit { background-color: #FEF3C7; color: #D97706; }
+    .btn-edit:hover { background-color: #FDE68A; }
+    .btn-delete { background-color: #FEE2E2; color: #DC2626; }
+    .btn-delete:hover { background-color: #FCA5A5; color: #7F1D1D; }
+</style>
+
+<!-- JS filtrage local ou redirection -->
+<script>
+    let teacherSearchTimeout;
+    const teacherSearchInput = document.getElementById('teacherSearchInput');
+
+    teacherSearchInput.addEventListener('keyup', function() {
+        clearTimeout(teacherSearchTimeout);
+        teacherSearchTimeout = setTimeout(() => {
+            const search = teacherSearchInput.value;
+            let url = "{% url 'teachers:list' %}?";
+            if (search) url += `search=${search}`;
+            window.location.href = url;
+        }, 400);
+    });
+</script>
+{% endblock %}

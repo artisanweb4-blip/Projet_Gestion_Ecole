@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Parents d'Élèves - Gestion École{% endblock %}
+
+{% block content %}
+<!-- En-tête de la page -->
+<div class="header-top">
+    <div class="page-title">
+        <h1>Parents d'Élèves</h1>
+        <p>Gérez les coordonnées et informations des responsables légaux.</p>
+    </div>
+    <div>
+        <a href="{% url 'parents:add' %}" class="btn btn-primary">
+            <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Ajouter un Parent
+        </a>
+    </div>
+</div>
+
+<!-- Carte contenant le tableau -->
+<div class="dashboard-card">
+    <div class="card-header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
+        <h3 style="margin: 0; font-size: 16px; color: var(--text-main);">
+            Liste des Parents (<span style="color: var(--primary-dark);">{{ parents|length }}</span>)
+        </h3>
+
+        <!-- Formulaire de recherche -->
+        <form method="get" action="" class="search-form" style="display: flex; gap: 8px; align-items: center; flex: 1; max-width: 400px;">
+            <div class="search-input-wrapper" style="position: relative; width: 100%;">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Rechercher par nom, email, téléphone..." class="search-input">
+                {% if request.GET.q %}
+                    <a href="{% url 'parents:list' %}" class="clear-search-btn" title="Effacer la recherche">
+                        <i class="fa-solid fa-xmark"></i>
+                    </a>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-search">
+                Rechercher
+            </button>
+        </form>
+    </div>
+
+    {% if parents %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Civilité</th>
+                        <th>Nom & Prénom</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
+                        <th>Profession</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for parent in parents %}
+                        <tr>
+                            <td>
+                                <span class="badge-civility">{{ parent.get_civility_display }}</span>
+                            </td>
+                            <td>
+                                <a href="{% url 'parents:detail' parent.pk %}" class="table-link">
+                                    <strong>{{ parent.first_name }} {{ parent.last_name }}</strong>
+                                </a>
+                            </td>
+                            <td>
+                                <i class="fa-regular fa-envelope" style="margin-right: 6px; color: var(--text-muted);"></i>
+                                {{ parent.email|default:"-" }}
+                            </td>
+                            <td>
+                                <i class="fa-solid fa-phone" style="margin-right: 6px; color: var(--text-muted);"></i>
+                                {{ parent.phone|default:"-" }}
+                            </td>
+                            <td>
+                                {{ parent.profession|default:"Non renseignée" }}
+                            </td>
+                            <td style="text-align: right;">
+                                <div class="action-buttons">
+                                    <a href="{% url 'parents:detail' parent.pk %}" class="btn-icon text-info" title="Voir le profil">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'parents:edit' parent.pk %}" class="btn-icon text-warning" title="Modifier">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </a>
+                                    <a href="{% url 'parents:delete' parent.pk %}" class="btn-icon text-danger" title="Supprimer">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fa-solid fa-users-slash"></i>
+            </div>
+            {% if request.GET.q %}
+                <h3>Aucun résultat trouvé</h3>
+                <p>Aucun parent ne correspond à votre recherche "<strong>{{ request.GET.q }}</strong>".</p>
+                <a href="{% url 'parents:list' %}" class="btn btn-secondary" style="margin-top: 12px;">
+                    <i class="fa-solid fa-arrow-rotate-left" style="margin-right: 8px;"></i> Réinitialiser la recherche
+                </a>
+            {% else %}
+                <h3>Aucun parent enregistré</h3>
+                <p>Commencez par ajouter un responsable légal dans le système.</p>
+                <a href="{% url 'parents:add' %}" class="btn btn-primary" style="margin-top: 12px;">
+                    <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Ajouter un Parent
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    /* Styles pour la barre de recherche */
+    .search-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        color: var(--text-muted, #94a3b8);
+        font-size: 14px;
+    }
+    .search-input {
+        width: 100%;
+        padding: 9px 36px 9px 36px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color, #cbd5e1);
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .search-input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    .clear-search-btn {
+        position: absolute;
+        right: 12px;
+        color: var(--text-muted, #94a3b8);
+        text-decoration: none;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .clear-search-btn:hover {
+        color: #ef4444;
+    }
+    .btn-search {
+        background-color: #f1f5f9;
+        color: var(--text-main, #1e293b);
+        border: 1px solid var(--border-color, #cbd5e1);
+        padding: 9px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background-color 0.2s ease;
+    }
+    .btn-search:hover {
+        background-color: #e2e8f0;
+    }
+
+    /* Vos styles d'origine */
+    .badge-civility {
+        background-color: #F1F5F9;
+        color: var(--text-main);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .table-link {
+        color: var(--text-main);
+        text-decoration: none;
+    }
+    .table-link:hover {
+        color: var(--primary-dark);
+    }
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    .data-table th, .data-table td {
+        padding: 14px 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .data-table th {
+        background-color: #F8FAFC;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .action-buttons {
+        display: inline-flex;
+        gap: 8px;
+    }
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        background-color: #F8FAFC;
+        transition: all 0.2s ease;
+    }
+    .text-info { color: #0284C7; }
+    .text-info:hover { background-color: #E0F2FE; }
+    .text-warning { color: #D97706; }
+    .text-warning:hover { background-color: #FEF3C7; }
+    .text-danger { color: #DC2626; }
+    .text-danger:hover { background-color: #FEF2F2; }
+
+    .empty-state {
+        text-align: center;
+        padding: 48px 20px;
+    }
+    .empty-icon {
+        font-size: 48px;
+        color: var(--text-muted);
+        margin-bottom: 16px;
+    }
+    .empty-state h3 {
+        margin: 0 0 8px 0;
+        color: var(--text-main);
+    }
+    .empty-state p {
+        color: var(--text-muted);
+        margin: 0;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}

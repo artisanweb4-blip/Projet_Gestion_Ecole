@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paramètres - Sauvegarde{% endblock %}
+
+{% block content %}
+<!-- En-tête -->
+<div class="header-top" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+    <div class="page-title">
+        <h1 style="font-size: 24px; font-weight: 700; color: #0F172A; margin: 0 0 4px 0;">Paramètres</h1>
+        <p style="font-size: 14px; color: #64748B; margin: 0;">Configuration du système scolaire</p>
+    </div>
+    <div>
+        <button type="button" class="btn btn-success" style="background-color: #10B981; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600; color: white; display: flex; align-items: center; gap: 8px; cursor: pointer; opacity: 0.85;">
+            <i class="fa-solid fa-floppy-disk"></i> Sauvegarder maintenant
+        </button>
+    </div>
+</div>
+
+<!-- Navigation par Onglets -->
+<div class="settings-tabs-container">
+    <a href="{% url 'school_settings:general' %}" class="tab-item"><i class="fa-solid fa-gear"></i> Général</a>
+    <a href="{% url 'school_settings:school' %}" class="tab-item"><i class="fa-solid fa-building-columns"></i> École</a>
+    <a href="{% url 'school_settings:notifications' %}" class="tab-item"><i class="fa-regular fa-bell"></i> Notifications</a>
+    <a href="{% url 'school_settings:users' %}" class="tab-item"><i class="fa-solid fa-user-group"></i> Utilisateurs</a>
+    <a href="{% url 'school_settings:backup' %}" class="tab-item active"><i class="fa-solid fa-database"></i> Sauvegarde</a>
+    <a href="{% url 'school_settings:security' %}" class="tab-item"><i class="fa-regular fa-circle-check"></i> Sécurité</a>
+</div>
+
+<!-- Carte Sauvegarde des Données -->
+<div class="settings-card">
+    <h2 class="card-section-title">Sauvegarde des données</h2>
+
+    <form id="backupForm" method="post" class="settings-form">
+        {% csrf_token %}
+
+        <!-- Sauvegarde Automatique -->
+        <div class="toggle-group">
+            <div class="toggle-info">
+                <label class="toggle-label" for="id_auto_backup">Sauvegarde automatique</label>
+                <span class="toggle-description">Sauvegarder automatiquement chaque jour</span>
+            </div>
+            <label class="switch">
+                <input type="checkbox" name="auto_backup" id="id_auto_backup" {% if form.auto_backup.value|default:True %}checked{% endif %}>
+                <span class="slider round"></span>
+            </label>
+        </div>
+
+        <!-- Dernière Sauvegarde -->
+        <div class="download-group">
+            <div class="download-info">
+                <span class="download-label">Dernière sauvegarde</span>
+                <span class="download-description">{{ last_backup_date|default:"Aujourd'hui à 03:00" }}</span>
+            </div>
+            <a href="{% url 'school_settings:download_backup' %}" class="btn-download">
+                Télécharger
+            </a>
+        </div>
+
+        <!-- Bouton Créer une Sauvegarde -->
+        <button type="submit" name="action" value="create_backup" class="btn-create-backup">
+            <i class="fa-solid fa-database"></i> Créer une sauvegarde maintenant
+        </button>
+    </form>
+</div>
+
+<style>
+    /* Structure onglets et cartes */
+    .settings-tabs-container {
+        display: flex;
+        align-items: center;
+        background-color: #F1F5F9;
+        border-radius: 8px;
+        padding: 4px;
+        gap: 4px;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 16px;
+    }
+
+    .tab-item {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #64748B;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.15s ease-in-out;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    .tab-item.active {
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
+        font-weight: 600 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .tab-item:hover:not(.active) {
+        background-color: #E2E8F0;
+        color: #0F172A;
+    }
+
+    .tab-item i { font-size: 14px; }
+
+    .settings-card {
+        background-color: #FFFFFF;
+        border-radius: 8px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid #E2E8F0;
+    }
+
+    .card-section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0 0 24px 0;
+    }
+
+    .settings-form {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    /* Interrupteur (Switch) */
+    .toggle-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .toggle-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .toggle-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0F172A;
+        margin: 0;
+        cursor: pointer;
+    }
+
+    .toggle-description {
+        font-size: 13px;
+        color: #64748B;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #E2E8F0;
+        transition: .2s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .2s;
+    }
+
+    input:checked + .slider {
+        background-color: #10B981;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(20px);
+    }
+
+    .slider.round {
+        border-radius: 24px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+
+    /* Section Téléchargement */
+    .download-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .download-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .download-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0F172A;
+    }
+
+    .download-description {
+        font-size: 13px;
+        color: #64748B;
+    }
+
+    .btn-download {
+        padding: 6px 14px;
+        border: 1px solid #E2E8F0;
+        border-radius: 6px;
+        background-color: #FFFFFF;
+        color: #0F172A;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background-color 0.15s ease;
+    }
+
+    .btn-download:hover {
+        background-color: #F8FAFC;
+    }
+
+    /* Bouton Créer Sauvegarde */
+    .btn-create-backup {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 10px 16px;
+        background-color: #10B981;
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+
+    .btn-create-backup:hover {
+        background-color: #059669;
+    }
+</style>
+{% endblock %}

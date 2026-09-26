@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - Gestion École{% endblock %}
+
+{% block content %}
+<div class="header-top" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <div class="page-title">
+        <h1 style="margin: 0;"><i class="fa-solid fa-list-check" style="margin-right: 10px; color: var(--primary-dark);"></i>{{ title }}</h1>
+        <p style="margin: 4px 0 0 0; color: #64748B;">Liste complète et recherche dans les événements académiques.</p>
+    </div>
+    <div>
+        <a href="{% url 'school_calendar:calendar' %}" class="btn" style="background-color: #F1F5F9; color: #0F172A; font-weight: 600; padding: 10px 18px; border-radius: 12px; border: none; display: inline-flex; align-items: center; text-decoration: none; font-size: 14px; transition: background-color 0.2s;">
+            <i class="fa-solid fa-calendar-days" style="margin-right: 8px; color: #4F46E5;"></i> Vue Calendrier
+      </a>
+    </div>
+</div>
+
+<!-- Filtres de Recherche -->
+<div class="dashboard-card" style="padding: 16px; margin-bottom: 20px;">
+    <form method="get" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end;">
+        <div style="flex: 1; min-width: 200px;">
+            <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Rechercher par titre</label>
+            <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Rechercher un événement...">
+        </div>
+        <div style="min-width: 200px;">
+            <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Catégorie</label>
+            <select name="category" class="form-control">
+                <option value="">Toutes les catégories</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter me-1"></i> Filtrer</button>
+        {% if search_query or selected_category %}
+            <a href="{% url 'school_calendar:calendar_list' %}" class="btn btn-secondary">Réinitialiser</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Tableau -->
+<div class="dashboard-card" style="padding: 20px; overflow-x: auto;">
+    <table class="table" style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="border-bottom: 2px solid #E2E8F0; font-size: 13px; color: #475569;">
+                <th style="padding: 12px;">Titre</th>
+                <th style="padding: 12px;">Catégorie</th>
+                <th style="padding: 12px;">Début</th>
+                <th style="padding: 12px;">Fin</th>
+                <th style="padding: 12px;">Statut</th>
+                <th style="padding: 12px; text-align: center;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr style="border-bottom: 1px solid #F1F5F9; font-size: 14px;">
+                <td style="padding: 12px; font-weight: 600; color: #1E293B;">
+                    {{ event.title }}
+                    {% if event.description %}
+                        <br><small style="font-weight: normal; color: #64748B;">{{ event.description|truncatewords:8 }}</small>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px;">
+                    {% with cat_color=event.category.color|default:"#3B82F6" %}
+                    <span style="--cat-color: {{ cat_color }}; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; font-size: 12px; background-color: #F1F5F9;">
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--cat-color);"></span>
+                        {{ event.category.name|default:"Général" }}
+                    </span>
+                    {% endwith %}
+                </td>
+                <td style="padding: 12px; color: #475569;">{{ event.start_date|date:"d/m/Y H:i" }}</td>
+                <td style="padding: 12px; color: #475569;">{{ event.end_date|date:"d/m/Y H:i" }}</td>
+                <td style="padding: 12px;">
+                    {% if event.end_date < now %}
+                        <span style="color: #64748B; background: #F1F5F9; padding: 3px 8px; border-radius: 4px; font-size: 12px;">Terminé</span>
+                    {% elif event.start_date <= now and event.end_date >= now %}
+                        <span style="color: #D97706; background: #FEF3C7; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">En cours</span>
+                    {% else %}
+                        <span style="color: #059669; background: #D1FAE5; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">À venir</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                    <div style="display: flex; gap: 6px; justify-content: center;">
+                        <!-- Bouton Ouvrir Modal Modifier -->
+                        <button type="button" class="btn btn-sm btn-outline-primary" style="padding: 4px 8px;" onclick="document.getElementById('editModal{{ event.id }}').style.display='flex'" title="Modifier">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        
+                        <!-- Bouton Ouvrir Modal Supprimer -->
+                        <button type="button" class="btn btn-sm btn-outline-danger" style="padding: 4px 8px;" onclick="document.getElementById('deleteModal{{ event.id }}').style.display='flex'" title="Supprimer">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+
+                    <!-- MODAL MODIFIER (Spécifique à chaque événement) -->
+                    <div id="editModal{{ event.id }}" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+                        <div style="background: white; border-radius: 8px; width: 100%; max-width: 520px; padding: 24px; text-align: left; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+                            <h3 style="margin-top: 0; font-size: 18px; color: #1E293B; margin-bottom: 16px;"><i class="fa-solid fa-pen-to-square me-2" style="color: var(--primary-color);"></i>Modifier l'événement</h3>
+                            
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="edit_event_id" value="{{ event.id }}">
+                                
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    <p><label>Titre:</label><input type="text" name="title" value="{{ event.title }}" class="form-control" required></p>
+                                    <p><label>Catégorie:</label>
+                                        <select name="category" class="form-control">
+                                            {% for cat in categories %}
+                                                <option value="{{ cat.id }}" {% if event.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </p>
+                                    <p><label>Date de début:</label><input type="datetime-local" name="start_date" value="{{ event.start_date|date:'Y-m-d\TH:i' }}" class="form-control" required></p>
+                                    <p><label>Date de fin:</label><input type="datetime-local" name="end_date" value="{{ event.end_date|date:'Y-m-d\TH:i' }}" class="form-control" required></p>
+                                    <p><label>Description:</label><textarea name="description" class="form-control" rows="3">{{ event.description|default:"" }}</textarea></p>
+                                </div>
+
+                                <div style="text-align: right; margin-top: 20px; display: flex; gap: 8px; justify-content: flex-end;">
+                                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('editModal{{ event.id }}').style.display='none'">Annuler</button>
+                                    <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- MODAL SUPPRIMER -->
+                    <div id="deleteModal{{ event.id }}" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+                        <div style="background: white; border-radius: 8px; width: 100%; max-width: 400px; padding: 24px; text-align: left; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+                            <h3 style="margin-top: 0; color: #DC2626; font-size: 18px;">Confirmer la suppression</h3>
+                            <p style="font-size: 14px; color: #475569;">Voulez-vous vraiment supprimer <strong>"{{ event.title }}"</strong> ?</p>
+                            <form method="post" action="{% url 'school_calendar:event_delete' event.id %}">
+                                {% csrf_token %}
+                                <div style="text-align: right; margin-top: 20px; display: flex; gap: 8px; justify-content: flex-end;">
+                                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('deleteModal{{ event.id }}').style.display='none'">Annuler</button>
+                                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 24px; color: #94A3B8;">Aucun événement trouvé.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Fermeture automatique si on clique sur l'arrière-plan d'une modale
+    window.addEventListener('click', (e) => {
+        // Cible automatiquement n'importe quelle modale de modification ou de suppression
+        if (e.target.id && (e.target.id.startsWith('editModal') || e.target.id.startsWith('deleteModal'))) {
+            e.target.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - Gestion École{% endblock %}
+
+{% block content %}
+<div class="header-top" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <div class="page-title">
+        <h1 style="margin: 0;"><i class="fa-solid fa-calendar-week" style="margin-right: 10px; color: var(--primary-dark, #4F46E5);"></i>{{ title }}</h1>
+        <p style="margin: 4px 0 0 0; color: #64748B;">Planning hebdomadaire des cours par programme et classe.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button type="button" class="btn" onclick="document.getElementById('addClassroomModal').style.display='flex'" style="background-color: #F1F5F9; color: #0F172A; font-weight: 600; padding: 10px 18px; border-radius: 12px; border: none; display: inline-flex; align-items: center;">
+            <i class="fa-solid fa-door-open" style="margin-right: 8px;"></i> + Salle
+        </button>
+        <button type="button" class="btn" onclick="document.getElementById('addSlotModal').style.display='flex'" style="background-color: #10B981; color: white; font-weight: 600; padding: 10px 18px; border-radius: 12px; border: none; display: inline-flex; align-items: center;">
+            <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Ajouter un cours
+        </button>
+    </div>
+</div>
+
+<!-- Filtres de sélection (Programme -> Classe) -->
+<div class="dashboard-card" style="padding: 16px; margin-bottom: 20px; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <form method="get" id="filterForm" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+        <div style="flex: 1; min-width: 220px;">
+            <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Programme / Filière :</label>
+            <select name="program" class="form-control" onchange="document.getElementById('filterForm').submit();">
+                <option value="">-- Tous les programmes --</option>
+                {% for prog in programs %}
+                    <option value="{{ prog.id }}" {% if selected_program_id == prog.id %}selected{% endif %}>{{ prog.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="flex: 1; min-width: 220px;">
+            <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px;">Classe :</label>
+            <select name="class" class="form-control" onchange="document.getElementById('filterForm').submit();">
+                <option value="">-- Choisir une classe --</option>
+                {% for cls in classes %}
+                    <option value="{{ cls.id }}" {% if selected_class and selected_class.id == cls.id %}selected{% endif %}>
+                        {% if not selected_program_id and cls.program %}
+                            {{ cls.program.name }} - {{ cls.name }}
+                        {% else %}
+                            {{ cls.name }}
+                        {% endif %}
+                    </option>
+                {% empty %}
+                    <option value="">Aucune classe trouvée</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+
+<!-- Grille Semainier -->
+{% if selected_class %}
+<div class="dashboard-card" style="padding: 20px; background: white; border-radius: 12px; overflow-x: auto;">
+    <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 16px; color: #1E293B;">
+        Emploi du temps : 
+        {% if selected_class.program %}
+            <span style="color: #64748B; font-weight: 500;">[{{ selected_class.program.name }}]</span>
+        {% endif %}
+        <span style="color: #4F46E5;">{{ selected_class.name }}</span>
+    </h3>
+
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(160px, 1fr)); gap: 12px;">
+        {% for day_num, day_name in days %}
+            {% if day_num <= 6 %} <!-- Lundi à Samedi -->
+            <div style="background: #F8FAFC; border-radius: 8px; padding: 12px; border: 1px solid #E2E8F0;">
+                <h4 style="margin: 0 0 12px 0; text-align: center; font-size: 14px; color: #334155; border-bottom: 2px solid #CBD5E1; padding-bottom: 6px;">
+                    {{ day_name }}
+                </h4>
+
+                {% for slot in timeslots %}
+                    {% if slot.day_of_week == day_num %}
+                        <div style="background: white; border-left: 4px solid #4F46E5; border-radius: 6px; padding: 10px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative;">
+                            <div style="font-size: 11px; font-weight: 700; color: #4F46E5;">
+                                {{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}
+                            </div>
+                            <div style="font-weight: 600; font-size: 13px; color: #0F172A; margin: 4px 0;">
+                                {{ slot.subject.name }}
+                            </div>
+                            <div style="font-size: 11px; color: #64748B;">
+                               <i class="fa-solid fa-user-tie me-1"></i> {{ slot.teacher_full_name }}
+                            </div>
+                            {% if slot.classroom %}
+                            <div style="font-size: 11px; color: #059669; font-weight: 600; margin-top: 2px;">
+                                <i class="fa-solid fa-location-dot me-1"></i> {{ slot.classroom.name }}
+                            </div>
+                            {% endif %}
+
+                            <!-- Bouton suppression -->
+                            <form method="post" action="{% url 'timetable:timeslot_delete' slot.id %}" style="position: absolute; top: 6px; right: 6px;" onsubmit="return confirm('Supprimer ce cours ?');">
+                                {% csrf_token %}
+                                <button type="submit" style="background: none; border: none; color: #EF4444; cursor: pointer; font-size: 12px;">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div style="text-align: center; padding: 40px; color: #94A3B8;">
+    <p>Veuillez sélectionner une classe pour afficher son emploi du temps.</p>
+</div>
+{% endif %}
+
+<!-- MODAL AJOUT CRÉNEAU -->
+<div id="addSlotModal" style="display: {% if timeslot_form.errors %}flex{% else %}none{% endif %}; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; width: 100%; max-width: 500px; padding: 24px;">
+        <h3 style="margin-top: 0;">Ajouter un cours</h3>
+        <form method="post" action="{{ request.get_full_path }}">
+            {% csrf_token %}
+            <input type="hidden" name="add_timeslot" value="1">
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                {{ timeslot_form.as_p }}
+            </div>
+            <div style="text-align: right; margin-top: 20px; display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('addSlotModal').style.display='none'">Annuler</button>
+                <button type="submit" class="btn btn-primary" style="background: #10B981; border: none;">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL AJOUT SALLE -->
+<div id="addClassroomModal" style="display: {% if classroom_form.errors %}flex{% else %}none{% endif %}; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; width: 100%; max-width: 400px; padding: 24px;">
+        <h3 style="margin-top: 0;">Nouvelle Salle de Cours</h3>
+        <form method="post" action="{{ request.get_full_path }}">
+            {% csrf_token %}
+            <input type="hidden" name="add_classroom" value="1">
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                {{ classroom_form.as_p }}
+            </div>
+            <div style="text-align: right; margin-top: 20px; display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('addClassroomModal').style.display='none'">Annuler</button>
+                <button type="submit" class="btn btn-primary">Créer la salle</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const slotModal = document.getElementById('addSlotModal');
+    if (!slotModal) return;
+
+    const classSelect = slotModal.querySelector('select[name="school_class"]') 
+                       || slotModal.querySelector('select[name="class"]') 
+                       || slotModal.querySelector('select[name="classe"]');
+                       
+    const subjectSelect = slotModal.querySelector('select[name="subject"]') 
+                          || slotModal.querySelector('select[name="matiere"]');
+
+    const teacherSelect = slotModal.querySelector('select[name="teacher"]') 
+                          || slotModal.querySelector('select[name="enseignant"]');
+
+    if (!classSelect || !subjectSelect) return;
+
+    let subjectsMap = {};
+
+    function updateSubjects(classId) {
+        if (!classId) {
+            subjectSelect.innerHTML = '<option value="">-- Sélectionnez d\'abord une classe --</option>';
+            return;
+        }
+
+        subjectSelect.innerHTML = '<option value="">Chargement des matières...</option>';
+
+        const fetchUrl = `{% url 'courses:ajax_get_subjects_by_class' %}?class_id=${classId}`;
+
+        fetch(fetchUrl)
+            .then(response => {
+                if (!response.ok) throw new Error('Réseau ou route indisponible');
+                return response.json();
+            })
+            .then(data => {
+                subjectSelect.innerHTML = '';
+                subjectsMap = {};
+                
+                if (data.subjects && data.subjects.length > 0) {
+                    subjectSelect.add(new Option('-- Choisir une matière --', ''));
+                    data.subjects.forEach(sub => {
+                        const label = sub.code ? `[${sub.code}] ${sub.name}` : sub.name;
+                        subjectSelect.add(new Option(label, sub.id));
+                        // Stockage des informations de l'enseignant pour chaque matière
+                        subjectsMap[sub.id] = sub;
+                    });
+                } else {
+                    subjectSelect.add(new Option('Aucune matière rattachée à cette classe', ''));
+                }
+            })
+            .catch(error => {
+                console.error('Erreur AJAX matières:', error);
+                subjectSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            });
+    }
+
+    // Écouteur pour charger les matières lors du changement de classe
+    classSelect.addEventListener('change', function() {
+        updateSubjects(this.value);
+    });
+
+    // Auto-sélection de l'enseignant quand une matière est choisie
+    if (subjectSelect && teacherSelect) {
+        subjectSelect.addEventListener('change', function() {
+            const selectedSubjectId = this.value;
+            if (selectedSubjectId && subjectsMap[selectedSubjectId]) {
+                const subInfo = subjectsMap[selectedSubjectId];
+                if (subInfo.teacher_id) {
+                    teacherSelect.value = subInfo.teacher_id;
+                }
+            }
+        });
+    }
+
+    // Chargement initial si une classe est déjà présélectionnée
+    if (classSelect.value) {
+        updateSubjects(classSelect.value);
+    }
+});
+</script>
+
+
+{% endblock %}

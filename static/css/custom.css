@@ -1,0 +1,71 @@
+/* Custom CSS for the Gestion École project */
+/* Dark theme with subtle gradients and glassmorphism */
+:root {
+    --primary-color: hsl(210, 30%, 15%);
+    --secondary-color: hsl(210, 30%, 20%);
+    --accent-color: hsl(210, 70%, 50%);
+    --text-color: #f0f0f0;
+    --bg-color: #121212;
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --radius: 0.75rem;
+}
+
+body {
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.header, .footer {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    border-radius: var(--radius);
+    margin: 1rem;
+    text-align: center;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    padding-top: 3rem;
+    overflow-y: auto;
+}
+
+.main-content {
+    margin-left: 260px;
+    padding: 2rem;
+}
+
+.menu a {
+    display: block;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: var(--radius);
+    transition: background 0.2s ease;
+}
+.menu a:hover, .menu a.active {
+    background: var(--accent-color);
+    color: #fff;
+}
+
+button, .btn {
+    background: var(--accent-color);
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+button:hover, .btn:hover {
+    background: hsl(210, 70%, 45%);
+}

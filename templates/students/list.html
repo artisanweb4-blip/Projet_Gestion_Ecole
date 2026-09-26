@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Élèves - Gestion École{% endblock %}
+
+{% block content %}
+<!-- En-tête de la page -->
+<div class="header-top">
+    <div class="page-title">
+        <h1>Élèves</h1>
+        <p>Gérez les dossiers et les informations des élèves de l'établissement.</p>
+    </div>
+    <div>
+        <a href="{% url 'students:add' %}" class="btn btn-primary">
+            <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Nouvel élève
+        </a>
+    </div>
+</div>
+
+<!-- Barre de recherche et filtres -->
+<div class="dashboard-card" style="padding: 20px; margin-bottom: 24px;">
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+        <div style="display: flex; gap: 16px; flex: 1; min-width: 300px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <input type="text" class="form-control" placeholder="Rechercher par nom, numéro..." id="searchInput" value="{{ search|default:'' }}">
+            </div>
+            <div style="width: 180px;">
+                <select class="form-control" id="classFilter">
+                    <option value="">Toutes les classes</option>
+                    {% for class in classes %}
+                    <option value="{{ class.id }}" {% if class_filter|add:"0" == class.id|add:"0" %}selected{% endif %}>
+                        {{ class.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="width: 160px;">
+                <select class="form-control" id="statusFilter">
+                    <option value="">Tous les statuts</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Actifs</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactifs</option>
+                </select>
+            </div>
+        </div>
+        <div>
+            <button class="btn btn-success" onclick="exportData()">
+                <i class="fa-solid fa-file-excel" style="margin-right: 8px;"></i> Exporter
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau des élèves -->
+<div class="dashboard-card" style="padding: 0; overflow: hidden;">
+    <div style="overflow-x: auto;">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Matricule</th>
+                    <th>Élève</th>
+                    <th>Classe</th>
+                    <th>Genre</th>
+                    <th>Nationalité</th>
+                    <th>Parent / Contact</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td><strong style="color: var(--primary-dark);">{{ student.student_id }}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            {% if student.photo %}
+                                <img src="{{ student.photo.url }}" alt="photo" class="avatar-img">
+                            {% else %}
+                                <div class="avatar-circle">
+                                    {{ student.first_name|first|upper }}{{ student.last_name|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <div style="font-weight: 600;">{{ student.first_name }} {{ student.last_name }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge-classe">{{ student.class_group.name|default:"Non assigné" }}</span>
+                    </td>
+                    <td>{{ student.get_gender_display|default:student.gender|default:"-" }}</td>
+                    <td>{{ student.nationality|default:"-" }}</td>
+                    <td>{{ student.emergency_contact_name|default:"-" }}</td>
+                    <td style="text-align: right;">
+                        <div class="action-buttons">
+                            <a href="{% url 'students:detail' student.pk %}" class="btn-action btn-view" title="Voir le profil">
+                                <i class="fa-regular fa-eye"></i>
+                            </a>
+                            <a href="{% url 'students:edit' student.pk %}" class="btn-action btn-edit" title="Modifier">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="{% url 'students:delete' student.pk %}" class="btn-action btn-delete" title="Supprimer">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i class="fa-solid fa-user-slash" style="font-size: 32px; margin-bottom: 12px; color: var(--text-light); display: block;"></i>
+                        Aucun élève trouvé.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<div class="pagination-wrapper">
+    <ul class="pagination-list">
+        {% if page_obj.has_previous %}
+        <li>
+            <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if class_filter %}&class={{ class_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                <i class="fa-solid fa-angles-left"></i>
+            </a>
+        </li>
+        <li>
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if class_filter %}&class={{ class_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                <i class="fa-solid fa-angle-left"></i>
+            </a>
+        </li>
+        {% endif %}
+
+        <li class="page-link active">
+            Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+        </li>
+
+        {% if page_obj.has_next %}
+        <li>
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if class_filter %}&class={{ class_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                <i class="fa-solid fa-angle-right"></i>
+            </a>
+        </li>
+        <li>
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if class_filter %}&class={{ class_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                <i class="fa-solid fa-angles-right"></i>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- Styles CSS spécifiques pour la page Élèves -->
+<style>
+    /* Styles de table */
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 14px;
+    }
+    .custom-table thead tr {
+        background-color: #F8FAFC;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .custom-table th {
+        padding: 14px 20px;
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .custom-table td {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+        color: var(--text-main);
+    }
+    .custom-table tbody tr:hover { background-color: #F8FAFC; }
+
+    /* Avatars */
+    .avatar-img {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .avatar-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: var(--primary-light);
+        color: var(--primary-dark);
+        font-weight: 700;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Badges & Buttons */
+    .badge-classe {
+        background-color: #F1F5F9;
+        color: var(--text-main);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--border-color);
+    }
+    .action-buttons { display: inline-flex; gap: 8px; }
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 13px;
+        transition: all 0.15s ease;
+    }
+    .btn-view { background-color: #F1F5F9; color: var(--text-muted); }
+    .btn-view:hover { background-color: var(--primary-light); color: var(--primary-dark); }
+    .btn-edit { background-color: #FEF3C7; color: #D97706; }
+    .btn-edit:hover { background-color: #FDE68A; }
+    .btn-delete { background-color: #FEE2E2; color: #DC2626; }
+    .btn-delete:hover { background-color: #FCA5A5; color: #7F1D1D; }
+
+    /* Pagination */
+    .pagination-wrapper { margin-top: 24px; display: flex; justify-content: center; }
+    .pagination-list { display: flex; gap: 6px; list-style: none; align-items: center; }
+    .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 14px;
+        border-radius: var(--radius-sm);
+        background: #FFFFFF;
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .page-link.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .page-link:hover:not(.active) { background: #F1F5F9; }
+</style>
+
+<!-- JS des filtres -->
+<script>
+    let searchTimeout;
+    const searchInput = document.getElementById('searchInput');
+    const classFilter = document.getElementById('classFilter');
+    const statusFilter = document.getElementById('statusFilter');
+
+    // Évite le rechargement excessif lors de la saisie au clavier (Debounce 400ms)
+    searchInput.addEventListener('keyup', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(applyFilters, 400);
+    });
+
+    classFilter.addEventListener('change', applyFilters);
+    statusFilter.addEventListener('change', applyFilters);
+
+    function applyFilters() {
+        const search = searchInput.value;
+        const class_id = classFilter.value;
+        const status = statusFilter.value;
+        
+        let url = "{% url 'students:list' %}?";
+        const params = new URLSearchParams();
+
+        if (search) params.append('search', search);
+        if (class_id) params.append('class', class_id);
+        if (status) params.append('status', status);
+
+        window.location.href = url + params.toString();
+    }
+
+    function exportData() {
+        alert("Export en cours (Excel)...");
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paramètres - Configuration de l'école{% endblock %}
+
+{% block content %}
+<!-- En-tête -->
+<div class="header-top" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+    <div class="page-title">
+        <h1 style="font-size: 24px; font-weight: 700; color: #0F172A; margin: 0 0 4px 0;">Paramètres</h1>
+        <p style="font-size: 14px; color: #64748B; margin: 0;">Configuration du système scolaire</p>
+    </div>
+    <div>
+        <button type="submit" form="schoolForm" class="btn btn-success" style="background-color: #10B981; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600; color: white; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <i class="fa-solid fa-floppy-disk"></i> Sauvegarder maintenant
+        </button>
+    </div>
+</div>
+
+<!-- Navigation par Onglets -->
+<div class="settings-tabs-container">
+    <a href="{% url 'school_settings:general' %}" class="tab-item"><i class="fa-solid fa-gear"></i> Général</a>
+    <a href="{% url 'school_settings:school' %}" class="tab-item active"><i class="fa-solid fa-building-columns"></i> École</a>
+    <a href="{% url 'school_settings:notifications' %}" class="tab-item"><i class="fa-regular fa-bell"></i> Notifications</a>
+    <a href="{% url 'school_settings:users' %}" class="tab-item"><i class="fa-solid fa-user-group"></i> Utilisateurs</a>
+    <a href="{% url 'school_settings:backup' %}" class="tab-item"><i class="fa-solid fa-database"></i> Sauvegarde</a>
+    <a href="{% url 'school_settings:security' %}" class="tab-item"><i class="fa-regular fa-circle-check"></i> Sécurité</a>
+</div>
+
+<!-- Formulaire -->
+<div class="settings-card">
+    <h2 class="card-section-title">Informations de l'école</h2>
+
+    <form id="schoolForm" method="post" enctype="multipart/form-data" class="settings-form">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label class="form-label">Logo de l'établissement</label>
+            <div class="file-upload-box">
+                <input type="file" name="logo" id="id_logo" class="file-input" accept="image/*">
+                <label for="id_logo" class="file-upload-label">
+                    <i class="fa-solid fa-upload"></i> Importer le logo
+                </label>
+            </div>
+            <span class="field-hint">Format recommandé: PNG ou JPG, dimensions carrées</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.school_name.id_for_label }}">Nom de l'école</label>
+            {{ form.school_name }}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.address.id_for_label }}">Adresse</label>
+            {{ form.address }}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.phone.id_for_label }}">Téléphone</label>
+            {{ form.phone }}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
+            {{ form.email }}
+        </div>
+    </form>
+</div>
+
+<style>
+    .settings-tabs-container {
+        display: flex;
+        align-items: center;
+        background-color: #F1F5F9;
+        border-radius: 8px;
+        padding: 4px;
+        gap: 4px;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 16px;
+    }
+
+    .tab-item {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #64748B;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.15s ease-in-out;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    .tab-item.active {
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
+        font-weight: 600 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .tab-item:hover:not(.active) {
+        background-color: #E2E8F0;
+        color: #0F172A;
+    }
+
+    .tab-item i { font-size: 14px; }
+
+    .settings-card {
+        background-color: #FFFFFF;
+        border-radius: 8px;
+        padding: 20px 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid #E2E8F0;
+    }
+
+    .card-section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0 0 12px 0;
+    }
+
+    .settings-form {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .form-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #0F172A;
+        margin: 0;
+    }
+
+    .settings-form input[type="text"],
+    .settings-form input[type="email"],
+    .settings-form input[type="tel"],
+    .settings-form textarea,
+    .settings-form .form-control {
+        width: 100%;
+        padding: 7px 12px;
+        border-radius: 6px;
+        border: 1px solid #E2E8F0;
+        background-color: #FFFFFF;
+        font-size: 13px;
+        color: #0F172A;
+        outline: none;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+    }
+
+    .settings-form input:focus,
+    .settings-form textarea:focus {
+        border-color: #2563EB;
+    }
+
+    .file-upload-box {
+        position: relative;
+        width: 100%;
+        border: 1px solid #E2E8F0;
+        border-radius: 6px;
+        background-color: #FFFFFF;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .file-input {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .file-upload-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #0F172A;
+        cursor: pointer;
+    }
+
+    .field-hint {
+        font-size: 11px;
+        color: #94A3B8;
+        margin-top: 2px;
+    }
+</style>
+{% endblock %}

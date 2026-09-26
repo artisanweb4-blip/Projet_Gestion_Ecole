@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Gestion École{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 30px auto;">
+    <div class="dashboard-card" style="padding: 28px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <h2 style="margin: 0; font-size: 20px; color: #1E293B;">
+                <i class="fa-solid fa-pen-to-square" style="color: var(--primary-color); margin-right: 8px;"></i> {{ title }}
+            </h2>
+            <a href="{% url 'school_calendar:calendar_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fa-solid fa-arrow-left me-1"></i> Retour
+            </a>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                {{ form.as_p }}
+            </div>
+            
+            <div style="text-align: right; margin-top: 24px; display: flex; gap: 10px; justify-content: flex-end;">
+                <a href="{% url 'school_calendar:calendar_list' %}" class="btn btn-secondary">Annuler</a>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check me-1"></i> Enregistrer les modifications</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

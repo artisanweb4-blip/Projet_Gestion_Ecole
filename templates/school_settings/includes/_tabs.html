@@ -1,0 +1,76 @@
+<div class="settings-tabs-container">
+    <a href="{% url 'school_settings:general' %}" 
+       class="tab-item {% if request.resolver_match.url_name == 'general' or request.resolver_match.url_name == 'index' %}active{% endif %}">
+        <i class="fa-solid fa-gear"></i> Général
+    </a>
+
+    <a href="{% url 'school_settings:school' %}" 
+       class="tab-item {% if request.resolver_match.url_name == 'school' %}active{% endif %}">
+        <i class="fa-solid fa-building-columns"></i> École
+    </a>
+
+    <a href="{% url 'school_settings:notifications' %}" 
+       class="tab-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+        <i class="fa-regular fa-bell"></i> Notifications
+    </a>
+
+    <a href="{% url 'school_settings:users' %}" 
+       class="tab-item {% if request.resolver_match.url_name == 'users' %}active{% endif %}">
+        <i class="fa-solid fa-user-group"></i> Utilisateurs
+    </a>
+
+    <a href="{% url 'school_settings:backup' %}" 
+       class="tab-item {% if request.resolver_match.url_name == 'backup' %}active{% endif %}">
+        <i class="fa-solid fa-database"></i> Sauvegarde
+    </a>
+
+    <a href="{% url 'school_settings:security' %}" 
+       class="tab-item {% if request.resolver_match.url_name == 'security' %}active{% endif %}">
+        <i class="fa-regular fa-circle-check"></i> Sécurité
+    </a>
+</div>
+
+<style>
+    .settings-tabs-container {
+        display: flex;
+        align-items: center;
+        background-color: #F1F5F9;
+        border-radius: 8px;
+        padding: 4px;
+        gap: 4px;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 16px;
+    }
+
+    .tab-item {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #64748B;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.15s ease-in-out;
+        white-space: nowrap;
+        cursor: pointer !important;
+        pointer-events: auto !important;
+    }
+
+    /* Style de l'onglet actif (Fond blanc avec ombre légère) */
+    .tab-item.active {
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
+        font-weight: 600 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .tab-item:hover:not(.active) {
+        background-color: #E2E8F0;
+        color: #0F172A;
+    }
+</style>
