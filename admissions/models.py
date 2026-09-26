@@ -1,6 +1,6 @@
 from django.db import models
 from core.models import TimeStampMixin
-from students.models import ClassRoom
+from classes.models import Class as ClassRoom
 
 class AdmissionApplication(TimeStampMixin):
     """Candidature / Demande d'admission d'un nouvel élève."""

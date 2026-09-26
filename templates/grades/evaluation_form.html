@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Gestion École{% endblock %}
+{% block topbar_title %}Évaluation{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1>{{ title }}</h1>
+        <p>Définissez les paramètres de l'évaluation (classe, matière, période, coefficient).</p>
+    </div>
+    <a href="{% if next_url %}{{ next_url }}{% else %}{% url 'grades:grade_list' %}{% endif %}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="dashboard-card" style="max-width: 760px;">
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="form-row-2">
+            <div class="form-group">
+                <label class="form-label">Titre <span class="required">*</span></label>
+                {{ form.title }}
+                {{ form.title.errors }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Type <span class="required">*</span></label>
+                {{ form.eval_type }}
+                {{ form.eval_type.errors }}
+            </div>
+        </div>
+        <div class="form-row-2">
+            <div class="form-group">
+                <label class="form-label">Classe <span class="required">*</span></label>
+                {{ form.classroom }}
+                {{ form.classroom.errors }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Matière <span class="required">*</span></label>
+                {{ form.subject }}
+                {{ form.subject.errors }}
+            </div>
+        </div>
+        <div class="form-row-2">
+            <div class="form-group">
+                <label class="form-label">Période <span class="required">*</span></label>
+                {{ form.period }}
+                {{ form.period.errors }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Date <span class="required">*</span></label>
+                {{ form.date }}
+                {{ form.date.errors }}
+            </div>
+        </div>
+        <div class="form-row-2">
+            <div class="form-group">
+                <label class="form-label">Coefficient</label>
+                {{ form.coefficient }}
+                {{ form.coefficient.errors }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Barème (ex : 20)</label>
+                {{ form.max_score }}
+                {{ form.max_score.errors }}
+            </div>
+        </div>
+        <input type="hidden" name="next" value="{{ next_url }}">
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <a href="{% if next_url %}{{ next_url }}{% else %}{% url 'grades:grade_list' %}{% endif %}" class="btn btn-outline">Annuler</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-floppy-disk"></i> Enregistrer
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

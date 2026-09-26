@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Saisie des notes - Gestion École{% endblock %}
+{% block topbar_title %}Saisie des notes{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1>Saisie des notes par classe / matière</h1>
+        <p>Choisissez une évaluation pour saisir ou mettre à jour les notes de toute la classe.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'grades:grade_list' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-list"></i> Toutes les évaluations
+        </a>
+    </div>
+</div>
+
+{% if evaluation %}
+    <!-- ============ GRILLE DE SAISIE ============ -->
+    <div class="dashboard-card" style="padding: 18px 20px;">
+        <div class="card-header mb-0">
+            <div>
+                <h2 class="card-title"><i class="fa-solid fa-pen me-1 text-success"></i> {{ evaluation.title }}</h2>
+                <p class="text-muted mb-0" style="font-size: 0.85rem;">
+                    <span class="badge badge-info">{{ evaluation.get_eval_type_display }}</span>
+                    {{ evaluation.classroom.name }} · {{ evaluation.subject.name }} ·
+                    {{ evaluation.period.name }} · Coefficient {{ evaluation.coefficient }} ·
+                    Barème /{{ evaluation.max_score }} · {{ evaluation.date|date:"d/m/Y" }}
+                </p>
+            </div>
+            <a href="{% url 'grades:grade_entry' %}" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-arrow-left"></i> Changer d'évaluation
+            </a>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="dashboard-card">
+            <div class="table-container">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 120px;">Matricule</th>
+                            <th>Élève</th>
+                            <th style="width: 130px;" class="text-center">Note / {{ evaluation.max_score }}</th>
+                            <th style="width: 40%;">Appréciation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in rows %}
+                            <tr>
+                                <td class="text-muted">{{ row.student.student_id }}</td>
+                                <td><strong>{{ row.student.last_name }}</strong> {{ row.student.first_name }}</td>
+                                <td class="text-center">
+                                    <input type="number"
+                                           class="form-control"
+                                           style="max-width: 110px; margin: 0 auto; text-align: center;"
+                                           name="score_{{ row.student.id }}"
+                                           id="score_{{ row.student.id }}"
+                                           min="0"
+                                           max="{{ evaluation.max_score }}"
+                                           step="0.25"
+                                           value="{{ row.grade.score|default:'' }}"
+                                           placeholder="—">
+                                </td>
+                                <td>
+                                    <input type="text"
+                                           class="form-control"
+                                           name="appreciation_{{ row.student.id }}"
+                                           value="{{ row.grade.appreciation|default:'' }}"
+                                           placeholder="Facultatif...">
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    Aucun élève actif dans la classe {{ evaluation.classroom.name }}.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if rows %}
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px;">
+                    <a href="{% url 'grades:grade_entry' %}" class="btn btn-outline">Annuler</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk"></i> Enregistrer les notes
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </form>
+
+{% else %}
+    <!-- ============ SÉLECTION ============ -->
+    <div class="dashboard-card" style="padding: 18px 20px;">
+        <h2 class="card-title" style="margin-bottom: 12px;"><i class="fa-solid fa-filter me-1 text-success"></i> 1. Choisir la classe, la matière et la période</h2>
+        <form method="get" style="display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;">
+            <div style="flex: 1; min-width: 180px;">
+                <label class="form-label">Classe</label>
+                <select name="classroom" class="form-control" required>
+                    <option value="">-- Classe --</option>
+                    {% for classroom in classrooms %}
+                        <option value="{{ classroom.id }}" {% if f_classroom == classroom.id|stringformat:"s" %}selected{% endif %}>{{ classroom.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 180px;">
+                <label class="form-label">Matière</label>
+                <select name="subject" class="form-control" required>
+                    <option value="">-- Matière --</option>
+                    {% for subject in subjects %}
+                        <option value="{{ subject.id }}" {% if f_subject == subject.id|stringformat:"s" %}selected{% endif %}>{{ subject.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 180px;">
+                <label class="form-label">Période</label>
+                <select name="period" class="form-control" required>
+                    <option value="">-- Période --</option>
+                    {% for period in periods %}
+                        <option value="{{ period.id }}" {% if f_period == period.id|stringformat:"s" %}selected{% endif %}>{{ period.name }} — {{ period.academic_year.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-arrow-right"></i> Afficher</button>
+        </form>
+    </div>
+
+    {% if evaluations is not None %}
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2 class="card-title">2. Choisir une évaluation existante</h2>
+                <a href="{% url 'grades:evaluation_create' %}?classroom={{ f_classroom }}&subject={{ f_subject }}&period={{ f_period }}"
+                   class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-plus"></i> Nouvelle évaluation
+                </a>
+            </div>
+            {% if evaluations %}
+                <div class="table-container">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Évaluation</th>
+                                <th>Type</th>
+                                <th class="text-center">Coef.</th>
+                                <th class="text-center">Barème</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for evaluation in evaluations %}
+                                <tr>
+                                    <td>{{ evaluation.date|date:"d/m/Y" }}</td>
+                                    <td><strong>{{ evaluation.title }}</strong></td>
+                                    <td><span class="badge badge-info">{{ evaluation.get_eval_type_display }}</span></td>
+                                    <td class="text-center">{{ evaluation.coefficient }}</td>
+                                    <td class="text-center">/{{ evaluation.max_score }}</td>
+                                    <td>
+                                        <a href="{% url 'grades:grade_entry_eval' evaluation.pk %}" class="btn btn-success btn-action">
+                                            <i class="fa-solid fa-pen"></i> Saisir les notes
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <p>Aucune évaluation pour ce trio classe / matière / période.<br>
+                    Créez-en une avec le bouton « Nouvelle évaluation ».</p>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

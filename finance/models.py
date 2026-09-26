@@ -1,7 +1,8 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from core.models import TimeStampMixin
-from students.models import ClassRoom, StudentProfile
+from classes.models import Class as ClassRoom
+from students.models import Student as StudentProfile
 
 class FeeStructure(TimeStampMixin):
     """Structure tarifaire et échéances des frais de scolarité."""
@@ -56,4 +57,4 @@ class StudentPayment(TimeStampMixin):
         super().delete(*args, **kwargs)
 
     def __str__(self):
-        return f"Reçu #{self.receipt_number} - {self.student.user.get_full_name()} : {self.amount_paid} FCFA"
+        return f"Reçu #{self.receipt_number} - {self.student.full_name} : {self.amount_paid} FCFA"

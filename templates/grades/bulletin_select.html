@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Bulletins - Gestion École{% endblock %}
+{% block topbar_title %}Bulletins de notes{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bulletin-header {
+        margin-bottom: 25px;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 10px;
+    }
+
+    .bulletin-header h2 {
+        font-size: 1.35rem;
+        color: var(--text-main);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .bulletin-card {
+        background-color: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 28px;
+        box-shadow: var(--shadow-card);
+    }
+
+    .form-group-custom {
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-group-custom label {
+        font-weight: 600;
+        color: var(--text-main);
+        font-size: 0.92rem;
+    }
+
+    .form-select-custom {
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background-color: #fff;
+        color: var(--text-main);
+        outline: none;
+        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        box-sizing: border-box;
+        font-family: inherit;
+    }
+
+    .form-select-custom:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+    }
+
+    .btn-submit-custom {
+        width: 100%;
+        padding: 12px 18px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #ffffff;
+        background: linear-gradient(135deg, var(--primary), #10b981);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-family: inherit;
+    }
+
+    .btn-submit-custom:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(5, 150, 105, 0.3);
+    }
+
+    .btn-submit-custom:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}
+
+{% block content_inner %}{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1>Consultation des bulletins</h1>
+        <p>Générez le bulletin d'un élève ou ceux d'une classe entière (PDF).</p>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Bulletin individuel -->
+    <div>
+        <div class="bulletin-header">
+            <h2><i class="fa-solid fa-user-graduate" style="color: var(--primary);"></i> Bulletin individuel</h2>
+        </div>
+        <div class="bulletin-card">
+            <form method="get" action="{% url 'grades:bulletin_select' %}">
+                <div class="form-group-custom">
+                    <label for="student">Élève</label>
+                    <select name="student" id="student" class="form-select-custom" required>
+                        <option value="">-- Choisir un élève --</option>
+                        {% for student in students %}
+                            <option value="{{ student.id }}">
+                                {{ student.last_name }} {{ student.first_name }}{% if student.class_group %} — {{ student.class_group.name }}{% endif %} ({{ student.student_id }})
+                            </option>
+                        {% empty %}
+                            <option value="" disabled>Aucun élève enregistré dans la base</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group-custom">
+                    <label for="period">Période</label>
+                    <select name="period" id="period" class="form-select-custom" required>
+                        <option value="">-- Choisir une période --</option>
+                        {% for period in periods %}
+                            <option value="{{ period.id }}">{{ period.name }} — {{ period.academic_year.name }}</option>
+                        {% empty %}
+                            <option value="" disabled>Aucune période enregistrée</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit-custom" {% if not students or not periods %}disabled{% endif %}>
+                    <i class="fa-solid fa-file-lines"></i> Consulter le bulletin
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulletins de classe (PDF) -->
+    <div>
+        <div class="bulletin-header">
+            <h2><i class="fa-solid fa-file-pdf" style="color: var(--danger);"></i> Bulletins d'une classe (PDF)</h2>
+        </div>
+        <div class="bulletin-card">
+            <form method="get" action="" id="classPdfForm">
+                <div class="form-group-custom">
+                    <label for="classroom">Classe</label>
+                    <select name="classroom" id="classroom" class="form-select-custom" required>
+                        <option value="">-- Choisir une classe --</option>
+                        {% for classroom in classrooms %}
+                            <option value="{{ classroom.id }}">{{ classroom.name }}</option>
+                        {% empty %}
+                            <option value="" disabled>Aucune classe enregistrée</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group-custom">
+                    <label for="period_class">Période</label>
+                    <select name="period" id="period_class" class="form-select-custom" required>
+                        <option value="">-- Choisir une période --</option>
+                        {% for period in periods %}
+                            <option value="{{ period.id }}">{{ period.name }} — {{ period.academic_year.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit-custom"
+                        style="background: linear-gradient(135deg, #dc2626, #ef4444);"
+                        {% if not classrooms or not periods %}disabled{% endif %}>
+                    <i class="fa-solid fa-download"></i> Télécharger tous les bulletins (PDF)
+                </button>
+            </form>
+            <p class="text-muted" style="font-size: 0.8rem; margin-top: 12px; text-align: center;">
+                Un bulletin par élève, classé par rang, prêt à imprimer.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Le formulaire « classe PDF » doit envoyer classroom + period en GET vers bulletin_select,
+    // la vue redirige alors vers l'export PDF.
+    document.getElementById('classPdfForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var classroom = document.getElementById('classroom').value;
+        var period = document.getElementById('period_class').value;
+        if (!classroom || !period) { return; }
+        window.location.href = "{% url 'grades:bulletin_select' %}?classroom=" + classroom + "&period=" + period;
+    });
+</script>
+{% endblock %}

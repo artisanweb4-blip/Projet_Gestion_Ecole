@@ -2,7 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from core.models import TimeStampMixin
 from courses.models import Course
-from students.models import StudentProfile
+from students.models import Student as StudentProfile
 
 class Exam(TimeStampMixin):
     """Examen d'évaluation (Partiel, Épreuve finale, Contrôle continu)."""
@@ -73,4 +73,4 @@ class ExamResult(TimeStampMixin):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.student.user.get_full_name()} : {self.score}/{self.exam.total_points} ({self.exam.title})"
+        return f"{self.student.full_name} : {self.score}/{self.exam.total_points} ({self.exam.title})"

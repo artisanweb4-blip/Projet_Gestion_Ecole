@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Tableau de bord - {{ school.school_name|default:"Gestion d'École" }}{% endblock %}
+{% block topbar_title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1>Bonjour, {{ user.first_name|default:user.username }} 👋</h1>
+        <p>Vue d'ensemble de l'établissement — Année {{ active_year }}</p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'grades:grade_entry' %}" class="btn btn-primary">
+            <i class="fa-solid fa-pen-to-square"></i> Saisir des notes
+        </a>
+        <a href="{% url 'grades:bulletin_select' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-file-lines"></i> Bulletins
+        </a>
+    </div>
+</div>
+
+<!-- Indicateurs clés -->
+<div class="metric-grid">
+    <div class="metric-card">
+        <span class="metric-icon is-green"><i class="fa-solid fa-user-graduate"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Élèves actifs</span>
+            <span class="metric-value">{{ kpi_students }}</span>
+            <span class="metric-hint">{{ kpi_classes }} classes</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-blue"><i class="fa-solid fa-chalkboard-user"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Enseignants</span>
+            <span class="metric-value">{{ kpi_teachers }}</span>
+            <span class="metric-hint">{{ kpi_subjects }} matières</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-amber"><i class="fa-solid fa-school"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Classes</span>
+            <span class="metric-value">{{ kpi_classes }}</span>
+            <span class="metric-hint">Année {{ active_year }}</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-violet"><i class="fa-solid fa-file-invoice-dollar"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Recettes encaissées</span>
+            <span class="metric-value">{{ kpi_payments|intcomma }} F</span>
+            <span class="metric-hint">Paiements enregistrés</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Graphique : moyennes par classe -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-chart-column me-1 text-success"></i> Performance académique</h2>
+            <span class="text-muted" style="font-size: 0.8rem;">Moyennes générales / 20</span>
+        </div>
+        {{ chart_data|json_script:"chart-data" }}
+        <canvas id="classAveragesChart" height="230"></canvas>
+    </div>
+
+    <!-- Événements à venir -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-calendar-check me-1 text-success"></i> À venir</h2>
+            <a href="{% url 'school_calendar:calendar' %}" class="text-muted" style="font-size: 0.82rem;">Tout voir</a>
+        </div>
+        {% if upcoming_events %}
+            <ul class="activity-list">
+                {% for event in upcoming_events %}
+                    <li>
+                        <span class="metric-icon is-amber" style="width: 36px; height: 36px; font-size: 0.85rem;"><i class="fa-solid fa-bell"></i></span>
+                        <span>
+                            <strong>{{ event.title }}</strong><br>
+                            <span class="text-muted" style="font-size: 0.8rem;">{{ event.start_date|date:"d/m/Y" }}</span>
+                        </span>
+                        <span class="when">{{ event.category.name|default:"Événement" }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty-state">
+                <i class="fa-regular fa-calendar"></i>
+                <p>Aucun événement planifié.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="grid-3">
+    <!-- Derniers élèves inscrits -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-user-plus me-1 text-success"></i> Derniers élèves</h2>
+            <a href="{% url 'students:list' %}" class="text-muted" style="font-size: 0.82rem;">Tout voir</a>
+        </div>
+        {% if recent_students %}
+            <ul class="activity-list">
+                {% for student in recent_students %}
+                    <li>
+                        <span class="avatar">{{ student.first_name|slice:":1" }}{{ student.last_name|slice:":1" }}</span>
+                        <span>
+                            <a href="{% url 'students:detail' student.pk %}"><strong>{{ student.first_name }} {{ student.last_name }}</strong></a><br>
+                            <span class="text-muted" style="font-size: 0.8rem;">{{ student.student_id }} · {{ student.class_group.name|default:"Sans classe" }}</span>
+                        </span>
+                        <span class="when">{{ student.created_at|date:"d/m" }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty-state"><i class="fa-solid fa-user-graduate"></i><p>Aucun élève enregistré.</p></div>
+        {% endif %}
+    </div>
+
+    <!-- Dernières évaluations -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-pen-to-square me-1 text-success"></i> Évaluations récentes</h2>
+            <a href="{% url 'grades:grade_list' %}" class="text-muted" style="font-size: 0.82rem;">Tout voir</a>
+        </div>
+        {% if recent_evaluations %}
+            <ul class="activity-list">
+                {% for evaluation in recent_evaluations %}
+                    <li>
+                        <span class="metric-icon is-blue" style="width: 36px; height: 36px; font-size: 0.85rem;"><i class="fa-solid fa-book"></i></span>
+                        <span>
+                            <strong>{{ evaluation.subject.name }}</strong> — {{ evaluation.title }}<br>
+                            <span class="text-muted" style="font-size: 0.8rem;">{{ evaluation.classroom.name }} · {{ evaluation.get_eval_type_display }}</span>
+                        </span>
+                        <span class="when">{{ evaluation.date|date:"d/m" }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty-state"><i class="fa-solid fa-pen"></i><p>Aucune évaluation créée.</p></div>
+        {% endif %}
+    </div>
+
+    <!-- Derniers paiements -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-money-bill-wave me-1 text-success"></i> Paiements récents</h2>
+        </div>
+        {% if recent_payments %}
+            <ul class="activity-list">
+                {% for payment in recent_payments %}
+                    <li>
+                        <span class="metric-icon is-green" style="width: 36px; height: 36px; font-size: 0.85rem;"><i class="fa-solid fa-check"></i></span>
+                        <span>
+                            <strong>{{ payment.student.full_name }}</strong><br>
+                            <span class="text-muted" style="font-size: 0.8rem;">Reçu #{{ payment.receipt_number }} · {{ payment.get_payment_method_display }}</span>
+                        </span>
+                        <span class="when">{{ payment.amount_paid|intcomma }} F</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty-state"><i class="fa-solid fa-money-bill-wave"></i><p>Aucun paiement enregistré.</p></div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    (function () {
+        var dataEl = document.getElementById('chart-data');
+        if (!dataEl || typeof Chart === 'undefined') return;
+        var data = JSON.parse(dataEl.textContent);
+        var ctx = document.getElementById('classAveragesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Moyenne / 20',
+                    data: data.values,
+                    backgroundColor: 'rgba(5, 150, 105, 0.75)',
+                    hoverBackgroundColor: 'rgba(5, 150, 105, 1)',
+                    borderRadius: 8,
+                    maxBarThickness: 46
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, suggestedMax: 20, ticks: { stepSize: 5 } }
+                }
+            }
+        });
+    })();
+</script>
+{% endblock %}

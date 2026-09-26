@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import AdmissionApplication
-from students.serializers import ClassRoomSerializer
+from classes.serializers import ClassSerializer as ClassRoomSerializer
 
 class AdmissionApplicationSerializer(serializers.ModelSerializer):
     requested_classroom_detail = ClassRoomSerializer(source='requested_classroom', read_only=True)

@@ -99,3 +99,81 @@ class ProgramSubject(TimeStampMixin):
     def __str__(self):
         teacher_name = f" - {self.teacher}" if self.teacher else ""
         return f"{self.subject.name} ({self.program.code}){teacher_name}"
+
+
+class Course(TimeStampMixin):
+    """Un cours : une matière enseignée à une classe par un enseignant."""
+    code = models.CharField(
+        max_length=20,
+        unique=True,
+        blank=True,
+        verbose_name="Code du cours",
+    )
+    name = models.CharField(max_length=150, verbose_name="Intitulé du cours")
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE,
+        related_name='courses',
+        verbose_name="Matière",
+    )
+    school_class = models.ForeignKey(
+        'classes.Class',
+        on_delete=models.CASCADE,
+        related_name='courses',
+        verbose_name="Classe",
+    )
+    teacher = models.ForeignKey(
+        'teachers.Teacher',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='courses',
+        verbose_name="Enseignant",
+    )
+    credits = models.PositiveSmallIntegerField(default=1, verbose_name="Crédits")
+    coefficient = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=1.0,
+        verbose_name="Coefficient",
+    )
+    description = models.TextField(blank=True, null=True, verbose_name="Description")
+
+    class Meta:
+        verbose_name = "Cours"
+        verbose_name_plural = "Cours"
+        unique_together = ('subject', 'school_class')
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            import uuid
+            base = self.subject.name[:4].upper() if self.subject and self.subject.name else "COUR"
+            self.code = f"{base}-{str(uuid.uuid4())[:4].upper()}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.subject.name} - {self.school_class.name} ({self.code})"
+
+
+class Enrollment(TimeStampMixin):
+    """Inscription d'un élève à un cours."""
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name='enrollments',
+        verbose_name="Cours",
+    )
+    student = models.ForeignKey(
+        'students.Student',
+        on_delete=models.CASCADE,
+        related_name='enrollments',
+        verbose_name="Élève",
+    )
+
+    class Meta:
+        verbose_name = "Inscription à un cours"
+        verbose_name_plural = "Inscriptions aux cours"
+        unique_together = ('course', 'student')
+
+    def __str__(self):
+        return f"{self.student.full_name} → {self.course.code}"

@@ -1,9 +1,30 @@
+# Framework
 Django>=5.0,<5.2
 djangorestframework>=3.14.0
 djangorestframework-simplejwt>=5.3.0
 drf-spectacular>=0.27.0
+
+# Base de données
 psycopg2-binary>=2.9.9
+
+# Configuration & utilitaires
 python-dotenv>=1.0.0
 django-cors-headers>=4.3.0
+django-htmx>=1.17.0
+
+# Formulaires
+django-crispy-forms>=2.1
+crispy-bootstrap5>=2024.2
+
+# Images & codes (élèves : photo, QR code, code-barres)
+Pillow>=10.0.0
+qrcode>=7.4.2
+python-barcode>=0.15.1
+
+# Documents : Excel (import/export) & PDF (bulletins, certificats)
+openpyxl>=3.1.2
+xhtml2pdf>=0.2.16
 reportlab>=4.0.0
+
+# Production
 gunicorn>=21.2.0

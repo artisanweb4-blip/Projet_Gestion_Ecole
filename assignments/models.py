@@ -2,7 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from core.models import TimeStampMixin
 from courses.models import Course
-from students.models import StudentProfile
+from students.models import Student as StudentProfile
 
 class Assignment(TimeStampMixin):
     """Devoir à rendre par les étudiants."""
@@ -49,4 +49,4 @@ class AssignmentSubmission(TimeStampMixin):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Soumission {self.student.user.get_full_name()} - {self.assignment.title}"
+        return f"Soumission {self.student.full_name} - {self.assignment.title}"

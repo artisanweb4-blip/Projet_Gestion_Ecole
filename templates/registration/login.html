@@ -306,7 +306,7 @@
                 <label for="email">Email</label>
                 <div class="input-wrapper">
                     <i class="fa-regular fa-envelope"></i>
-                    <input type="email" id="email" name="username" placeholder="votre@email.com" value="" required>
+                    <input type="email" id="email" name="username" placeholder="votre@email.com" value="{{ form.username.value|default:'' }}" required>
                 </div>
             </div>
 
@@ -322,7 +322,7 @@
                 <label>
                     <input type="checkbox" name="remember"> Se souvenir de moi
                 </label>
-                <a href="{% url 'password_reset' %}">Mot de passe oublié ?</a>
+                <a href="{% url 'admin:index' %}">Mot de passe oublié ?</a>
             </div>
 
             <button type="submit" class="btn-login">

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Assignment, AssignmentSubmission
 from courses.serializers import CourseSerializer
-from students.serializers import StudentProfileSerializer
+from students.serializers import StudentSerializer as StudentProfileSerializer
 
 class AssignmentSerializer(serializers.ModelSerializer):
     course_detail = CourseSerializer(source='course', read_only=True)
