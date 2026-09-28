@@ -11,9 +11,9 @@
         <p>Gérez les programmes et parcours de formation de l'établissement.</p>
     </div>
     <div>
-        <a href="{% url 'courses:program_create' %}" class="btn btn-primary">
+        <button type="button" class="btn btn-primary" hx-get="{% url 'courses:program_create' %}" hx-target="#modal-body" hx-swap="innerHTML">
             <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Nouveau programme
-        </a>
+        </button>
     </div>
 </div>
 
@@ -66,12 +66,12 @@
                             <a href="{% url 'courses:program_detail' program.pk %}" class="btn-action btn-view" title="Voir les détails">
                                 <i class="fa-regular fa-eye"></i>
                             </a>
-                            <a href="{% url 'courses:program_update' program.pk %}" class="btn-action btn-edit" title="Modifier">
+                            <button type="button" class="btn-action btn-edit" title="Modifier" hx-get="{% url 'courses:program_update' program.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                 <i class="fa-regular fa-pen-to-square"></i>
-                            </a>
-                            <a href="{% url 'courses:program_delete' program.pk %}" class="btn-action btn-delete" title="Supprimer">
+                            </button>
+                            <button type="button" class="btn-action btn-delete" title="Supprimer" hx-get="{% url 'courses:program_delete' program.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                 <i class="fa-regular fa-trash-can"></i>
-                            </a>
+                            </button>
                         </div>
                     </td>
                 </tr>

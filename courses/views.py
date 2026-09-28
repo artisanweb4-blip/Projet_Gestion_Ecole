@@ -13,6 +13,7 @@ from django.views.generic import (
 )
 
 from classes.models import Class as SchoolClass
+from core.mixins import HtmxCrudMixin
 from .forms import ProgramForm, ProgramSubjectFormSet
 from .models import Program, ProgramSubject, Subject
 
@@ -117,7 +118,7 @@ class ProgramDetailView(DetailView):
         return context
 
 
-class ProgramCreateView(CreateView):
+class ProgramCreateView(HtmxCrudMixin, CreateView):
     """
     Permet de créer un nouveau programme avec ses matières (FormSet).
     """
@@ -126,6 +127,9 @@ class ProgramCreateView(CreateView):
     form_class = ProgramForm
     template_name = 'courses/program_form.html'
     success_url = reverse_lazy('courses:program_list')
+    partial_template = 'courses/program_form_modal.html'
+    modal_title = 'Nouveau programme'
+    add_success_message = False  # la vue ajoute déjà son message
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
@@ -152,7 +156,7 @@ class ProgramCreateView(CreateView):
             return self.render_to_response(self.get_context_data(form=form))
 
 
-class ProgramUpdateView(UpdateView):
+class ProgramUpdateView(HtmxCrudMixin, UpdateView):
     """
     Permet de modifier un programme existant et ses matières associées.
     """
@@ -161,6 +165,9 @@ class ProgramUpdateView(UpdateView):
     form_class = ProgramForm
     template_name = 'courses/program_form.html'
     success_url = reverse_lazy('courses:program_list')
+    partial_template = 'courses/program_form_modal.html'
+    modal_title = 'Modifier le programme'
+    add_success_message = False  # la vue ajoute déjà son message
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
@@ -188,7 +195,7 @@ class ProgramUpdateView(UpdateView):
             return self.render_to_response(self.get_context_data(form=form))
 
 
-class ProgramDeleteView(DeleteView):
+class ProgramDeleteView(HtmxCrudMixin, DeleteView):
     """
     Permet de supprimer un programme d'études.
     """
@@ -196,6 +203,9 @@ class ProgramDeleteView(DeleteView):
     model = Program
     template_name = 'courses/program_confirm_delete.html'
     success_url = reverse_lazy('courses:program_list')
+    partial_template = 'includes/delete_modal.html'
+    modal_title = 'Supprimer ce programme'
+    success_message = 'Programme supprimé.'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

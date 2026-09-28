@@ -294,6 +294,16 @@ class Command(BaseCommand):
         admin.set_password("admin123")
         admin.save()
 
+        comptable_user, _ = User.objects.get_or_create(
+            email="comptable@ecole.africa",
+            defaults={
+                "username": "comptable", "first_name": "Bineta", "last_name": "NDIAYE",
+                "role": "COMPTABLE", "phone": "+237 6 77 88 99 00",
+            },
+        )
+        comptable_user.set_password("compta123")
+        comptable_user.save()
+
         parent_user, _ = User.objects.get_or_create(
             email="parent@ecole.africa",
             defaults={
@@ -308,6 +318,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("=" * 58))
         self.stdout.write(self.style.SUCCESS("DONNÉES DE DÉMO CRÉÉES — Comptes d'accès :"))
         self.stdout.write(self.style.SUCCESS("  Admin   : admin@ecole.africa / admin123"))
+        self.stdout.write(self.style.SUCCESS("  Compta  : comptable@ecole.africa / compta123"))
         self.stdout.write(self.style.SUCCESS("  Parent  : parent@ecole.africa / parent123"))
         self.stdout.write(self.style.SUCCESS("  Prof    : awa.diallo@cpbr-cm.edu / prof123"))
         self.stdout.write(self.style.SUCCESS("=" * 58))

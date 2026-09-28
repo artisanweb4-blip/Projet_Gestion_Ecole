@@ -56,6 +56,7 @@ INSTALLED_APPS = [
 
     # Project apps
     'core',
+    'accounting',   # Comptabilité (frais & paiements)
     'accounts',        # Utilisateurs / rôles / JWT
     'dashboard',       # Tableau de bord
     'students',        # Élèves

@@ -84,7 +84,15 @@ a:hover { color: var(--primary-dark); }
     position: fixed;
     inset: 0 auto 0 0;
     width: var(--sidebar-width);
-    background: var(--sidebar-bg);
+    /* Ancien fond de la sidebar : verre dépoli sur ardoise très sombre */
+    background-color: #121212;
+    background-image: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.02) 100%
+    );
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
     color: var(--sidebar-text);
     display: flex;
     flex-direction: column;
@@ -719,4 +727,157 @@ textarea.form-control { min-height: 90px; resize: vertical; }
     .sidebar, .topbar, .footer, .alert, .btn, .messages-stack { display: none !important; }
     .main-area { margin-left: 0; }
     .dashboard-card { box-shadow: none; border: none; }
+}
+
+/* ==========================================================================
+   Sidebar — pied : bouton de déconnexion
+   ========================================================================== */
+
+.sidebar-footer { padding: 14px 14px 18px; }
+
+.btn-logout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fda4af;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-logout:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+}
+
+/* ==========================================================================
+   Modale globale (formulaires ajout / modification / suppression)
+   ========================================================================== */
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    z-index: 2000;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 6vh 16px 16px;
+    overflow-y: auto;
+}
+
+.modal-overlay.show { display: flex; }
+
+.modal-box {
+    background: #ffffff;
+    border-radius: 16px;
+    border-top: 4px solid var(--primary);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+    width: min(680px, 96vw);
+    max-height: 88vh;
+    overflow-y: auto;
+    animation: modalIn 0.22s ease;
+}
+
+.modal-box:has(.modal-head.danger) { border-top-color: var(--danger); }
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(-14px) scale(0.98); }
+    to   { opacity: 1; transform: none; }
+}
+
+.modal-body { padding: 22px 24px 24px; }
+
+.modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-head h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.modal-head.danger { border-bottom-color: #fecaca; }
+.modal-head.danger h3 { color: var(--danger); }
+
+.modal-close {
+    background: #f1f5f9;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 1.15rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.modal-close:hover { background: #e2e8f0; color: var(--text-main); }
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.modal-delete-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+
+.modal-delete-warning .warning-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #fee2e2;
+    color: var(--danger);
+    font-size: 1.05rem;
+    flex-shrink: 0;
+}
+
+.modal-delete-warning p { margin: 0; font-size: 0.92rem; }
+
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+}
+
+.form-grid-2 .form-group:has(textarea),
+.form-grid-2 .form-group.full { grid-column: 1 / -1; }
+
+@media (max-width: 640px) {
+    .form-grid-2 { grid-template-columns: 1fr; }
+    .modal-body { padding: 18px 16px; }
 }

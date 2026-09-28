@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Frais scolaires - Comptabilité{% endblock %}
+{% block topbar_title %}Frais scolaires{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1>Frais scolaires</h1>
+        <p>Structures tarifaires par classe et par année académique.</p>
+    </div>
+    <button type="button" class="btn btn-primary"
+            hx-get="{% url 'accounting:fee_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+        <i class="fa-solid fa-plus"></i> Nouveau frais
+    </button>
+</div>
+
+<div class="dashboard-card">
+    {% if fees %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Libellé</th>
+                        <th>Classe ciblée</th>
+                        <th class="text-center">Montant</th>
+                        <th class="text-center">Échéance</th>
+                        <th class="text-center">Année</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fee in fees %}
+                        <tr>
+                            <td><strong>{{ fee.name }}</strong></td>
+                            <td>{{ fee.classroom.name|default:"Toutes les classes" }}</td>
+                            <td class="text-center">{{ fee.amount|intcomma }} F</td>
+                            <td class="text-center">{{ fee.due_date|date:"d/m/Y" }}</td>
+                            <td class="text-center">{{ fee.academic_year }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button type="button" class="btn btn-secondary btn-action" title="Modifier"
+                                            hx-get="{% url 'accounting:fee_edit' fee.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-action" title="Supprimer"
+                                            hx-get="{% url 'accounting:fee_delete' fee.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-file-invoice-dollar"></i>
+            <p>Aucun frais configuré.<br>Cliquez sur « Nouveau frais » pour commencer.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -32,6 +32,7 @@ urlpatterns = [
     path('classes/', include('classes.urls')),
     path('courses/', include('courses.urls')),
     path('grades/', include('grades.urls')),
+    path('accounting/', include('accounting.urls')),
     path('timetable/', include('timetable.urls')),
     path('calendar/', include('school_calendar.urls')),
     path('settings/', include('school_settings.urls')),

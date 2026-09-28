@@ -11,9 +11,9 @@
         <p>Gérez les classes, les niveaux et les enseignants responsables.</p>
     </div>
     <div>
-        <a href="{% url 'classes:add' %}" class="btn btn-primary">
+        <button type="button" class="btn btn-primary" hx-get="{% url 'classes:add' %}" hx-target="#modal-body" hx-swap="innerHTML">
             <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Nouvelle classe
-        </a>
+        </button>
     </div>
 </div>
 
@@ -80,12 +80,12 @@
                             <a href="{% url 'classes:detail' class.pk %}" class="btn-action btn-view" title="Voir les détails">
                                 <i class="fa-regular fa-eye"></i>
                             </a>
-                            <a href="{% url 'classes:edit' class.pk %}" class="btn-action btn-edit" title="Modifier">
+                            <button type="button" class="btn-action btn-edit" title="Modifier" hx-get="{% url 'classes:edit' class.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                 <i class="fa-regular fa-pen-to-square"></i>
-                            </a>
-                            <a href="{% url 'classes:delete' class.pk %}" class="btn-action btn-delete" title="Supprimer">
+                            </button>
+                            <button type="button" class="btn-action btn-delete" title="Supprimer" hx-get="{% url 'classes:delete' class.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                 <i class="fa-regular fa-trash-can"></i>
-                            </a>
+                            </button>
                         </div>
                     </td>
                 </tr>

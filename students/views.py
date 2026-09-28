@@ -9,7 +9,7 @@ from django.views.generic import (
     UpdateView,
 )
 
-from core.mixins import RoleRequiredMixin
+from core.mixins import HtmxCrudMixin, RoleRequiredMixin
 
 from .forms import StudentForm
 from .models import Student
@@ -58,27 +58,36 @@ class StudentListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
         return context
 
 
-class StudentCreateView(LoginRequiredMixin, RoleRequiredMixin, CreateView):
+class StudentCreateView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, CreateView):
     model = Student
     form_class = StudentForm
     template_name = 'students/form.html'
     success_url = reverse_lazy('students:list')
     allowed_roles = ['admin', 'director', 'secretary']
+    partial_template = 'includes/form_modal.html'
+    modal_title = 'Nouvel élève'
+    success_message = 'Élève enregistré avec succès.'
 
 
-class StudentUpdateView(LoginRequiredMixin, RoleRequiredMixin, UpdateView):
+class StudentUpdateView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, UpdateView):
     model = Student
     form_class = StudentForm
     template_name = 'students/form.html'
     success_url = reverse_lazy('students:list')
     allowed_roles = ['admin', 'director', 'secretary']
+    partial_template = 'includes/form_modal.html'
+    modal_title = "Modifier l'élève"
+    success_message = 'Élève mis à jour.'
 
 
-class StudentDeleteView(LoginRequiredMixin, RoleRequiredMixin, DeleteView):
+class StudentDeleteView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, DeleteView):
     model = Student
     success_url = reverse_lazy('students:list')
     allowed_roles = ['admin', 'director']
     template_name = 'students/confirm_delete.html'
+    partial_template = 'includes/delete_modal.html'
+    modal_title = 'Supprimer cet élève'
+    success_message = 'Élève supprimé.'
 
 
 class StudentDetailView(LoginRequiredMixin, RoleRequiredMixin, DetailView):

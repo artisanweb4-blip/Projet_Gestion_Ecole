@@ -1,6 +1,8 @@
 """
 Processeurs de contexte globaux : menu latéral, informations de l'école.
 """
+from datetime import date
+
 from django.urls import reverse
 
 MENU = [
@@ -16,6 +18,13 @@ MENU = [
     {'label': 'Notes', 'url_name': 'grades:grade_list', 'icon': 'fa-pen-to-square', 'prefix': '/grades/entry'},
     {'label': 'Saisie des notes', 'url_name': 'grades:grade_entry', 'icon': 'fa-table-list', 'prefix': '/grades/entry'},
     {'label': 'Bulletins', 'url_name': 'grades:bulletin_select', 'icon': 'fa-file-lines', 'prefix': '/grades/bulletins'},
+    {'section': 'Finances'},
+    {'label': 'Comptabilité', 'url_name': 'accounting:index', 'icon': 'fa-coins', 'prefix': '/accounting',
+     'roles': ['ADMIN', 'COMPTABLE']},
+    {'label': 'Frais scolaires', 'url_name': 'accounting:fees', 'icon': 'fa-file-invoice-dollar', 'prefix': '/accounting',
+     'roles': ['ADMIN', 'COMPTABLE']},
+    {'label': 'Paiements', 'url_name': 'accounting:payments', 'icon': 'fa-money-bill-wave', 'prefix': '/accounting',
+     'roles': ['ADMIN', 'COMPTABLE']},
     {'section': 'Organisation'},
     {'label': 'Emploi du temps', 'url_name': 'timetable:index', 'icon': 'fa-calendar-days', 'prefix': '/timetable'},
     {'label': 'Calendrier scolaire', 'url_name': 'school_calendar:calendar', 'icon': 'fa-calendar-check', 'prefix': '/calendar'},
@@ -26,12 +35,25 @@ MENU = [
 
 
 def build_menu(request):
-    """Construit la liste des entrées de menu avec URL résolue + état actif."""
+    """Construit la liste des entrées de menu avec URL résolue + état actif.
+
+    Les entrées déclarant une clé `roles` ne sont visibles que pour ces rôles
+    (les superutilisateurs voient tout).
+    """
+    user = request.user
+    is_superuser = getattr(user, 'is_superuser', False)
+    user_role = str(getattr(user, 'role', '') or '').upper()
+
     items = []
     for entry in MENU:
         if 'section' in entry:
             items.append({'section': entry['section'], 'is_section': True})
             continue
+
+        allowed_roles = entry.get('roles')
+        if allowed_roles and not is_superuser and user_role not in allowed_roles:
+            continue
+
         try:
             url = reverse(entry['url_name'])
         except Exception:
@@ -60,5 +82,5 @@ def global_context(request):
     return {
         'menu_items': build_menu(request),
         'school': school,
-        'current_year': __import__('datetime').date.today().year,
+        'current_year': date.today().year,
     }

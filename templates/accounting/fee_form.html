@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Frais scolaire - Comptabilité{% endblock %}
+{% block topbar_title %}Frais scolaires{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1>{{ modal_title|default:"Frais scolaire" }}</h1>
+        <p>Version complète du formulaire (sans JavaScript).</p>
+    </div>
+    <a href="{% url 'accounting:fees' %}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="dashboard-card" style="max-width: 680px;">
+    <div id="modal-body">
+        {% include "includes/form_modal.html" %}
+    </div>
+</div>
+{% endblock %}

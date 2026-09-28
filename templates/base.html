@@ -40,10 +40,13 @@
             </nav>
 
             <div class="sidebar-footer">
-                <a href="{% url 'admin:index' %}" class="menu-link">
-                    <i class="fa-solid fa-user-shield menu-icon"></i>
-                    <span class="menu-label">Admin Django</span>
-                </a>
+                <form method="post" action="{% url 'logout' %}" class="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout btn-block" title="Se déconnecter">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Déconnexion</span>
+                    </button>
+                </form>
             </div>
         </aside>
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -61,14 +64,10 @@
                     <span class="user-chip" title="{{ user.email }}">
                         <span class="avatar">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</span>
                         <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                        {% if user.role %}
+                            <span class="badge badge-secondary">{{ user.get_role_display }}</span>
+                        {% endif %}
                     </span>
-                    <form method="post" action="{% url 'logout' %}" class="logout-form">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline btn-sm" title="Se déconnecter">
-                            <i class="fa-solid fa-right-from-bracket"></i>
-                            <span class="hide-sm">Déconnexion</span>
-                        </button>
-                    </form>
                 </div>
             </header>
 
@@ -91,6 +90,15 @@
             <footer class="footer">
                 <p>&copy; {{ current_year }} {{ school.school_name|default:"Gestion d'École" }} — Tous droits réservés.</p>
             </footer>
+        </div>
+    </div>
+
+    <!-- ===================== MODALE GLOBALE ===================== -->
+    <div class="modal-overlay" id="modalOverlay" aria-hidden="true">
+        <div class="modal-box" role="dialog" aria-modal="true">
+            <div class="modal-body" id="modal-body">
+                <!-- Contenu injecté par HTMX -->
+            </div>
         </div>
     </div>
 

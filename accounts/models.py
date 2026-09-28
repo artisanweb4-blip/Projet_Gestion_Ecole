@@ -35,6 +35,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampMixin):
     """
     ROLE_CHOICES = (
         ('ADMIN', 'Administrateur / Direction'),
+        ('COMPTABLE', 'Comptable'),
         ('TEACHER', 'Enseignant'),
         ('STUDENT', 'Étudiant'),
         ('PARENT', 'Parent d\'élève'),

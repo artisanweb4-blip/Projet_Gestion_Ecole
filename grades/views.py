@@ -15,6 +15,8 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
+from django_htmx.http import HttpResponseClientRedirect
 from xhtml2pdf import pisa
 
 from classes.models import Class
@@ -110,9 +112,17 @@ def evaluation_create(request):
     if request.method == 'POST' and form.is_valid():
         evaluation = form.save()
         messages.success(request, f"Évaluation « {evaluation.title} » créée avec succès.")
-        if next_url:
-            return redirect(next_url)
-        return redirect('grades:grade_entry_eval', evaluation=evaluation.pk)
+        target = next_url or reverse('grades:grade_entry_eval', args=[evaluation.pk])
+        if request.htmx:
+            return HttpResponseClientRedirect(target)
+        return redirect(target)
+
+    if request.htmx:
+        return render(request, 'includes/form_modal.html', {
+            'form': form,
+            'modal_title': 'Nouvelle évaluation',
+            'modal_action': request.get_full_path(),
+        })
     return render(request, 'grades/evaluation_form.html', {
         'form': form,
         'title': 'Nouvelle évaluation',
@@ -127,7 +137,16 @@ def evaluation_edit(request, pk):
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, "Évaluation mise à jour.")
+        if request.htmx:
+            return HttpResponseClientRedirect(reverse('grades:grade_list'))
         return redirect('grades:grade_list')
+
+    if request.htmx:
+        return render(request, 'includes/form_modal.html', {
+            'form': form,
+            'modal_title': f"Modifier : {evaluation.title}",
+            'modal_action': request.get_full_path(),
+        })
     return render(request, 'grades/evaluation_form.html', {
         'form': form,
         'title': f"Modifier : {evaluation.title}",
@@ -142,7 +161,16 @@ def evaluation_delete(request, pk):
         title = evaluation.title
         evaluation.delete()
         messages.success(request, f"Évaluation « {title} » supprimée.")
+        if request.htmx:
+            return HttpResponseClientRedirect(reverse('grades:grade_list'))
         return redirect('grades:grade_list')
+
+    if request.htmx:
+        return render(request, 'includes/delete_modal.html', {
+            'object': evaluation,
+            'modal_title': 'Supprimer cette évaluation',
+            'modal_action': request.get_full_path(),
+        })
     return render(request, 'grades/evaluation_confirm_delete.html', {
         'evaluation': evaluation,
     })

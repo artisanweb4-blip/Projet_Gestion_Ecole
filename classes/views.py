@@ -1,11 +1,14 @@
 # classes/views.py
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
+
+from core.mixins import HtmxCrudMixin
 from .models import Class
 from .forms import ClassForm  # Import de votre formulaire personnalisé
 
 
-class ClassListView(ListView):
+class ClassListView(LoginRequiredMixin, ListView):
     model = Class
     template_name = 'classes/class_list.html'
     context_object_name = 'classes'
@@ -15,11 +18,14 @@ class ClassListView(ListView):
         return Class.objects.select_related('program', 'responsible').all()
 
 
-class ClassCreateView(CreateView):
+class ClassCreateView(LoginRequiredMixin, HtmxCrudMixin, CreateView):
     model = Class
     form_class = ClassForm  # Utilisation du formulaire personnalisé avec le champ program
     template_name = 'classes/class_form.html'
     success_url = reverse_lazy('classes:list')
+    partial_template = 'includes/form_modal.html'
+    modal_title = 'Nouvelle classe'
+    success_message = 'Classe enregistrée avec succès.'
 
 
 class ClassDetailView(DetailView):
@@ -37,7 +43,7 @@ class ClassDetailView(DetailView):
         return context
 
 
-class ClassUpdateView(UpdateView):
+class ClassUpdateView(LoginRequiredMixin, HtmxCrudMixin, UpdateView):
     model = Class
     form_class = ClassForm  # Utilisation du formulaire personnalisé pour la modification
     template_name = 'classes/class_form.html'
@@ -46,8 +52,15 @@ class ClassUpdateView(UpdateView):
     def get_queryset(self):
         return Class.objects.select_related('program', 'responsible')
 
+    partial_template = 'includes/form_modal.html'
+    modal_title = 'Modifier la classe'
+    success_message = 'Classe mise à jour.'
 
-class ClassDeleteView(DeleteView):
+
+class ClassDeleteView(LoginRequiredMixin, HtmxCrudMixin, DeleteView):
     model = Class
     template_name = 'classes/class_confirm_delete.html'
     success_url = reverse_lazy('classes:list')
+    partial_template = 'includes/delete_modal.html'
+    modal_title = 'Supprimer cette classe'
+    success_message = 'Classe supprimée.'
