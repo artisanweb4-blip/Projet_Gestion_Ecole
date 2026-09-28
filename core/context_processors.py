@@ -15,7 +15,7 @@ MENU = [
     {'label': 'Classes', 'url_name': 'classes:list', 'icon': 'fa-school', 'prefix': '/classes'},
     {'label': 'Matières & Programmes', 'url_name': 'courses:program_list', 'icon': 'fa-book-open', 'prefix': '/courses'},
     {'section': 'Évaluations'},
-    {'label': 'Notes', 'url_name': 'grades:grade_list', 'icon': 'fa-pen-to-square', 'prefix': '/grades/entry'},
+    {'label': 'Notes', 'url_name': 'grades:grade_list', 'icon': 'fa-pen-to-square', 'prefix': '/grades/'},
     {'label': 'Saisie des notes', 'url_name': 'grades:grade_entry', 'icon': 'fa-table-list', 'prefix': '/grades/entry'},
     {'label': 'Bulletins', 'url_name': 'grades:bulletin_select', 'icon': 'fa-file-lines', 'prefix': '/grades/bulletins'},
     {'section': 'Finances'},
@@ -80,16 +80,28 @@ def global_context(request):
         school = None
 
     menu = build_menu(request)
-    # Titre de la page courante = libellé de l'entrée de menu active
-    active_page_label = next(
-        (item['label'] for item in menu
-         if not item.get('is_section') and item.get('is_active')),
-        None,
-    )
+    # Titre + icône de la page courante : préfixe le plus long correspondant
+    active_page_label = None
+    active_page_icon = 'fa-gauge-high'
+    best_len = -1
+    path = request.path
+    for item in menu:
+        if item.get('is_section'):
+            continue
+        if path == item.get('url'):
+            active_page_label, active_page_icon = item['label'], item.get('icon', active_page_icon)
+            best_len = 10_000
+            break
+        prefix = item.get('prefix', '')
+        if prefix != '/dashboard' and path.startswith(prefix) and len(prefix) > best_len:
+            best_len = len(prefix)
+            active_page_label = item['label']
+            active_page_icon = item.get('icon', active_page_icon)
 
     return {
         'menu_items': menu,
         'active_page_label': active_page_label,
+        'active_page_icon': active_page_icon,
         'school': school,
         'current_year': date.today().year,
     }

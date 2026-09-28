@@ -11,7 +11,7 @@
         <div class="header-content">
             <div class="header-titles">
                 <span class="header-badge"><i class="fa-solid fa-folder-tree"></i> Espace Administratif</span>
-                <h1>Gestion des Documents</h1>
+                <h1><span class="page-icon"><i class="fa-solid fa-folder-open"></i></span>Gestion des Documents</h1>
                 <p>Générez, consultez et exportez tous les documents officiels et administratifs de l'établissement.</p>
             </div>
             
@@ -86,7 +86,7 @@
                     </div>
                     <div class="doc-card-footer">
                         <span class="doc-meta"><i class="fa-regular fa-clock"></i> Temps réel</span>
-                        <a href="{% url 'documents:generate_certificat_scolarite' %}" class="btn-action primary">
+                        <a href="{% url 'documents:generate_certificat_scolarite' %}" hx-boost="false" class="btn-action primary">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> Générer
                         </a>
                     </div>
@@ -107,7 +107,7 @@
                     </div>
                     <div class="doc-card-footer">
                         <span class="doc-meta"><i class="fa-regular fa-clock"></i> Temps réel</span>
-                        <a href="{% url 'documents:generate_certificat_frequentation' %}" class="btn-action primary">
+                        <a href="{% url 'documents:generate_certificat_frequentation' %}" hx-boost="false" class="btn-action primary">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> Générer
                         </a>
                     </div>
@@ -128,7 +128,7 @@
                     </div>
                     <div class="doc-card-footer">
                         <span class="doc-meta"><i class="fa-regular fa-clock"></i> Temps réel</span>
-                        <a href="{% url 'documents:generate_certificat_transfert' %}" class="btn-action primary">
+                        <a href="{% url 'documents:generate_certificat_transfert' %}" hx-boost="false" class="btn-action primary">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> Générer
                         </a>
                     </div>
@@ -161,7 +161,7 @@
                     </div>
                     <div class="doc-card-footer">
                         <span class="doc-meta"><i class="fa-solid fa-table"></i> Format grille</span>
-                        <a href="{% url 'documents:registre_presence' %}" class="btn-action secondary">
+                        <a href="{% url 'documents:registre_presence' %}" hx-boost="false" class="btn-action secondary">
                             <i class="fa-solid fa-print"></i> Imprimer / Voir
                         </a>
                     </div>

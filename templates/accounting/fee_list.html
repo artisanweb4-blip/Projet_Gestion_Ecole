@@ -2,12 +2,11 @@
 {% load humanize %}
 
 {% block title %}Frais scolaires - Comptabilité{% endblock %}
-{% block topbar_title %}Frais scolaires{% endblock %}
 
 {% block content %}
 <div class="header-top">
     <div class="page-title">
-        <h1>Frais scolaires</h1>
+        <h1><span class="page-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span>Frais scolaires</h1>
         <p>Structures tarifaires par classe et par année académique.</p>
     </div>
     <button type="button" class="btn btn-primary"
@@ -40,11 +39,11 @@
                             <td class="text-center">{{ fee.academic_year }}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <button type="button" class="btn btn-secondary btn-action" title="Modifier"
+                                    <button type="button" class="btn-action btn-edit" title="Modifier"
                                             hx-get="{% url 'accounting:fee_edit' fee.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </button>
-                                    <button type="button" class="btn btn-danger btn-action" title="Supprimer"
+                                    <button type="button" class="btn-action btn-delete" title="Supprimer"
                                             hx-get="{% url 'accounting:fee_delete' fee.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>

@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block title %}Bulletin - {{ student.first_name }} {{ student.last_name }}{% endblock %}
-{% block topbar_title %}Bulletin de notes{% endblock %}
 
 {% block content %}
 <style>
@@ -128,10 +127,10 @@
         <i class="fa-solid fa-arrow-left"></i> Retour
     </a>
     <div style="flex: 1;"></div>
-    <a href="{% url 'grades:export_bulletin_excel' student.id period.id %}" class="btn btn-success">
+    <a href="{% url 'grades:export_bulletin_excel' student.id period.id %}" hx-boost="false" class="btn btn-success">
         <i class="fa-solid fa-file-excel"></i> Export Excel
     </a>
-    <a href="{% url 'grades:export_bulletin_pdf' student.id period.id %}" class="btn btn-danger">
+    <a href="{% url 'grades:export_bulletin_pdf' student.id period.id %}" hx-boost="false" class="btn btn-danger">
         <i class="fa-solid fa-file-pdf"></i> Export PDF
     </a>
 </div>
@@ -143,7 +142,7 @@
             <p>{{ school.address|default:"—" }}{% if school.phone %} · Tél : {{ school.phone }}{% endif %}</p>
         </div>
         <div class="report-title">
-            <h1>Bulletin de notes</h1>
+            <h1><span class="page-icon"><i class="fa-solid fa-file-invoice"></i></span>Bulletin de notes</h1>
             <span>{{ period.name }} — Année {{ period.academic_year.name }}</span>
         </div>
     </div>

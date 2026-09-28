@@ -1,12 +1,11 @@
 {% extends "base.html" %}
 
 {% block title %}Notes - Gestion École{% endblock %}
-{% block topbar_title %}Gestion des notes{% endblock %}
 
 {% block content %}
 <div class="header-top">
     <div class="page-title">
-        <h1>Évaluations</h1>
+        <h1><span class="page-icon"><i class="fa-solid fa-pen-to-square"></i></span>Évaluations</h1>
         <p>Créez les évaluations, saisissez les notes par classe et matière, importez depuis Excel.</p>
     </div>
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -90,13 +89,13 @@
                             <td class="text-center">{{ evaluation.max_score }}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{% url 'grades:grade_entry_eval' evaluation.pk %}" class="btn btn-success btn-action" title="Saisir les notes">
+                                    <a href="{% url 'grades:grade_entry_eval' evaluation.pk %}" class="btn-action btn-entry" title="Saisir les notes">
                                         <i class="fa-solid fa-pen"></i> Saisir
                                     </a>
-                                    <button type="button" class="btn btn-secondary btn-action" title="Modifier" hx-get="{% url 'grades:evaluation_edit' evaluation.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                    <button type="button" class="btn-action btn-edit" title="Modifier" hx-get="{% url 'grades:evaluation_edit' evaluation.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </button>
-                                    <button type="button" class="btn btn-danger btn-action" title="Supprimer" hx-get="{% url 'grades:evaluation_delete' evaluation.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                    <button type="button" class="btn-action btn-delete" title="Supprimer" hx-get="{% url 'grades:evaluation_delete' evaluation.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>
                                 </div>

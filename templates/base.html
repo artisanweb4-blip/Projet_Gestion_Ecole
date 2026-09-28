@@ -58,7 +58,7 @@
                     <i class="fa-solid fa-bars"></i>
                 </button>
                 <div class="topbar-title">
-                    {% block topbar_title %}{{ active_page_label|default:"Tableau de bord" }}{% endblock %}
+                    {% block topbar_title %}<span class="topbar-title-inner"><i class="fa-solid {{ active_page_icon }}" aria-hidden="true"></i> {{ active_page_label|default:"Tableau de bord" }}</span>{% endblock %}
                 </div>
                 <div class="topbar-right">
                     <span class="topbar-user">
@@ -72,7 +72,7 @@
                 </div>
             </header>
 
-            <main class="content">
+            <main class="content" id="main-content" hx-boost="true" hx-target="#main-content" hx-swap="innerHTML show:window:top">
                 {% if messages %}
                     <div class="messages-stack">
                         {% for message in messages %}
@@ -103,8 +103,8 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-    <script src="{% static 'js/main.js' %}"></script>
+    <script defer src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script defer src="{% static 'js/main.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

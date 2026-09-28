@@ -2,12 +2,11 @@
 {% load humanize %}
 
 {% block title %}Tableau de bord - {{ school.school_name|default:"Gestion d'École" }}{% endblock %}
-{% block topbar_title %}Tableau de bord{% endblock %}
 
 {% block content %}
 <div class="header-top">
     <div class="page-title">
-        <h1>Bonjour, {{ user.first_name|default:user.username }} 👋</h1>
+        <h1><span class="page-icon"><i class="fa-solid fa-gauge-high"></i></span>Bonjour, {{ user.first_name|default:user.username }} 👋</h1>
         <p>Vue d'ensemble de l'établissement — Année {{ active_year }}</p>
     </div>
 </div>

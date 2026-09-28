@@ -8,7 +8,7 @@
 <div class="header-top">
     <div class="page-title">
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <h1>{{ object.name }}</h1>
+            <h1><span class="page-icon"><i class="fa-solid fa-school"></i></span>{{ object.name }}</h1>
             <span class="badge-level">{{ object.get_level_display }}</span>
             {% if object.section %}
                 <span class="badge-section">{{ object.get_section_display }}</span>

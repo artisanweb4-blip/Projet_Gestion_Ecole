@@ -2,12 +2,11 @@
 {% load humanize %}
 
 {% block title %}Paiements - Comptabilité{% endblock %}
-{% block topbar_title %}Paiements{% endblock %}
 
 {% block content %}
 <div class="header-top">
     <div class="page-title">
-        <h1>Paiements</h1>
+        <h1><span class="page-icon"><i class="fa-solid fa-money-bill-wave"></i></span>Paiements</h1>
         <p>Historique des encaissements (espèces, Orange Money, Wave, MTN...).</p>
     </div>
     <button type="button" class="btn btn-primary"
@@ -42,7 +41,7 @@
                             <td>{{ payment.fee_structure.name|default:"—" }}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <button type="button" class="btn btn-danger btn-action" title="Supprimer"
+                                    <button type="button" class="btn-action btn-delete" title="Supprimer"
                                             hx-get="{% url 'accounting:payment_delete' payment.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>

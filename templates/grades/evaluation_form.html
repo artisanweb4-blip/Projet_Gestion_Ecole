@@ -1,12 +1,11 @@
 {% extends "base.html" %}
 
 {% block title %}{{ title }} - Gestion École{% endblock %}
-{% block topbar_title %}Évaluation{% endblock %}
 
 {% block content %}
 <div class="header-top">
     <div class="page-title">
-        <h1>{{ title }}</h1>
+        <h1><span class="page-icon"><i class="fa-solid fa-clipboard-list"></i></span>{{ title }}</h1>
         <p>Définissez les paramètres de l'évaluation (classe, matière, période, coefficient).</p>
     </div>
     <a href="{% if next_url %}{{ next_url }}{% else %}{% url 'grades:grade_list' %}{% endif %}" class="btn btn-secondary">

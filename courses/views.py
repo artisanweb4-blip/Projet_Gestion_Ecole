@@ -3,7 +3,9 @@
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
+from django.views.generic import RedirectView
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -14,7 +16,7 @@ from django.views.generic import (
 
 from classes.models import Class as SchoolClass
 from core.mixins import HtmxCrudMixin
-from .forms import ProgramForm, ProgramSubjectFormSet
+from .forms import ProgramForm, ProgramSubjectFormSet, SubjectForm
 from .models import Program, ProgramSubject, Subject
 
 
@@ -80,13 +82,29 @@ def ajax_get_subjects_by_class(request):
 # ==============================================================================
 
 
-class ProgramListView(ListView):
+class ProgramListView(LoginRequiredMixin, ListView):
     """
-    Affiche la liste de tous les programmes d'études avec recherche et pagination.
+    Page « Programmes & Matières » : les deux listes sont gérées ici.
     """
 
     model = Program
     template_name = 'courses/program_list.html'
+
+    def get_queryset(self):
+        return (
+            Program.objects
+            .prefetch_related('program_subjects__subject', 'classes')
+            .order_by('name')
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['subjects'] = (
+            Subject.objects
+            .prefetch_related('subject_programs__program')
+            .order_by('name')
+        )
+        return context
     context_object_name = 'programs'
     paginate_by = 12
 
@@ -220,23 +238,42 @@ class ProgramDeleteView(HtmxCrudMixin, DeleteView):
 # ==============================================================================
 
 
-class SubjectListView(ListView):
-    """
-    Affiche la liste des matières/cours.
-    """
+class SubjectListView(LoginRequiredMixin, RedirectView):
+    """La liste des matières est intégrée à la page Programmes & Matières."""
+
+    pattern_name = 'courses:program_list'
+
+
+class SubjectCreateView(LoginRequiredMixin, HtmxCrudMixin, CreateView):
+    """Ajout d'une matière (formulaire en modale)."""
 
     model = Subject
-    template_name = 'courses/subject_list.html'
-    context_object_name = 'subjects'
-    paginate_by = 10
-
-
-class SubjectCreateView(CreateView):
-    """
-    Permet d'ajouter une nouvelle matière.
-    """
-
-    model = Subject
-    fields = ['name', 'code', 'description']
+    form_class = SubjectForm
     template_name = 'courses/subject_form.html'
-    success_url = reverse_lazy('courses:subject_list')
+    success_url = reverse_lazy('courses:program_list')
+    partial_template = 'includes/form_modal.html'
+    modal_title = 'Nouvelle matière'
+    success_message = 'Matière enregistrée avec succès.'
+
+
+class SubjectUpdateView(LoginRequiredMixin, HtmxCrudMixin, UpdateView):
+    """Modification d'une matière (formulaire en modale)."""
+
+    model = Subject
+    form_class = SubjectForm
+    template_name = 'courses/subject_form.html'
+    success_url = reverse_lazy('courses:program_list')
+    partial_template = 'includes/form_modal.html'
+    modal_title = 'Modifier la matière'
+    success_message = 'Matière mise à jour.'
+
+
+class SubjectDeleteView(LoginRequiredMixin, HtmxCrudMixin, DeleteView):
+    """Suppression d'une matière (confirmation en modale)."""
+
+    model = Subject
+    template_name = 'courses/subject_confirm_delete.html'
+    success_url = reverse_lazy('courses:program_list')
+    partial_template = 'includes/delete_modal.html'
+    modal_title = 'Supprimer cette matière'
+    success_message = 'Matière supprimée.'

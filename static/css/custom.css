@@ -243,11 +243,38 @@ a:hover { color: var(--primary-dark); }
 }
 
 .page-title h1 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
     font-size: 1.45rem;
     font-weight: 800;
     color: var(--text-main);
     letter-spacing: -0.3px;
 }
+
+.page-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-size: 1rem;
+}
+
+.page-icon.fa-trash { background: #fee2e2; color: var(--danger); }
+
+.topbar-title-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.topbar-title-inner i { color: var(--primary); font-size: 0.95rem; }
 
 .page-title p { color: var(--text-muted); font-size: 0.92rem; margin-top: 3px; }
 
@@ -373,7 +400,58 @@ a:hover { color: var(--primary-dark); }
 .btn-outline:hover { background: var(--bg); color: var(--text-main); }
 
 .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
-.btn-action { padding: 6px 10px; font-size: 0.8rem; border-radius: 7px; }
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 9px;
+    border: 1px solid var(--border-color);
+    background: #ffffff;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+
+.btn-action:hover {
+    transform: translateY(-1px);
+    color: var(--text-main);
+    border-color: #cbd5e1;
+}
+
+/* Variantes de couleur au survol, comme le bouton détail */
+.btn-action.btn-view:hover,
+a.btn-action.primary:hover {
+    color: var(--info);
+    border-color: #bfdbfe;
+    background: #eff6ff;
+}
+
+.btn-action.btn-entry:hover,
+a.btn-action.secondary:hover {
+    color: var(--primary-dark);
+    border-color: #a7f3d0;
+    background: var(--primary-light);
+}
+
+.btn-action.btn-edit:hover,
+a.btn-action:not(.primary):not(.secondary):not(.btn-view):not(.btn-entry):not(.btn-delete):hover {
+    color: var(--warning);
+    border-color: #fde68a;
+    background: #fef3c7;
+}
+
+.btn-action.btn-delete:hover,
+a.btn-action.danger:hover {
+    color: var(--danger);
+    border-color: #fecaca;
+    background: #fef2f2;
+}
 .btn-block { width: 100%; }
 
 /* ==========================================================================

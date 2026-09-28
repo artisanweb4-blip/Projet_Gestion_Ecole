@@ -9,7 +9,7 @@
 <!-- En-tête de la page -->
 <div class="header-top">
     <div class="page-title">
-        <h1>{% if object.pk %}Modifier la classe{% else %}Ajouter une classe{% endif %}</h1>
+        <h1><span class="page-icon"><i class="fa-solid fa-school"></i></span>{% if object.pk %}Modifier la classe{% else %}Ajouter une classe{% endif %}</h1>
         <p>{% if object.pk %}Mettez à jour les informations de la classe {{ object.name }}.{% else %}Remplissez les informations ci-dessous pour créer une nouvelle classe.{% endif %}</p>
     </div>
     <div>

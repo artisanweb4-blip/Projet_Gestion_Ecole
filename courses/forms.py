@@ -72,3 +72,24 @@ ProgramSubjectFormSet = inlineformset_factory(
     min_num=1,
     validate_min=True
 )
+
+class SubjectForm(forms.ModelForm):
+    """Création / modification d'une matière."""
+
+    class Meta:
+        model = Subject
+        fields = ['name', 'code']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex : Mathématiques',
+            }),
+            'code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Généré automatiquement si vide',
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['code'].required = False
