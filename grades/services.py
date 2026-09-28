@@ -25,22 +25,27 @@ def get_class_coefficients(classroom):
     return coefficients
 
 
-def subject_breakdown(student, period, coefficients=None):
+def subject_breakdown(student, period, coefficients=None, prefetched_grades=None):
     """
     Agrège les notes d'un élève pour une période, matière par matière.
+
+    prefetched_grades permet de passer des notes déjà chargées en base
+    (optimisation : évite une requête par élève dans le calcul de rangs).
 
     Retourne une liste de dicts triée par nom de matière :
     {subject, average, coefficient, points, appreciation, details: [...]}
     """
-    grades = (
-        Grade.objects.filter(
-            student=student,
-            evaluation__period=period,
-            score__isnull=False,
+    if prefetched_grades is None:
+        prefetched_grades = (
+            Grade.objects.filter(
+                student=student,
+                evaluation__period=period,
+                score__isnull=False,
+            )
+            .select_related('evaluation', 'evaluation__subject')
+            .order_by('evaluation__date', 'evaluation__id')
         )
-        .select_related('evaluation', 'evaluation__subject')
-        .order_by('evaluation__date', 'evaluation__id')
-    )
+    grades = prefetched_grades
 
     if coefficients is None:
         coefficients = get_class_coefficients(getattr(student, 'class_group', None))
@@ -107,9 +112,26 @@ def class_ranking(classroom, period):
     from .models import Grade  # import local pour éviter toute circularité
 
     coefficients = get_class_coefficients(classroom)
+    students = list(classroom.students.filter(is_active=True))
+
+    # Toutes les notes de la classe en UNE seule requête
+    all_grades = (
+        Grade.objects
+        .filter(student__in=students, evaluation__period=period,
+                score__isnull=False)
+        .select_related('evaluation', 'evaluation__subject')
+        .order_by('evaluation__date', 'evaluation__id')
+    )
+    grades_by_student = {}
+    for grade in all_grades:
+        grades_by_student.setdefault(grade.student_id, []).append(grade)
+
     results = []
-    for student in classroom.students.filter(is_active=True):
-        rows = subject_breakdown(student, period, coefficients)
+    for student in students:
+        rows = subject_breakdown(
+            student, period, coefficients,
+            prefetched_grades=grades_by_student.get(student.id, []),
+        )
         results.append({
             'student': student,
             'average': general_average(rows),

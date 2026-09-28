@@ -23,7 +23,7 @@ class StudentListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = super().get_queryset().select_related('class_group')
         search = self.request.GET.get('search')
         class_filter = self.request.GET.get('class')
         status_filter = self.request.GET.get('status')

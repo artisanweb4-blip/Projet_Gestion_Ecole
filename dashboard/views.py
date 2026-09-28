@@ -1,8 +1,6 @@
 """
 Tableau de bord : KPIs, activités récentes et graphiques.
 """
-import json
-
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Sum
 from django.shortcuts import render
@@ -48,20 +46,30 @@ def dashboard_home(request):
         'academic_year__name', flat=True
     ).first() or "—"
 
-    # --- Graphique : moyenne générale par classe (sur 20) -----------------
-    class_labels, class_averages = [], []
-    for klass in Class.objects.filter(is_active=True).prefetch_related('students'):
-        grade_notes = []
-        for student in klass.students.filter(is_active=True):
-            notes = [
-                (float(g.score) / float(g.evaluation.max_score or 20)) * 20.0
-                for g in student.grades.filter(score__isnull=False)
-                .select_related('evaluation')
-            ]
-            grade_notes.extend(notes)
-        if grade_notes:
-            class_labels.append(klass.name)
-            class_averages.append(round(sum(grade_notes) / len(grade_notes), 2))
+    # --- Graphique : moyenne générale par classe (1 seule requête SQL) ----
+    from django.db.models import Avg, ExpressionWrapper, F, FloatField
+    note20 = ExpressionWrapper(
+        F('score') * 20.0 / F('evaluation__max_score'),
+        output_field=FloatField(),
+    )
+    class_rows = (
+        Grade.objects
+        .filter(score__isnull=False,
+                student__is_active=True,
+                student__class_group__isnull=False)
+        .annotate(note20=note20)
+        .values('student__class_group_id', 'student__class_group__name')
+        .annotate(average=Avg('note20'))
+        .order_by('student__class_group__name')
+    )
+    class_stats = [
+        {
+            'name': row['student__class_group__name'],
+            'average': round(row['average'], 2),
+            'percent': max(2, min(100, round(row['average'] * 5))),
+        }
+        for row in class_rows
+    ]
 
     context = {
         'kpi_students': total_students,
@@ -74,9 +82,6 @@ def dashboard_home(request):
         'recent_evaluations': recent_evaluations,
         'upcoming_events': upcoming_events,
         'active_year': active_year,
-        'chart_data': json.dumps({
-            'labels': class_labels,
-            'values': class_averages,
-        }),
+        'class_stats': class_stats,
     }
     return render(request, 'dashboard/dashboard.html', context)

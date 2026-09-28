@@ -48,14 +48,27 @@
 </div>
 
 <div class="grid-2">
-    <!-- Graphique : moyennes par classe -->
+    <!-- Graphique : moyennes par classe (barres CSS, sans JavaScript) -->
     <div class="dashboard-card">
         <div class="card-header">
             <h2 class="card-title"><i class="fa-solid fa-chart-column me-1 text-success"></i> Performance académique</h2>
             <span class="text-muted" style="font-size: 0.8rem;">Moyennes générales / 20</span>
         </div>
-        {{ chart_data|json_script:"chart-data" }}
-        <canvas id="classAveragesChart" height="230"></canvas>
+        {% if class_stats %}
+            {% for stat in class_stats %}
+                <div style="margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px;">
+                        <span>{{ stat.name }}</span>
+                        <span>{{ stat.average }} / 20</span>
+                    </div>
+                    <div style="background: #f1f5f9; border-radius: 999px; height: 14px; overflow: hidden;">
+                        <div style="width: {{ stat.percent }}%; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--primary), #10b981);"></div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state"><i class="fa-solid fa-chart-column"></i><p>Aucune note saisie pour le moment.</p></div>
+        {% endif %}
     </div>
 
     <!-- Événements à venir -->
@@ -159,35 +172,4 @@
     </div>
 </div>
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
-    (function () {
-        var dataEl = document.getElementById('chart-data');
-        if (!dataEl || typeof Chart === 'undefined') return;
-        var data = JSON.parse(dataEl.textContent);
-        var ctx = document.getElementById('classAveragesChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Moyenne / 20',
-                    data: data.values,
-                    backgroundColor: 'rgba(5, 150, 105, 0.75)',
-                    hoverBackgroundColor: 'rgba(5, 150, 105, 1)',
-                    borderRadius: 8,
-                    maxBarThickness: 46
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, suggestedMax: 20, ticks: { stepSize: 5 } }
-                }
-            }
-        });
-    })();
-</script>
 {% endblock %}
