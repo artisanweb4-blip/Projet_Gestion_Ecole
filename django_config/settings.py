@@ -77,7 +77,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.gzip.GZipMiddleware',   # Réponses compressées (plus rapide)
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Fichiers statiques compressés & cachés
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -118,6 +120,7 @@ if _db_engine in ('sqlite', 'sqlite3', 'django.db.backends.sqlite3'):
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
+            'CONN_MAX_AGE': 60,  # Connexion persistante : pas de reconnexion à chaque page
         }
     }
 else:

@@ -111,3 +111,47 @@
     // Ferme la modale automatiquement quand le serveur demande une redirection
     document.body.addEventListener('htmx:beforeHistorySave', closeModal);
 })();
+
+// =========================================================================
+// NAVIGATION BOOSTÉE : barre de progression + lien actif du menu
+// =========================================================================
+(function () {
+    'use strict';
+
+    var loader = document.getElementById('pageLoader');
+
+    // Barre de progression pendant les navigations HTMX
+    document.body.addEventListener('htmx:beforeRequest', function (e) {
+        var elt = e.detail.elt;
+        // Uniquement pour les navigations de page (pas les modales)
+        if (elt && elt.closest && elt.closest('#page-area') &&
+            !(elt.hasAttribute && elt.hasAttribute('hx-target'))) {
+            if (loader) { loader.classList.add('active'); }
+        }
+    });
+    document.body.addEventListener('htmx:afterRequest', function () {
+        if (loader) {
+            loader.classList.add('done');
+            setTimeout(function () {
+                loader.classList.remove('active', 'done');
+            }, 300);
+        }
+    });
+
+    // Met à jour le lien actif du menu après chaque navigation boostée
+    function updateActiveMenu() {
+        var path = window.location.pathname;
+        document.querySelectorAll('.menu-link').forEach(function (link) {
+            var href = link.getAttribute('href');
+            if (!href || href === '#') { return; }
+            // Correspondance exacte ou préfixe propre (/grades/ couvre /grades/entry/...)
+            var isActive = href === path ||
+                (href !== '/' && path.indexOf(href) === 0);
+            link.classList.toggle('active', isActive);
+        });
+    }
+
+    document.body.addEventListener('htmx:afterSwap', updateActiveMenu);
+    document.body.addEventListener('htmx:pushedIntoHistory', updateActiveMenu);
+    window.addEventListener('popstate', function () { setTimeout(updateActiveMenu, 50); });
+})();

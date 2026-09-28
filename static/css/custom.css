@@ -1009,3 +1009,25 @@ textarea.form-control { min-height: 90px; resize: vertical; }
     .form-grid-2 { grid-template-columns: 1fr; }
     .modal-body { padding: 18px 16px; }
 }
+
+
+/* ==========================================================================
+   Barre de progression des navigations (hx-boost)
+   ========================================================================== */
+
+.page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), #10b981);
+    box-shadow: 0 0 8px rgba(5, 150, 105, 0.5);
+    z-index: 3000;
+    opacity: 0;
+    transition: width 0.25s ease, opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.page-loader.active { width: 80%; opacity: 1; }
+.page-loader.done { width: 100%; opacity: 0; }

@@ -51,7 +51,9 @@
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <!-- ===================== ZONE PRINCIPALE ===================== -->
+        <div class="page-loader" id="pageLoader"></div>
         <div class="main-area">
+            <div id="page-area" class="page-area">
             <header class="topbar">
                 <button type="button" class="burger" id="sidebarToggle" aria-label="Menu">
                     <i class="fa-solid fa-bars"></i>
@@ -71,7 +73,7 @@
                 </div>
             </header>
 
-            <main class="content" id="main-content" hx-boost="true" hx-target="#main-content" hx-swap="innerHTML show:window:top">
+            <main class="content" id="main-content" hx-boost="true" hx-select="#page-area" hx-target="#page-area" hx-swap="outerHTML show:window:top">
                 {% if messages %}
                     <div class="messages-stack">
                         {% for message in messages %}
@@ -86,6 +88,7 @@
 
                 {% block content %}{% endblock %}
             </main>
+            </div><!-- /#page-area -->
 
             <footer class="footer">
                 <p>&copy; {{ current_year }} Gestion d'École. Tous droits réservés.</p>
