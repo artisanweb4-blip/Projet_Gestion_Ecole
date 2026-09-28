@@ -19,10 +19,10 @@
         <!-- ===================== SIDEBAR ===================== -->
         <aside class="sidebar" id="sidebar">
             <div class="brand">
-                <span class="brand-logo"><i class="fa-solid fa-graduation-cap"></i></span>
+                <span class="brand-logo">GCE</span>
                 <span class="brand-text">
                     <strong>{{ school.school_name|default:"Gestion d'École" }}</strong>
-                    <small>Plateforme GCE</small>
+                    <small>Gestion complète d'école</small>
                 </span>
             </div>
 
@@ -40,6 +40,13 @@
             </nav>
 
             <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <span class="avatar">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</span>
+                    <span class="sidebar-user-info">
+                        <strong title="{{ user.email }}">{{ user.email|default:user.username }}</strong>
+                        <small>{{ user.get_role_display|default:"Utilisateur" }}</small>
+                    </span>
+                </div>
                 <form method="post" action="{% url 'logout' %}" class="logout-form">
                     {% csrf_token %}
                     <button type="submit" class="btn-logout btn-block" title="Se déconnecter">
@@ -61,13 +68,7 @@
                     {% block topbar_title %}Tableau de bord{% endblock %}
                 </div>
                 <div class="topbar-right">
-                    <span class="user-chip" title="{{ user.email }}">
-                        <span class="avatar">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</span>
-                        <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
-                        {% if user.role %}
-                            <span class="badge badge-secondary">{{ user.get_role_display }}</span>
-                        {% endif %}
-                    </span>
+                    {% block topbar_actions %}{% endblock %}
                 </div>
             </header>
 
