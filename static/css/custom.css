@@ -686,7 +686,6 @@ textarea.form-control { min-height: 90px; resize: vertical; }
 }
 
 .footer {
-    margin-top: auto;
     padding: 18px 32px;
     background: #ffffff;
     border-top: 1px solid var(--border-color);
@@ -697,6 +696,11 @@ textarea.form-control { min-height: 90px; resize: vertical; }
     margin: 0;
     font-size: 0.82rem;
     color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+    .footer { padding: 14px 16px; }
+    .footer p { font-size: 0.75rem; }
 }
 
 /* Utilitaires texte */

@@ -79,8 +79,17 @@ def global_context(request):
     except Exception:
         school = None
 
+    menu = build_menu(request)
+    # Titre de la page courante = libellé de l'entrée de menu active
+    active_page_label = next(
+        (item['label'] for item in menu
+         if not item.get('is_section') and item.get('is_active')),
+        None,
+    )
+
     return {
-        'menu_items': build_menu(request),
+        'menu_items': menu,
+        'active_page_label': active_page_label,
         'school': school,
         'current_year': date.today().year,
     }

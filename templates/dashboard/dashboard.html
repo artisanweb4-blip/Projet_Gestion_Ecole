@@ -10,14 +10,6 @@
         <h1>Bonjour, {{ user.first_name|default:user.username }} 👋</h1>
         <p>Vue d'ensemble de l'établissement — Année {{ active_year }}</p>
     </div>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <a href="{% url 'grades:grade_entry' %}" class="btn btn-primary">
-            <i class="fa-solid fa-pen-to-square"></i> Saisir des notes
-        </a>
-        <a href="{% url 'grades:bulletin_select' %}" class="btn btn-secondary">
-            <i class="fa-solid fa-file-lines"></i> Bulletins
-        </a>
-    </div>
 </div>
 
 <!-- Indicateurs clés -->
