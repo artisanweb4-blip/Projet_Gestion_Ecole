@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Plateforme — Utilisateurs{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-users-gear"></i></span>Utilisateurs de la plateforme</h1>
+        <p>Tous les comptes, toutes écoles confondues.</p>
+    </div>
+    <a href="{% url 'platform_dashboard' %}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Retour aux écoles
+    </a>
+</div>
+
+<div class="dashboard-card">
+    <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px;">
+        <input type="text" name="q" class="form-control" placeholder="Nom, prénom ou email..." value="{{ q }}" style="flex: 1; min-width: 200px;">
+        <select name="role" class="form-control" style="max-width: 220px;">
+            <option value="">Tous les rôles</option>
+            {% for value, label in roles %}
+                <option value="{{ value }}" {% if f_role == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filtrer</button>
+    </form>
+
+    {% if users %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Utilisateur</th>
+                        <th>Email</th>
+                        <th class="text-center">Rôle</th>
+                        <th>École</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-center">Créé le</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>
+                                <span class="avatar me-1">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</span>
+                                <strong>{{ user.get_full_name }}</strong>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td class="text-center">
+                                <span class="badge {% if user.role == 'ADMIN' %}badge-info{% elif user.role == 'TEACHER' %}badge-success{% elif user.role == 'COMPTABLE' %}badge-warning{% else %}badge-secondary{% endif %}">
+                                    {{ user.get_role_display }}
+                                </span>
+                            </td>
+                            <td>{{ user.school.name|default:"—" }}</td>
+                            <td class="text-center">
+                                {% if user.is_active %}<span class="badge badge-success">Actif</span>{% else %}<span class="badge badge-danger">Inactif</span>{% endif %}
+                            </td>
+                            <td class="text-center">{{ user.created_at|date:"d/m/Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&role={{ f_role }}">« Précédent</a>
+                {% endif %}
+                <span class="current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&q={{ q }}&role={{ f_role }}">Suivant »</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state"><i class="fa-solid fa-users"></i><p>Aucun utilisateur pour ces critères.</p></div>
+    {% endif %}
+</div>
+{% endblock %}

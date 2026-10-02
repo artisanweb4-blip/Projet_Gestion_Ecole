@@ -11,7 +11,10 @@ urlpatterns = [
     # Administration Django
     path('admin/', admin.site.urls),
 
-    # Tableau de bord & page d'accueil
+    # Site public (landing + inscription école) & plateforme super admin
+    path('', include('website.urls')),
+
+    # Tableau de bord
     path('', include('dashboard.urls')),
 
     # Authentification (session web)

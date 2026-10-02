@@ -117,6 +117,12 @@ class Student(TimeStampMixin):
         related_name='students',
         verbose_name='Classe',
     )
+    parents = models.ManyToManyField(
+        'parents.Parent',
+        blank=True,
+        related_name='children',
+        verbose_name='Parents / Tuteurs',
+    )
     enrollment_date = models.DateField(
         default=date.today, verbose_name="Date d'inscription"
     )

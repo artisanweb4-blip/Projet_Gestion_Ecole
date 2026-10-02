@@ -1,4 +1,5 @@
 from django.apps import apps
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -10,6 +11,7 @@ from django.views.generic import (
 )
 
 from core.mixins import HtmxCrudMixin, RoleRequiredMixin
+from parents.models import Parent
 
 from .forms import StudentForm
 from .models import Student
@@ -58,24 +60,72 @@ class StudentListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
         return context
 
 
-class StudentCreateView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, CreateView):
+class StudentParentLinkMixin:
+    """Mixin partagé par la création et la modification d'élève :
+    crée et lie le parent saisi directement dans le formulaire (inline)."""
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        self._link_inline_parent()
+        return response
+
+    def _link_inline_parent(self):
+        """Crée et lie le parent saisi directement dans le formulaire élève."""
+        first = (self.request.POST.get('parent_first_name') or '').strip()
+        last = (self.request.POST.get('parent_last_name') or '').strip()
+        if not first or not last:
+            return
+
+        email = (self.request.POST.get('parent_email') or '').strip().lower()
+        parent = None
+        if email:
+            parent = Parent.objects.filter(email__iexact=email).first()
+        if parent is None:
+            parent = Parent.objects.filter(
+                first_name__iexact=first, last_name__iexact=last
+            ).first()
+        if parent is None:
+            parent = Parent.objects.create(
+                civility=self.request.POST.get('parent_civility') or 'M',
+                first_name=first, last_name=last, email=email or None,
+                phone=(self.request.POST.get('parent_phone') or '').strip() or None,
+                profession=(self.request.POST.get('parent_profession') or '').strip() or None,
+                address=(self.request.POST.get('parent_address') or '').strip() or None,
+            )
+            messages.success(
+                self.request,
+                f"Parent « {parent} » créé et lié à {self.object.first_name} "
+                f"{self.object.last_name}."
+            )
+        else:
+            messages.info(
+                self.request,
+                f"Parent existant « {parent} » lié à {self.object.first_name} "
+                f"{self.object.last_name}."
+            )
+        self.object.parents.add(parent)
+
+
+class StudentCreateView(StudentParentLinkMixin, LoginRequiredMixin, RoleRequiredMixin,
+                        HtmxCrudMixin, CreateView):
     model = Student
     form_class = StudentForm
     template_name = 'students/form.html'
     success_url = reverse_lazy('students:list')
     allowed_roles = ['admin', 'director', 'secretary']
-    partial_template = 'includes/form_modal.html'
+    partial_template = 'students/student_form_modal.html'
     modal_title = 'Nouvel élève'
     success_message = 'Élève enregistré avec succès.'
 
 
-class StudentUpdateView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, UpdateView):
+class StudentUpdateView(StudentParentLinkMixin, LoginRequiredMixin, RoleRequiredMixin,
+                        HtmxCrudMixin, UpdateView):
     model = Student
     form_class = StudentForm
     template_name = 'students/form.html'
     success_url = reverse_lazy('students:list')
     allowed_roles = ['admin', 'director', 'secretary']
-    partial_template = 'includes/form_modal.html'
+    partial_template = 'students/student_form_modal.html'
     modal_title = "Modifier l'élève"
     success_message = 'Élève mis à jour.'
 

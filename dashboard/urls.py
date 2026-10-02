@@ -2,10 +2,10 @@ from django.urls import path
 
 from . import views
 
-# Pas d'app_name : les noms 'home' et 'dashboard' restent globaux
-# (utilisés par LOGIN_REDIRECT_URL et core.mixins.RoleRequiredMixin).
+# Pas d'app_name : les noms 'dashboard' et 'home' restent globaux.
+# La racine '/' est la landing page publique (app website).
 
 urlpatterns = [
-    path('', views.dashboard_home, name='home'),
     path('dashboard/', views.dashboard_home, name='dashboard'),
+    path('home/', views.dashboard_home, name='home'),
 ]

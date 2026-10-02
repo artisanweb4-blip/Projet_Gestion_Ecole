@@ -189,6 +189,35 @@ class Command(BaseCommand):
         self.stdout.write(f"  [OK] {Student.objects.count()} élèves répartis dans {len(classes)} classes")
 
         # ------------------------------------------------------------------
+        # 4b. Parents d'élèves + liaison parents ↔ élèves (1 → N)
+        # ------------------------------------------------------------------
+        from parents.models import Parent
+
+        PARENTS = [
+            ("M", "Oumar", "MAIGA", "oumarm856@gmail.com", "78765643", "Prof Histoire-Géographie", "Djélibougou"),
+            ("Mme", "Fatoumata", "DIALLO", "fatoumata.diallo@gmail.com", "76554433", "Commerçante", "Kalaban Coura"),
+            ("M", "Seydou", "TRAORE", "seydou.traore@gmail.com", "70112233", "Fonctionnaire", "Badalabougou"),
+            ("Mme", "Kadiatou", "SOW", "kadiatou.sow@gmail.com", "76998877", "Couturière", "Sikoro"),
+        ]
+        parents_objs = []
+        for civ, first, last, email, phone, job, addr in PARENTS:
+            parent, _ = Parent.objects.get_or_create(
+                email=email,
+                defaults={"civility": civ, "first_name": first, "last_name": last,
+                          "phone": phone, "profession": job, "address": addr},
+            )
+            parents_objs.append(parent)
+
+        students_list = list(Student.objects.filter(is_active=True).order_by("id"))
+        # Un parent peut avoir plusieurs enfants : affectation en cascade
+        for idx, student in enumerate(students_list):
+            student.parents.add(parents_objs[idx % len(parents_objs)])
+            if idx % 7 == 3 and idx + 1 < len(students_list):
+                # Fratrie : le même parent supplémentaire pour certains élèves
+                student.parents.add(parents_objs[(idx + 1) % len(parents_objs)])
+        self.stdout.write(f"  [OK] {len(parents_objs)} parents liés aux élèves (1 → N)")
+
+        # ------------------------------------------------------------------
         # 5. Évaluations & notes (1er trimestre)
         # ------------------------------------------------------------------
         p1 = periods["1er Trimestre"]

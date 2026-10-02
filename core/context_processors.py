@@ -8,6 +8,9 @@ from django.urls import reverse
 MENU = [
     {'section': 'Pilotage'},
     {'label': 'Tableau de bord', 'url_name': 'dashboard', 'icon': 'fa-gauge-high', 'prefix': '/dashboard'},
+    {'section': 'Plateforme'},
+    {'label': 'Écoles (Super Admin)', 'url_name': 'platform_dashboard',
+     'icon': 'fa-server', 'prefix': '/platform', 'superuser_only': True},
     {'section': 'Scolarité'},
     {'label': 'Élèves', 'url_name': 'students:list', 'icon': 'fa-user-graduate', 'prefix': '/students'},
     {'label': 'Enseignants', 'url_name': 'teachers:list', 'icon': 'fa-chalkboard-user', 'prefix': '/teachers'},
@@ -52,6 +55,8 @@ def build_menu(request):
 
         allowed_roles = entry.get('roles')
         if allowed_roles and not is_superuser and user_role not in allowed_roles:
+            continue
+        if entry.get('superuser_only') and not is_superuser:
             continue
 
         try:

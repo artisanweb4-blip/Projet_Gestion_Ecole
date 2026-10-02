@@ -1031,3 +1031,64 @@ textarea.form-control { min-height: 90px; resize: vertical; }
 
 .page-loader.active { width: 80%; opacity: 1; }
 .page-loader.done { width: 100%; opacity: 0; }
+
+/* ==========================================================================
+   Formulaire élève : section parents + création de parent en ligne
+   ========================================================================== */
+
+.inline-section {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 6px;
+    background: #f8fafc;
+}
+
+.inline-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin: 0 0 12px 0;
+}
+
+details.inline-parent {
+    border: 1px dashed #a7f3d0;
+    border-radius: 10px;
+    background: #ffffff;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+details.inline-parent summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    user-select: none;
+}
+
+details.inline-parent summary::-webkit-details-marker { display: none; }
+
+details.inline-parent summary::after {
+    content: "+";
+    margin-left: auto;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+details.inline-parent[open] summary::after { content: "–"; }
+
+details.inline-parent[open] summary {
+    border-bottom: 1px dashed #a7f3d0;
+}
+
+.inline-parent-body { padding: 14px; }

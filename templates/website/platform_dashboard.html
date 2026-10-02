@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Plateforme — Écoles{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-server"></i></span>Gestion globale des écoles</h1>
+        <p>Supervision de toutes les écoles inscrites sur la plateforme GCE.</p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'platform_users' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-users-gear"></i> Utilisateurs
+        </a>
+        <button type="button" class="btn btn-primary"
+                hx-get="{% url 'platform_school_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-plus"></i> Nouvelle école
+        </button>
+    </div>
+</div>
+
+<!-- KPIs plateforme -->
+<div class="metric-grid">
+    <div class="metric-card">
+        <span class="metric-icon is-green"><i class="fa-solid fa-school"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Écoles actives</span>
+            <span class="metric-value">{{ nb_schools_active }} <small style="font-size: 0.9rem; color: var(--text-muted);">/ {{ nb_schools_total }}</small></span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-blue"><i class="fa-solid fa-users"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Comptes utilisateurs</span>
+            <span class="metric-value">{{ nb_users }}</span>
+            <span class="metric-hint">{{ nb_admins }} admin · {{ nb_teachers_users }} prof · {{ nb_comptables }} compta · {{ nb_parents_users }} parents</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-amber"><i class="fa-solid fa-user-graduate"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Élèves (toutes écoles)</span>
+            <span class="metric-value">{{ nb_students }}</span>
+            <span class="metric-hint">{{ nb_classes }} classes · {{ nb_teachers }} enseignants</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-violet"><i class="fa-solid fa-sack-dollar"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Encaissements globaux</span>
+            <span class="metric-value">{{ total_payments|intcomma }} F</span>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des écoles -->
+<div class="dashboard-card">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fa-solid fa-building-columns me-1 text-success"></i> Écoles inscrites</h2>
+        <form method="get" style="display: flex; gap: 8px;">
+            <input type="text" name="q" class="form-control" placeholder="Rechercher une école..." value="{{ q }}" style="min-width: 220px;">
+            <button type="submit" class="btn btn-secondary btn-sm"><i class="fa-solid fa-search"></i></button>
+        </form>
+    </div>
+    {% if schools %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>École</th>
+                        <th class="text-center">Formule</th>
+                        <th class="text-center">Comptes</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-center">Inscrite le</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for school in schools %}
+                        <tr>
+                            <td>
+                                <strong>{{ school.name }}</strong><br>
+                                <span class="text-muted" style="font-size: 0.78rem;">{{ school.email|default:school.address|default:"—" }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge {% if school.plan == 'PREMIUM' %}badge-warning{% elif school.plan == 'GRATUIT' %}badge-secondary{% else %}badge-info{% endif %}">
+                                    {{ school.get_plan_display }}
+                                </span>
+                            </td>
+                            <td class="text-center">{{ school.nb_users }}</td>
+                            <td class="text-center">
+                                {% if school.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Suspendue</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">{{ school.created_at|date:"d/m/Y" }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'platform_school_detail' school.pk %}" class="btn-action btn-view" title="Voir">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </a>
+                                    <form method="post" action="{% url 'platform_school_toggle' school.pk %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-action btn-entry"
+                                                title="{% if school.is_active %}Suspendre{% else %}Réactiver{% endif %}">
+                                            <i class="fa-solid {% if school.is_active %}fa-pause{% else %}fa-play{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn-action btn-delete" title="Supprimer"
+                                            hx-get="{% url 'platform_school_delete' school.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-school"></i>
+            <p>Aucune école inscrite pour le moment.<br>Cliquez sur « Nouvelle école » pour créer la première.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

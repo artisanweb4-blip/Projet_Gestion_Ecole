@@ -2,6 +2,40 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from core.models import TimeStampMixin
 
+
+class School(TimeStampMixin):
+    """École (tenant) inscrite sur la plateforme GCE."""
+    PLAN_CHOICES = [
+        ('GRATUIT', 'Gratuit'),
+        ('STANDARD', 'Standard'),
+        ('PREMIUM', 'Premium'),
+    ]
+
+    name = models.CharField(max_length=150, unique=True, verbose_name="Nom de l'école")
+    code = models.SlugField(max_length=30, unique=True, blank=True, verbose_name="Code")
+    address = models.CharField(max_length=255, blank=True, null=True, verbose_name="Adresse")
+    phone = models.CharField(max_length=30, blank=True, null=True, verbose_name="Téléphone")
+    email = models.EmailField(blank=True, null=True, verbose_name="Email de contact")
+    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default='STANDARD',
+                            verbose_name="Formule")
+
+    class Meta:
+        verbose_name = "École (plateforme)"
+        verbose_name_plural = "Écoles (plateforme)"
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            from django.utils.text import slugify
+            import uuid
+            base = slugify(self.name)[:20].strip('-') or 'ecole'
+            self.code = f"{base}-{str(uuid.uuid4())[:5]}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
 class UserManager(BaseUserManager):
     """Gestionnaire personnalisé pour la création d'utilisateurs et superutilisateurs."""
     def create_user(self, email, username, password=None, role='STUDENT', **extra_fields):
@@ -47,6 +81,14 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampMixin):
     last_name = models.CharField(max_length=150, verbose_name="Nom de famille")
     phone = models.CharField(max_length=30, blank=True, null=True, verbose_name="Téléphone")
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='STUDENT', verbose_name="Rôle dans l'établissement")
+    school = models.ForeignKey(
+        School,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users',
+        verbose_name="École (rattachement)",
+    )
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, verbose_name="Photo de profil")
 
     is_staff = models.BooleanField(default=False, verbose_name="Membre du staff")
