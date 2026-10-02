@@ -26,4 +26,5 @@ staticfiles/
 
 # OS
 .DS_Store
-Thumbs.dbcookies.txt
+Thumbs.db
+cookies.txt
