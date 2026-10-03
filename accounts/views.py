@@ -63,7 +63,15 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class SchoolLoginView(DjangoLoginView):
-    """Connexion : refuse les comptes rattachés à une école suspendue."""
+    """Connexion : refuse les comptes d'une école suspendue et envoie le
+    Super Admin directement sur son interface plateforme."""
+
+    def get_success_url(self):
+        user = getattr(self.request, 'user', None)
+        if user is not None and user.is_superuser:
+            from django.urls import reverse
+            return reverse('platform_dashboard')
+        return super().get_success_url()
 
     def form_valid(self, form):
         user = form.get_user()

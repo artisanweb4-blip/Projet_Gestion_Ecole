@@ -316,12 +316,26 @@ class Command(BaseCommand):
             email="admin@ecole.africa",
             defaults={
                 "username": "admin", "first_name": "Amadou", "last_name": "DIOP",
-                "role": "ADMIN", "is_staff": True, "is_superuser": True,
+                "role": "ADMIN", "is_staff": True, "is_superuser": False,
                 "phone": "+237 6 99 00 00 00",
             },
         )
+        admin.is_superuser = False  # interface ÉCOLE uniquement (séparation stricte)
         admin.set_password("admin123")
         admin.save()
+
+        platform_admin, _ = User.objects.get_or_create(
+            email="plateforme@gestion-ecole.ml",
+            defaults={
+                "username": "plateforme", "first_name": "Super", "last_name": "Admin",
+                "role": "ADMIN", "is_staff": True, "is_superuser": True,
+                "school": None,
+            },
+        )
+        platform_admin.is_superuser = True  # interface PLATEFORME uniquement
+        platform_admin.school = None
+        platform_admin.set_password("plateforme123")
+        platform_admin.save()
 
         comptable_user, _ = User.objects.get_or_create(
             email="comptable@ecole.africa",
@@ -459,7 +473,8 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS("=" * 58))
         self.stdout.write(self.style.SUCCESS("DONNÉES DE DÉMO CRÉÉES — Comptes d'accès :"))
-        self.stdout.write(self.style.SUCCESS("  Admin   : admin@ecole.africa / admin123"))
+        self.stdout.write(self.style.SUCCESS("  École   : admin@ecole.africa / admin123 (interface école)"))
+        self.stdout.write(self.style.SUCCESS("  Plateforme : plateforme@gestion-ecole.ml / plateforme123 (Super Admin)"))
         self.stdout.write(self.style.SUCCESS("  Compta  : comptable@ecole.africa / compta123"))
         self.stdout.write(self.style.SUCCESS("  Parent  : parent@ecole.africa / parent123"))
         self.stdout.write(self.style.SUCCESS("  Prof    : awa.diallo@cpbr-cm.edu / prof123"))

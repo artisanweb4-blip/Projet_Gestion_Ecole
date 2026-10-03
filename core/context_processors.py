@@ -58,16 +58,28 @@ def build_menu(request):
     user_role = str(getattr(user, 'role', '') or '').upper()
 
     items = []
+    pending_section = None
     for entry in MENU:
         if 'section' in entry:
-            items.append({'section': entry['section'], 'is_section': True})
+            pending_section = {'section': entry['section'], 'is_section': True}
+            continue
+
+        # Interfaces strictement séparées :
+        # - le Super Admin ne voit QUE les pages de la plateforme ;
+        # - les comptes école ne voient JAMAIS les pages plateforme.
+        if is_superuser:
+            if not entry.get('superuser_only'):
+                continue
+        elif entry.get('superuser_only'):
             continue
 
         allowed_roles = entry.get('roles')
         if allowed_roles and not is_superuser and user_role not in allowed_roles:
             continue
-        if entry.get('superuser_only') and not is_superuser:
-            continue
+
+        if pending_section is not None:
+            items.append(pending_section)
+            pending_section = None
 
         try:
             url = reverse(entry['url_name'])

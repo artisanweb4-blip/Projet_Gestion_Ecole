@@ -101,10 +101,23 @@ class CurrentSchoolMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
+    # Préfixes accessibles au Super Admin (interface plateforme uniquement)
+    SUPERADMIN_ALLOWED = (
+        '/platform', '/accounts', '/admin', '/api/',
+        '/static', '/media', '/favicon', '/robots.txt', '/sitemap.xml',
+    )
+
     def __call__(self, request):
         set_current_school(None)
 
         user = getattr(request, 'user', None)
+
+        # Interfaces séparées : le Super Admin utilise UNIQUEMENT /platform.
+        if (user is not None and user.is_authenticated and user.is_superuser
+                and not request.path.startswith(self.SUPERADMIN_ALLOWED)):
+            from django.shortcuts import redirect
+            return redirect('platform_dashboard')
+
         if user is not None and user.is_authenticated and not user.is_superuser:
             school = getattr(user, 'school', None)
             if school is not None and school.is_active:
