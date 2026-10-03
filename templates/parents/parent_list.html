@@ -11,9 +11,9 @@
         <p>Gérez les coordonnées et informations des responsables légaux.</p>
     </div>
     <div>
-        <button type="button" class="btn btn-primary" hx-get="{% url 'parents:add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+        <a href="{% url 'parents:add' %}" class="btn btn-primary" hx-get="{% url 'parents:add' %}" hx-target="#modal-body" hx-swap="innerHTML">
             <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Ajouter un Parent
-        </button>
+        </a>
     </div>
 </div>
 
@@ -81,12 +81,12 @@
                                     <a href="{% url 'parents:detail' parent.pk %}" class="btn-icon text-info" title="Voir le profil">
                                         <i class="fa-regular fa-eye"></i>
                                     </a>
-                                    <button type="button" class="btn-icon text-warning" title="Modifier" hx-get="{% url 'parents:edit' parent.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                    <a href="{% url 'parents:edit' parent.pk %}" class="btn-icon text-warning" title="Modifier" hx-get="{% url 'parents:edit' parent.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-regular fa-pen-to-square"></i>
-                                    </button>
-                                    <button type="button" class="btn-icon text-danger" title="Supprimer" hx-get="{% url 'parents:delete' parent.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                    </a>
+                                    <a href="{% url 'parents:delete' parent.pk %}" class="btn-icon text-danger" title="Supprimer" hx-get="{% url 'parents:delete' parent.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-regular fa-trash-can"></i>
-                                    </button>
+                                    </a>
                                 </div>
                             </td>
                         </tr>
@@ -108,9 +108,9 @@
             {% else %}
                 <h3>Aucun parent enregistré</h3>
                 <p>Commencez par ajouter un responsable légal dans le système.</p>
-                <button type="button" class="btn btn-primary" style="margin-top: 12px;" hx-get="{% url 'parents:add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+                <a href="{% url 'parents:add' %}" class="btn btn-primary" style="margin-top: 12px;" hx-get="{% url 'parents:add' %}" hx-target="#modal-body" hx-swap="innerHTML">
                     <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Ajouter un Parent
-                </button>
+                </a>
             {% endif %}
         </div>
     {% endif %}

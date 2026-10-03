@@ -9,14 +9,14 @@
         <p>Gérez les programmes d'études et les matières enseignées avec leurs coefficients.</p>
     </div>
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <button type="button" class="btn btn-primary"
+        <a href="{% url 'courses:program_create' %}" class="btn btn-primary"
                 hx-get="{% url 'courses:program_create' %}" hx-target="#modal-body" hx-swap="innerHTML">
             <i class="fa-solid fa-plus"></i> Nouveau programme
-        </button>
-        <button type="button" class="btn btn-secondary"
+        </a>
+        <a href="{% url 'courses:subject_create' %}" class="btn btn-secondary"
                 hx-get="{% url 'courses:subject_create' %}" hx-target="#modal-body" hx-swap="innerHTML">
             <i class="fa-solid fa-plus"></i> Nouvelle matière
-        </button>
+        </a>
     </div>
 </div>
 
@@ -50,14 +50,14 @@
                                     <a href="{% url 'courses:program_detail' program.pk %}" class="btn-action btn-view" title="Voir le détail">
                                         <i class="fa-regular fa-eye"></i>
                                     </a>
-                                    <button type="button" class="btn-action btn-edit" title="Modifier"
+                                    <a href="{% url 'courses:program_update' program.pk %}" class="btn-action btn-edit" title="Modifier"
                                             hx-get="{% url 'courses:program_update' program.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-regular fa-pen-to-square"></i>
-                                    </button>
-                                    <button type="button" class="btn-action btn-delete" title="Supprimer"
+                                    </a>
+                                    <a href="{% url 'courses:program_delete' program.pk %}" class="btn-action btn-delete" title="Supprimer"
                                             hx-get="{% url 'courses:program_delete' program.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-regular fa-trash-can"></i>
-                                    </button>
+                                    </a>
                                 </div>
                             </td>
                         </tr>
@@ -98,14 +98,14 @@
                             <td class="text-center">{{ subject.subject_programs.all|length }}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <button type="button" class="btn-action btn-edit" title="Modifier"
+                                    <a href="{% url 'courses:subject_edit' subject.pk %}" class="btn-action btn-edit" title="Modifier"
                                             hx-get="{% url 'courses:subject_edit' subject.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-regular fa-pen-to-square"></i>
-                                    </button>
-                                    <button type="button" class="btn-action btn-delete" title="Supprimer"
+                                    </a>
+                                    <a href="{% url 'courses:subject_delete' subject.pk %}" class="btn-action btn-delete" title="Supprimer"
                                             hx-get="{% url 'courses:subject_delete' subject.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-regular fa-trash-can"></i>
-                                    </button>
+                                    </a>
                                 </div>
                             </td>
                         </tr>

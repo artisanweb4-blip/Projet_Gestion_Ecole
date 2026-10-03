@@ -12,9 +12,9 @@
     </div>
     <div>
         <!-- APRÈS (Correction) -->
-            <button type="button" class="btn btn-primary" hx-get="{% url 'teachers:add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+            <a href="{% url 'teachers:add' %}" class="btn btn-primary" hx-get="{% url 'teachers:add' %}" hx-target="#modal-body" hx-swap="innerHTML">
             <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Nouvel enseignant
-        </button>
+        </a>
     </div>
 </div>
 
@@ -79,12 +79,12 @@
                             <a href="{% url 'teachers:detail' teacher.pk %}" class="btn-action btn-view" title="Voir le profil">
                                 <i class="fa-regular fa-eye"></i>
                             </a>
-                            <button type="button" class="btn-action btn-edit" title="Modifier" hx-get="{% url 'teachers:edit' teacher.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                            <a href="{% url 'teachers:edit' teacher.pk %}" class="btn-action btn-edit" title="Modifier" hx-get="{% url 'teachers:edit' teacher.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                 <i class="fa-regular fa-pen-to-square"></i>
-                            </button>
-                            <button type="button" class="btn-action btn-delete" title="Supprimer" hx-get="{% url 'teachers:delete' teacher.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                            </a>
+                            <a href="{% url 'teachers:delete' teacher.pk %}" class="btn-action btn-delete" title="Supprimer" hx-get="{% url 'teachers:delete' teacher.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                 <i class="fa-regular fa-trash-can"></i>
-                            </button>
+                            </a>
                         </div>
                     </td>
                 </tr>

@@ -9,10 +9,10 @@
         <h1><span class="page-icon"><i class="fa-solid fa-money-bill-wave"></i></span>Paiements</h1>
         <p>Historique des encaissements (espèces, Orange Money, Wave, MTN...).</p>
     </div>
-    <button type="button" class="btn btn-primary"
+    <a href="{% url 'accounting:payment_add' %}" class="btn btn-primary"
             hx-get="{% url 'accounting:payment_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
         <i class="fa-solid fa-money-bill-wave"></i> Encaisser un paiement
-    </button>
+    </a>
 </div>
 
 <div class="dashboard-card">
@@ -41,10 +41,10 @@
                             <td>{{ payment.fee_structure.name|default:"—" }}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <button type="button" class="btn-action btn-delete" title="Supprimer"
+                                    <a href="{% url 'accounting:payment_delete' payment.pk %}" class="btn-action btn-delete" title="Supprimer"
                                             hx-get="{% url 'accounting:payment_delete' payment.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-solid fa-trash"></i>
-                                    </button>
+                                    </a>
                                 </div>
                             </td>
                         </tr>

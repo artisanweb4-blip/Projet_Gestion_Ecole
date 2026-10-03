@@ -12,10 +12,10 @@
         <a href="{% url 'platform_dashboard' %}" class="btn btn-secondary">
             <i class="fa-solid fa-arrow-left"></i> Retour aux écoles
         </a>
-        <button type="button" class="btn btn-primary"
+        <a href="{% url 'platform_user_add' %}" class="btn btn-primary"
                 hx-get="{% url 'platform_user_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
             <i class="fa-solid fa-user-plus"></i> Ajouter un utilisateur
-        </button>
+        </a>
     </div>
 </div>
 

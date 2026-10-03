@@ -69,8 +69,7 @@ a:hover { color: var(--primary-dark); }
 }
 
 .content {
-    flex: 1;
-    padding: 28px 32px 40px;
+    padding: 28px 32px 18px;
     max-width: 1400px;
     width: 100%;
     margin: 0 auto;
@@ -764,9 +763,9 @@ textarea.form-control { min-height: 90px; resize: vertical; }
 }
 
 .footer {
-    padding: 18px 32px;
-    background: #ffffff;
-    border-top: 1px solid var(--border-color);
+    /* Discret, centré, juste sous le contenu (pas collé au bas de l'écran) */
+    padding: 4px 32px 26px;
+    background: transparent;
     text-align: center;
 }
 
@@ -777,7 +776,7 @@ textarea.form-control { min-height: 90px; resize: vertical; }
 }
 
 @media (max-width: 640px) {
-    .footer { padding: 14px 16px; }
+    .footer { padding: 4px 16px 22px; }
     .footer p { font-size: 0.75rem; }
 }
 

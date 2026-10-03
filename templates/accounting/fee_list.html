@@ -9,10 +9,10 @@
         <h1><span class="page-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span>Frais scolaires</h1>
         <p>Structures tarifaires par classe et par année académique.</p>
     </div>
-    <button type="button" class="btn btn-primary"
+    <a href="{% url 'accounting:fee_add' %}" class="btn btn-primary"
             hx-get="{% url 'accounting:fee_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
         <i class="fa-solid fa-plus"></i> Nouveau frais
-    </button>
+    </a>
 </div>
 
 <div class="dashboard-card">
@@ -39,14 +39,14 @@
                             <td class="text-center">{{ fee.academic_year }}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <button type="button" class="btn-action btn-edit" title="Modifier"
+                                    <a href="{% url 'accounting:fee_edit' fee.pk %}" class="btn-action btn-edit" title="Modifier"
                                             hx-get="{% url 'accounting:fee_edit' fee.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-solid fa-pen-to-square"></i>
-                                    </button>
-                                    <button type="button" class="btn-action btn-delete" title="Supprimer"
+                                    </a>
+                                    <a href="{% url 'accounting:fee_delete' fee.pk %}" class="btn-action btn-delete" title="Supprimer"
                                             hx-get="{% url 'accounting:fee_delete' fee.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                         <i class="fa-solid fa-trash"></i>
-                                    </button>
+                                    </a>
                                 </div>
                             </td>
                         </tr>

@@ -13,10 +13,10 @@
         <a href="{% url 'platform_schools' %}" class="btn btn-secondary">
             <i class="fa-solid fa-school"></i> Toutes les écoles
         </a>
-        <button type="button" class="btn btn-primary"
+        <a href="{% url 'platform_school_add' %}" class="btn btn-primary"
                 hx-get="{% url 'platform_school_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
             <i class="fa-solid fa-plus"></i> Nouvelle école
-        </button>
+        </a>
     </div>
 </div>
 

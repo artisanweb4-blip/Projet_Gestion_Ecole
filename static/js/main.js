@@ -108,6 +108,19 @@
         }
     });
 
+    // Si la requête de modale échoue (erreur réseau/serveur) → formulaire
+    // en pleine page : les formulaires restent TOUJOURS accessibles.
+    function modalFallback(e) {
+        var elt = e.detail.elt;
+        if (elt && elt.getAttribute &&
+            elt.getAttribute('hx-target') === '#modal-body' &&
+            elt.getAttribute('hx-get')) {
+            window.location.href = elt.getAttribute('hx-get');
+        }
+    }
+    document.body.addEventListener('htmx:sendError', modalFallback);
+    document.body.addEventListener('htmx:responseError', modalFallback);
+
     // Ferme la modale automatiquement quand le serveur demande une redirection
     document.body.addEventListener('htmx:beforeHistorySave', closeModal);
 })();
