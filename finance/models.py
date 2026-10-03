@@ -1,10 +1,15 @@
 from django.db import models
+
+from core.scoping import SchoolManager, scoped_manager
 from django.core.exceptions import ValidationError
 from core.models import TimeStampMixin
-from students.models import ClassRoom, StudentProfile
+from classes.models import Class as ClassRoom
+from students.models import Student as StudentProfile
 
 class FeeStructure(TimeStampMixin):
     """Structure tarifaire et échéances des frais de scolarité."""
+    objects = scoped_manager('classroom__school')
+
     name = models.CharField(max_length=150, verbose_name="Libellé du frais (ex: Tranche 1 Scolarité)")
     classroom = models.ForeignKey(ClassRoom, on_delete=models.SET_NULL, null=True, blank=True, related_name='fee_structures', verbose_name="Classe ciblée")
     amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Montant requis (FCFA / EUR)")
@@ -25,6 +30,8 @@ class StudentPayment(TimeStampMixin):
     Enregistrement de règlement / paiement effectué par un étudiant.
     Intègre le verrouillage strict si un reçu officiel a été émis.
     """
+    objects = scoped_manager('student__school')
+
     PAYMENT_METHODS = (
         ('CASH', 'Espèces (Caisse)'),
         ('BANK_TRANSFER', 'Virement BTP / Banque'),
@@ -56,4 +63,4 @@ class StudentPayment(TimeStampMixin):
         super().delete(*args, **kwargs)
 
     def __str__(self):
-        return f"Reçu #{self.receipt_number} - {self.student.user.get_full_name()} : {self.amount_paid} FCFA"
+        return f"Reçu #{self.receipt_number} - {self.student.full_name} : {self.amount_paid} FCFA"

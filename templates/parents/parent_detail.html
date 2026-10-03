@@ -7,7 +7,7 @@
 <!-- En-tête de la page -->
 <div class="header-top">
     <div class="page-title">
-        <h1>Fiche Parent</h1>
+        <h1><span class="page-icon"><i class="fa-solid fa-users"></i></span>Fiche Parent</h1>
         <p>Informations complètes du responsable légal.</p>
     </div>
     <div style="display: flex; gap: 10px;">
@@ -184,4 +184,35 @@
         .info-grid .full-width { grid-column: span 1; }
     }
 </style>
+
+<div class="dashboard-card">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fa-solid fa-user-graduate me-1 text-success"></i> Enfants / Élèves liés</h2>
+        <span class="badge badge-success">{{ parent.children.count }} élève(s)</span>
+    </div>
+    {% if parent.children.all %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr><th>Matricule</th><th>Élève</th><th>Classe</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for child in parent.children.all %}
+                        <tr>
+                            <td><span class="badge badge-secondary">{{ child.student_id }}</span></td>
+                            <td><strong>{{ child.first_name }} {{ child.last_name }}</strong></td>
+                            <td>{{ child.class_group.name|default:"—" }}</td>
+                            <td><a href="{% url 'students:detail' child.pk %}" class="btn-action btn-view" title="Voir la fiche"><i class="fa-regular fa-eye"></i></a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-user-graduate"></i>
+            <p>Aucun élève lié à ce parent.<br>Liez des élèves depuis le formulaire de l'élève.</p>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

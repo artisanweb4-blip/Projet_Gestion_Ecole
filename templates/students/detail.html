@@ -388,4 +388,36 @@
         </div>
     </div>
 </div>
+
+<div class="dashboard-card">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fa-solid fa-users me-1 text-success"></i> Parents / Tuteurs</h2>
+        <span class="badge badge-success">{{ student.parents.count }} lié(s)</span>
+    </div>
+    {% if student.parents.all %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr><th>Parent</th><th>Lien</th><th>Téléphone</th><th>Email</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for parent in student.parents.all %}
+                        <tr>
+                            <td><strong>{{ parent }}</strong></td>
+                            <td>{{ parent.get_civility_display }}</td>
+                            <td>{{ parent.phone|default:"—" }}</td>
+                            <td>{{ parent.email|default:"—" }}</td>
+                            <td><a href="{% url 'parents:detail' parent.pk %}" class="btn-action btn-view" title="Voir la fiche"><i class="fa-regular fa-eye"></i></a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-users"></i>
+            <p>Aucun parent lié.<br>Cliquez sur « Modifier » pour lier ou créer un parent.</p>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

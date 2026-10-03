@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion - École Fondamentale</title>
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/vendor/fonts/plus-jakarta.css">
     <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/vendor/fontawesome/css/all.min.css">
     
     <style>
         * {
@@ -291,7 +289,8 @@
         <!-- Error message (affichée si Django renvoie une erreur) -->
         {% if form.errors %}
         <div class="error-message show" id="errorMessage">
-            <i class="fa-solid fa-circle-exclamation"></i> Email ou mot de passe incorrect.
+            <i class="fa-solid fa-circle-exclamation"></i>
+            {% for error in form.non_field_errors %}{{ error }}{% empty %}Email ou mot de passe incorrect.{% endfor %}
         </div>
         {% else %}
         <div class="error-message" id="errorMessage">
@@ -306,7 +305,7 @@
                 <label for="email">Email</label>
                 <div class="input-wrapper">
                     <i class="fa-regular fa-envelope"></i>
-                    <input type="email" id="email" name="username" placeholder="votre@email.com" value="" required>
+                    <input type="email" id="email" name="username" placeholder="votre@email.com" value="{{ form.username.value|default:'' }}" required>
                 </div>
             </div>
 
@@ -322,7 +321,7 @@
                 <label>
                     <input type="checkbox" name="remember"> Se souvenir de moi
                 </label>
-                <a href="{% url 'password_reset' %}">Mot de passe oublié ?</a>
+                <a href="{% url 'admin:index' %}">Mot de passe oublié ?</a>
             </div>
 
             <button type="submit" class="btn-login">
@@ -331,7 +330,10 @@
         </form>
 
         <div class="login-footer">
-            © 2026 Gestion Complet d'École. Tous droits réservés
+            <a href="{% url 'landing' %}" style="color: #059669; font-weight: 600;"><i class="fa-solid fa-arrow-left"></i> Retour à l'accueil</a>
+            &nbsp;·&nbsp;
+            <a href="{% url 'register_school' %}" style="color: #059669; font-weight: 600;">Créer un compte école</a>
+            <br><br>© 2026 Gestion d'École. Tous droits réservés
         </div>
     </div>
 

@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer un compte école — Gestion d'École</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23059669'/><text x='50' y='68' font-size='46' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'>G</text></svg>">
+    <link rel="stylesheet" href="{% static 'vendor/fonts/plus-jakarta.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
+    <style>
+        :root {
+            --primary: #059669; --primary-dark: #047857; --primary-light: #d1fae5;
+            --text: #1e293b; --muted: #64748b; --border: #e2e8f0; --bg: #f8fafc;
+            --danger: #dc2626;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text);
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 60%, #d1fae5 100%);
+            min-height: 100vh; padding: 28px 16px; line-height: 1.55;
+        }
+        .wrap { max-width: 760px; margin: 0 auto; }
+        .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+        .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+        .brand-logo {
+            width: 38px; height: 38px; border-radius: 11px; background: var(--primary);
+            color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+        }
+        .top a { color: var(--primary-dark); font-weight: 700; font-size: 0.88rem; }
+        .card {
+            background: #fff; border-radius: 20px; box-shadow: 0 18px 50px rgba(5,150,105,.12);
+            padding: 38px 36px; border-top: 5px solid var(--primary);
+        }
+        h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
+        .sub { color: var(--muted); font-size: 0.92rem; margin: 6px 0 26px; }
+        .section-label {
+            display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.8px; color: var(--primary-dark);
+            margin: 24px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+        }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+        .full { grid-column: 1 / -1; }
+        label { display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 5px; }
+        input {
+            width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px;
+            font-size: 0.92rem; font-family: inherit; outline: none; transition: all .15s ease;
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(5,150,105,.12); }
+        .err { color: var(--danger); font-size: 0.78rem; margin-top: 4px; font-weight: 600; }
+        .help { color: var(--muted); font-size: 0.75rem; margin-top: 4px; }
+        .alert-error {
+            background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+            padding: 12px 16px; border-radius: 10px; font-size: 0.87rem; margin-bottom: 16px;
+        }
+        .actions { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 13px 26px; border-radius: 11px; font-weight: 800; font-size: 0.95rem;
+            cursor: pointer; border: 1px solid transparent; font-family: inherit; transition: all .15s ease;
+        }
+        .btn-primary { background: var(--primary); color: #fff; flex: 1; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-ghost { background: #fff; color: var(--text); border-color: var(--border); }
+        .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+        .foot { text-align: center; margin-top: 18px; font-size: 0.82rem; color: var(--muted); }
+        .foot a { color: var(--primary-dark); font-weight: 700; }
+        @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } .card { padding: 26px 20px; } }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="top">
+            <a href="{% url 'landing' %}" class="brand" style="color: var(--text);">
+                <span class="brand-logo">GCE</span> Gestion d'École
+            </a>
+            <a href="{% url 'login' %}">Se connecter</a>
+        </div>
+
+        <div class="card">
+            <h1><i class="fa-solid fa-school" style="color: var(--primary);"></i> Créer un compte école</h1>
+            <p class="sub">Inscrivez votre établissement et obtenez un espace de gestion complet en moins de 2 minutes.</p>
+
+            {% if form.non_field_errors %}
+                <div class="alert-error"><i class="fa-solid fa-circle-exclamation"></i> {{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="section-label"><i class="fa-solid fa-building-columns"></i> Votre école</div>
+                <div class="grid">
+                    <div class="full">
+                        <label>Nom de l'école <span style="color: var(--danger);">*</span></label>
+                        {{ form.name }}
+                        {% for e in form.name.errors %}<div class="err">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="full">
+                        <label>Adresse</label>
+                        {{ form.address }}
+                        {% for e in form.address.errors %}<div class="err">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div>
+                        <label>Téléphone</label>
+                        {{ form.phone }}
+                        {% for e in form.phone.errors %}<div class="err">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div>
+                        <label>Email de contact</label>
+                        {{ form.email }}
+                        {% for e in form.email.errors %}<div class="err">{{ e }}</div>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="section-label"><i class="fa-solid fa-user-shield"></i> Compte administrateur</div>
+                <div class="grid">
+                    <div>
+                        <label>Prénom <span style="color: var(--danger);">*</span></label>
+                        {{ form.admin_first_name }}
+                        {% for e in form.admin_first_name.errors %}<div class="err">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div>
+                        <label>Nom <span style="color: var(--danger);">*</span></label>
+                        {{ form.admin_last_name }}
+                        {% for e in form.admin_last_name.errors %}<div class="err">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div>
+                        <label>Email <span style="color: var(--danger);">*</span></label>
+                        {{ form.admin_email }}
+                        {% for e in form.admin_email.errors %}<div class="err">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div>
+                        <label>Mot de passe <span style="color: var(--danger);">*</span></label>
+                        {{ form.admin_password }}
+                        {% for e in form.admin_password.errors %}<div class="err">{{ e }}</div>{% endfor %}
+                        <div class="help">Au moins 6 caractères. Vous pourrez le modifier plus tard.</div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <a href="{% url 'landing' %}" class="btn btn-ghost">Annuler</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-rocket"></i> Créer mon école
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <p class="foot">
+            Déjà inscrit ? <a href="{% url 'login' %}">Connectez-vous</a>
+            — © {% now "Y" %} Gestion d'École
+        </p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Supprimer le paiement - Comptabilité{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-trash"></i></span>Supprimer le paiement</h1>
+        <p>Un paiement dont le reçu officiel a été émis ne peut pas être supprimé.</p>
+    </div>
+    <a href="{% url 'accounting:payments' %}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="dashboard-card" style="max-width: 680px;">
+    <div id="modal-body">
+        {% include "includes/delete_modal.html" %}
+    </div>
+</div>
+{% endblock %}

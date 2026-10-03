@@ -1,812 +1,112 @@
 {% extends "base.html" %}
-{% load static %}
+{% load humanize %}
 
-{% block title %}Centre de Documents & Modèles{% endblock %}
+{% block title %}Documents - Gestion d'École{% endblock %}
 
 {% block content %}
-<div class="doc-management-wrapper">
-
-    <!-- En-tête Principal -->
-    <div class="doc-header">
-        <div class="header-content">
-            <div class="header-titles">
-                <span class="header-badge"><i class="fa-solid fa-folder-tree"></i> Espace Administratif</span>
-                <h1>Gestion des Documents</h1>
-                <p>Générez, consultez et exportez tous les documents officiels et administratifs de l'établissement.</p>
-            </div>
-            
-            <!-- Statistiques Rapides -->
-            <div class="header-stats">
-                <div class="stat-item">
-                    <span class="stat-value">04</span>
-                    <span class="stat-label">Catégories</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                    <span class="stat-value">09</span>
-                    <span class="stat-label">Modèles actifs</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Action Bar: Filtres et Recherche -->
-        <div class="doc-action-bar">
-            <!-- Onglets de filtrage par catégorie -->
-            <div class="category-tabs" id="categoryTabs">
-                <button class="tab-btn active" data-filter="all">
-                    <i class="fa-solid fa-layer-group"></i> Tous les documents
-                </button>
-                <button class="tab-btn" data-filter="eleves">
-                    <i class="fa-solid fa-graduation-cap"></i> Élèves
-                </button>
-                <button class="tab-btn" data-filter="pedagogie">
-                    <i class="fa-solid fa-chalkboard-user"></i> Pédagogie
-                </button>
-                <button class="tab-btn" data-filter="rh">
-                    <i class="fa-solid fa-id-card"></i> Personnel / RH
-                </button>
-                <button class="tab-btn" data-filter="admin">
-                    <i class="fa-solid fa-building-columns"></i> Administration
-                </button>
-            </div>
-
-            <!-- Barre de Recherche -->
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" id="documentSearch" placeholder="Rechercher un document..." class="search-input">
-            </div>
-        </div>
-    </div>
-
-    <!-- Grille Globale des Documents -->
-    <div class="doc-container">
-
-        <!-- Section 1 : Certificats & Attestations (Élèves) -->
-        <div class="doc-section" data-category="eleves">
-            <div class="section-header">
-                <div class="section-icon student-icon"><i class="fa-solid fa-graduation-cap"></i></div>
-                <div>
-                    <h2 class="section-title">Certificats & Attestations (Élèves)</h2>
-                    <p class="section-sub">Documents officiels et actes d'inscription pour les élèves</p>
-                </div>
-            </div>
-            <div class="doc-grid">
-                <!-- Certificat de scolarité -->
-                <div class="doc-card" data-title="certificat de scolarite attestation inscription">
-                    <div class="doc-card-header">
-                        <div class="doc-file-icon pdf">
-                            <i class="fa-regular fa-file-pdf"></i>
-                            <span class="file-ext">PDF</span>
-                        </div>
-                        <span class="badge badge-dynamic"><i class="fa-solid fa-bolt"></i> Génération dynamique</span>
-                    </div>
-                    <div class="doc-card-body">
-                        <h3>Certificat de scolarité</h3>
-                        <p>Attestation officielle certifiant l'inscription et la présence régulière de l'élève pour l'année en cours.</p>
-                    </div>
-                    <div class="doc-card-footer">
-                        <span class="doc-meta"><i class="fa-regular fa-clock"></i> Temps réel</span>
-                        <a href="{% url 'documents:generate_certificat_scolarite' %}" class="btn-action primary">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Générer
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Certificat de fréquentation -->
-                <div class="doc-card" data-title="certificat de frequentation presence">
-                    <div class="doc-card-header">
-                        <div class="doc-file-icon pdf">
-                            <i class="fa-regular fa-file-pdf"></i>
-                            <span class="file-ext">PDF</span>
-                        </div>
-                        <span class="badge badge-dynamic"><i class="fa-solid fa-bolt"></i> Génération dynamique</span>
-                    </div>
-                    <div class="doc-card-body">
-                        <h3>Certificat de fréquentation</h3>
-                        <p>Justificatif administratif confirmant l'assiduité et la présence effective de l'élève aux cours.</p>
-                    </div>
-                    <div class="doc-card-footer">
-                        <span class="doc-meta"><i class="fa-regular fa-clock"></i> Temps réel</span>
-                        <a href="{% url 'documents:generate_certificat_frequentation' %}" class="btn-action primary">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Générer
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Certificat d'abandon ou de transfert -->
-                <div class="doc-card" data-title="certificat abandon transfert radiation">
-                    <div class="doc-card-header">
-                        <div class="doc-file-icon pdf">
-                            <i class="fa-regular fa-file-pdf"></i>
-                            <span class="file-ext">PDF</span>
-                        </div>
-                        <span class="badge badge-dynamic"><i class="fa-solid fa-bolt"></i> Génération dynamique</span>
-                    </div>
-                    <div class="doc-card-body">
-                        <h3>Certificat d'abandon / transfert</h3>
-                        <p>Document officiel attestant de la radiation ou du transfert de l'élève vers un autre établissement.</p>
-                    </div>
-                    <div class="doc-card-footer">
-                        <span class="doc-meta"><i class="fa-regular fa-clock"></i> Temps réel</span>
-                        <a href="{% url 'documents:generate_certificat_transfert' %}" class="btn-action primary">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Générer
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 2 : Documents Pédagogiques & Classes -->
-        <div class="doc-section" data-category="pedagogie">
-            <div class="section-header">
-                <div class="section-icon pedagogy-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
-                <div>
-                    <h2 class="section-title">Documents Pédagogiques & Classes</h2>
-                    <p class="section-sub">Outils d'émargement et fiches de suivi quotidien</p>
-                </div>
-            </div>
-            <div class="doc-grid">
-                <!-- Registre d'appel -->
-                <div class="doc-card" data-title="fiche de presence registre d'appel emargement absences">
-                    <div class="doc-card-header">
-                        <div class="doc-file-icon sheet">
-                            <i class="fa-regular fa-file-excel"></i>
-                            <span class="file-ext">XLSX</span>
-                        </div>
-                        <span class="badge badge-template"><i class="fa-solid fa-print"></i> Exportable</span>
-                    </div>
-                    <div class="doc-card-body">
-                        <h3>Fiche de présence / Registre d'appel</h3>
-                        <p>Feuille d'émargement officielle pour le suivi des absences, retards et présences par classe.</p>
-                    </div>
-                    <div class="doc-card-footer">
-                        <span class="doc-meta"><i class="fa-solid fa-table"></i> Format grille</span>
-                        <a href="{% url 'documents:registre_presence' %}" class="btn-action secondary">
-                            <i class="fa-solid fa-print"></i> Imprimer / Voir
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 3 : Documents du Personnel / RH -->
-        <div class="doc-section" data-category="rh">
-            <div class="section-header">
-                <div class="section-icon rh-icon"><i class="fa-solid fa-id-card"></i></div>
-                <div>
-                    <h2 class="section-title">Documents du Personnel / RH</h2>
-                    <p class="section-sub">Gestion des contrats, fiches de poste et demandes de congé</p>
-                </div>
-            </div>
-            <div class="doc-grid">
-                <!-- Contrats de travail -->
-                <div class="doc-card" data-title="contrat de travail modele enseignants rh">
-                    <div class="doc-card-header">
-                        <div class="doc-file-icon word">
-                            <i class="fa-regular fa-file-word"></i>
-                            <span class="file-ext">DOCX</span>
-                        </div>
-                        <span class="badge badge-static"><i class="fa-solid fa-download"></i> Téléchargeable</span>
-                    </div>
-                    <div class="doc-card-body">
-                        <h3>Contrats de travail</h3>
-                        <p>Modèles de contrats types prêts à l'emploi pour les corps enseignants et administratifs.</p>
-                    </div>
-                    <div class="doc-card-footer">
-                        <span class="doc-meta"><i class="fa-solid fa-file-word"></i> Word éditable</span>
-                        <a href="#" class="btn-action secondary">
-                            <i class="fa-solid fa-download"></i> Télécharger
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Fiches de poste -->
-                <div class="doc-card" data-title="fiche de poste attribution responsabilite rh">
-                    <div class="doc-card-header">
-                        <div class="doc-file-icon word">
-                            <i class="fa-regular fa-file-word"></i>
-                            <span class="file-ext">DOCX</span>
-                        </div>
-                        <span class="badge badge-static"><i class="fa-solid fa-download"></i> Téléchargeable</span>
-                    </div>
-                    <div class="doc-card-body">
-                        <h3>Fiches de poste</h3>
-                        <p>Descriptions explicites des attributions, missions et niveaux de responsabilité par rôle.</p>
-                    </div>
-                    <div class="doc-card-footer">
-                        <span class="doc-meta"><i class="fa-solid fa-file-word"></i> Word éditable</span>
-                        <a href="#" class="btn-action secondary">
-                            <i class="fa-solid fa-download"></i> Télécharger
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Demandes de congé -->
-                <div class="doc-card" data-title="demande de conge autorisation absence rh">
-                    <div class="doc-card-header">
-                        <div class="doc-file-icon pdf">
-                            <i class="fa-regular fa-file-pdf"></i>
-                            <span class="file-ext">FORM</span>
-                        </div>
-                        <span class="badge badge-dynamic"><i class="fa-solid fa-pen-to-square"></i> Formulaire</span>
-                    </div>
-                    <div class="doc-card-body">
-                        <h3>Demandes de congé / Absences</h3>
-                        <p>Formulaire numérisé pour soumettre une demande officielle de congé ou d'absence payée.</p>
-                    </div>
-                    <div class="doc-card-footer">
-                        <span class="doc-meta"><i class="fa-solid fa-laptop-code"></i> En ligne</span>
-                        <a href="{% url 'documents:demande_conge_create' %}" class="btn-action primary">
-                            <i class="fa-solid fa-pen-to-square"></i> Remplir
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 4 : Documents Administratifs & Généraux -->
-        <div class="doc-section" data-category="admin">
-            <div class="section-header">
-                <div class="section-icon admin-icon"><i class="fa-solid fa-building-columns"></i></div>
-                <div>
-                    <h2 class="section-title">Documents Administratifs & Généraux</h2>
-                    <p class="section-sub">Textes d'organisation, règlements intérieurs et plannings</p>
-                </div>
-            </div>
-            <div class="doc-grid">
-                <!-- Règlement intérieur -->
-                <div class="doc-card" data-title="reglement interieur regles ecole discipline">
-                    <div class="doc-card-header">
-                        <div class="doc-file-icon pdf">
-                            <i class="fa-regular fa-file-pdf"></i>
-                            <span class="file-ext">PDF</span>
-                        </div>
-                        <span class="badge badge-static"><i class="fa-solid fa-shield-halved"></i> Officiel</span>
-                    </div>
-                    <div class="doc-card-body">
-                        <h3>Règlement intérieur de l'école</h3>
-                        <p>Cadre réglementaire régissant les droits, devoirs et la discipline au sein de l'établissement.</p>
-                    </div>
-                    <div class="doc-card-footer">
-                        <span class="doc-meta"><i class="fa-regular fa-file-pdf"></i> Document PDF</span>
-                        <a href="#" class="btn-action secondary">
-                            <i class="fa-regular fa-eye"></i> Consulter
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Calendrier scolaire -->
-                <div class="doc-card" data-title="calendrier scolaire annuel planning vacance examen">
-                    <div class="doc-card-header">
-                        <div class="doc-file-icon sheet">
-                            <i class="fa-regular fa-file-excel"></i>
-                            <span class="file-ext">XLSX</span>
-                        </div>
-                        <span class="badge badge-static"><i class="fa-regular fa-calendar"></i> Planning</span>
-                    </div>
-                    <div class="doc-card-body">
-                        <h3>Calendrier scolaire annuel</h3>
-                        <p>Planning général fixant la chronologie des semestres, congés, examens et réunions.</p>
-                    </div>
-                    <div class="doc-card-footer">
-                        <span class="doc-meta"><i class="fa-solid fa-calendar-day"></i> Version 2025-2026</span>
-                        <a href="#" class="btn-action secondary">
-                            <i class="fa-regular fa-eye"></i> Consulter
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Courriers administratifs -->
-                <div class="doc-card" data-title="courriers administratifs lettres convocations autorisations parents">
-                    <div class="doc-card-header">
-                        <div class="doc-file-icon word">
-                            <i class="fa-regular fa-file-word"></i>
-                            <span class="file-ext">DOCX</span>
-                        </div>
-                        <span class="badge badge-template"><i class="fa-solid fa-pen"></i> Éditeur</span>
-                    </div>
-                    <div class="doc-card-body">
-                        <h3>Courriers administratifs</h3>
-                        <p>Modèles pré-rédigés pour convocations, autorisations de sortie et lettres aux familles.</p>
-                    </div>
-                    <div class="doc-card-footer">
-                        <span class="doc-meta"><i class="fa-solid fa-file-word"></i> Modèles Word</span>
-                        <a href="#" class="btn-action primary">
-                            <i class="fa-solid fa-plus"></i> Rédiger
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Zone Aucun Résultat -->
-        <div id="noResults" class="no-results-box" style="display: none;">
-            <div class="no-results-icon"><i class="fa-solid fa-folder-open"></i></div>
-            <h3>Aucun document trouvé</h3>
-            <p>Ajustez votre recherche ou changez d'onglet de catégorie.</p>
-        </div>
-
-    </div>
-</div>
-
 <style>
-    /* ==========================================================================
-       VARIABLES ET BASE
-       ========================================================================== */
-    .doc-management-wrapper {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        color: #1E293B;
-        padding-bottom: 40px;
-        width: 100%;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    .doc-container {
-        width: 100%;
-    }
-
-    /* ==========================================================================
-       EN-TÊTE ET BANNIÈRE
-       ========================================================================== */
-    .doc-header {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 24px 28px 0 28px;
-        margin-bottom: 24px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .header-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #F1F5F9;
-        gap: 20px;
-    }
-
-    .header-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #2563EB;
-        background-color: #EFF6FF;
-        padding: 4px 10px;
-        border-radius: 20px;
-        margin-bottom: 8px;
-    }
-
-    .header-titles h1 {
-        font-size: 22px;
-        font-weight: 700;
-        color: #0F172A;
-        margin: 0 0 6px 0;
-        letter-spacing: -0.02em;
-    }
-
-    .header-titles p {
-        font-size: 13px;
-        color: #64748B;
-        margin: 0;
-    }
-
-    .header-stats {
-        display: flex;
-        align-items: center;
-        background-color: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        padding: 10px 18px;
-        gap: 16px;
-    }
-
-    .stat-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .stat-value {
-        font-size: 18px;
-        font-weight: 700;
-        color: #0F172A;
-        line-height: 1;
-    }
-
-    .stat-label {
-        font-size: 11px;
-        color: #64748B;
-        margin-top: 4px;
-        font-weight: 500;
-    }
-
-    .stat-divider {
-        width: 1px;
-        height: 28px;
-        background-color: #CBD5E1;
-    }
-
-    /* ==========================================================================
-       ACTION BAR (TABULATION & SEARCH)
-       ========================================================================== */
-    .doc-action-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-        padding-top: 12px;
-        flex-wrap: wrap;
-    }
-
-    .category-tabs {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        overflow-x: auto;
-    }
-
-    .tab-btn {
-        background: transparent;
-        border: none;
-        padding: 12px 16px;
-        font-size: 13px;
-        font-weight: 600;
-        color: #64748B;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        border-bottom: 2px solid transparent;
-        transition: all 0.2s ease;
-        white-space: nowrap;
-    }
-
-    .tab-btn:hover {
-        color: #0F172A;
-    }
-
-    .tab-btn.active {
-        color: #2563EB;
-        border-bottom-color: #2563EB;
-    }
-
-    .search-box {
-        position: relative;
-        width: 260px;
-        margin-bottom: 12px;
-    }
-
-    .search-input {
-        width: 100%;
-        padding: 9px 12px 9px 36px;
-        border: 1px solid #CBD5E1;
-        border-radius: 8px;
-        font-size: 13px;
-        background-color: #F8FAFC;
-        outline: none;
-        transition: all 0.2s ease;
-        box-sizing: border-box;
-    }
-
-    .search-input:focus {
-        border-color: #2563EB;
-        background-color: #FFFFFF;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #94A3B8;
-        font-size: 13px;
-    }
-
-    /* ==========================================================================
-       SECTIONS & ICONS
-       ========================================================================== */
-    .doc-section {
-        margin-bottom: 32px;
-        width: 100%;
-    }
-
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-
-    .section-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 17px;
-        flex-shrink: 0;
-    }
-
-    .student-icon { background-color: #EFF6FF; color: #2563EB; }
-    .pedagogy-icon { background-color: #ECFDF5; color: #059669; }
-    .rh-icon { background-color: #FFF7ED; color: #EA580C; }
-    .admin-icon { background-color: #F3E8FF; color: #9333EA; }
-
-    .section-title {
-        font-size: 16px;
-        font-weight: 700;
-        color: #0F172A;
-        margin: 0;
-    }
-
-    .section-sub {
-        font-size: 12px;
-        color: #64748B;
-        margin: 2px 0 0 0;
-    }
-
-    /* ==========================================================================
-       GRILLE ET CARTES DE DOCUMENTS (PLEINE LARGEUR)
-       ========================================================================== */
     .doc-grid {
         display: grid;
-        /* Utilisation de auto-fit et 1fr pour s'étendre sur toute la largeur */
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
-        width: 100%;
-        box-sizing: border-box;
+        grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+        gap: 18px;
     }
 
     .doc-card {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        padding: 18px;
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        box-shadow: var(--shadow-card);
+        padding: 20px;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        transition: all 0.2s ease;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
-        box-sizing: border-box;
+        gap: 12px;
+        transition: all 0.15s ease;
     }
 
     .doc-card:hover {
-        border-color: #CBD5E1;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+        border-color: var(--primary);
         transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(5, 150, 105, 0.1);
     }
 
-    .doc-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 14px;
-    }
+    .doc-card-top { display: flex; align-items: center; gap: 12px; }
 
-    .doc-file-icon {
-        position: relative;
-        width: 44px;
-        height: 44px;
-        border-radius: 8px;
-        display: flex;
+    .doc-icon {
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
-        flex-shrink: 0;
-    }
-
-    .doc-file-icon .file-ext {
-        position: absolute;
-        bottom: -4px;
-        font-size: 8px;
-        font-weight: 800;
-        padding: 1px 4px;
-        border-radius: 3px;
-        text-transform: uppercase;
-        background: #FFFFFF;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-
-    .doc-file-icon.pdf { background-color: #FEF2F2; color: #EF4444; }
-    .doc-file-icon.pdf .file-ext { color: #EF4444; }
-
-    .doc-file-icon.word { background-color: #EFF6FF; color: #2563EB; }
-    .doc-file-icon.word .file-ext { color: #2563EB; }
-
-    .doc-file-icon.sheet { background-color: #ECFDF5; color: #10B981; }
-    .doc-file-icon.sheet .file-ext { color: #10B981; }
-
-    .doc-card-body h3 {
-        font-size: 14px;
-        font-weight: 700;
-        color: #0F172A;
-        margin: 0 0 6px 0;
-        line-height: 1.3;
-    }
-
-    .doc-card-body p {
-        font-size: 12px;
-        color: #64748B;
-        margin: 0 0 18px 0;
-        line-height: 1.5;
-    }
-
-    .doc-card-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-top: 14px;
-        border-top: 1px solid #F1F5F9;
-    }
-
-    .doc-meta {
-        font-size: 11px;
-        color: #94A3B8;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    /* ==========================================================================
-       BADGES & BOUTONS
-       ========================================================================== */
-    .badge {
-        font-size: 11px;
-        font-weight: 600;
-        padding: 4px 8px;
-        border-radius: 6px;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .badge-dynamic { background-color: #ECFDF5; color: #047857; }
-    .badge-template { background-color: #F1F5F9; color: #475569; }
-    .badge-static { background-color: #FFF7ED; color: #C2410C; }
-
-    .btn-action {
-        padding: 7px 14px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        transition: all 0.15s ease;
-        cursor: pointer;
-    }
-
-    .btn-action.primary {
-        background-color: #2563EB;
-        color: #FFFFFF;
-        border: 1px solid transparent;
-    }
-
-    .btn-action.primary:hover {
-        background-color: #1D4ED8;
-    }
-
-    .btn-action.secondary {
-        background-color: #FFFFFF;
-        color: #334155;
-        border: 1px solid #CBD5E1;
-    }
-
-    .btn-action.secondary:hover {
-        background-color: #F8FAFC;
-        border-color: #94A3B8;
-    }
-
-    /* ==========================================================================
-       AUCUN RÉSULTAT
-       ========================================================================== */
-    .no-results-box {
-        text-align: center;
-        padding: 48px 20px;
-        background: #FFFFFF;
-        border: 1px dashed #CBD5E1;
+        width: 44px;
+        height: 44px;
         border-radius: 12px;
-        margin-top: 20px;
-        width: 100%;
-        box-sizing: border-box;
+        font-size: 1.05rem;
+        flex-shrink: 0;
+        background: #f0fdf4;
+        color: var(--primary-dark);
     }
 
-    .no-results-icon {
-        font-size: 36px;
-        color: #94A3B8;
-        margin-bottom: 12px;
-    }
-
-    .no-results-box h3 {
-        font-size: 16px;
-        color: #0F172A;
-        margin: 0 0 4px 0;
-    }
-
-    .no-results-box p {
-        font-size: 13px;
-        color: #64748B;
+    .doc-card h3 {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--text-main);
         margin: 0;
     }
+
+    .doc-cat { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); }
+
+    .doc-card p { font-size: 0.83rem; color: var(--text-muted); margin: 0; flex: 1; }
+
+    .doc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 </style>
 
-<!-- JS: Gestion du Filtrage Dynamique & Recherche -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('documentSearch');
-        const tabButtons = document.querySelectorAll('.tab-btn');
-        const sections = document.querySelectorAll('.doc-section');
-        const cards = document.querySelectorAll('.doc-card');
-        const noResults = document.getElementById('noResults');
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-folder-open"></i></span>Documents officiels</h1>
+        <p>Générez, imprimez et prévisualisez tous les documents de l'établissement — un exemplaire de démonstration est disponible pour chaque type.</p>
+    </div>
+</div>
 
-        let currentCategory = 'all';
+<!-- Légende catégories -->
+<div class="dashboard-card" style="padding: 14px 20px; display: flex; gap: 22px; flex-wrap: wrap; align-items: center;">
+    <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Catégories :</span>
+    <span class="badge badge-info">Administratif</span>
+    <span class="badge badge-success">Pédagogique</span>
+    <span class="badge badge-warning">Financier</span>
+    <span class="badge badge-secondary">RH</span>
+    <span style="margin-left: auto; font-size: 0.78rem; color: var(--text-muted);">
+        <i class="fa-solid fa-circle-info"></i> « Exemple » ouvre un PDF fictif, « Générer » crée un document réel.
+    </span>
+</div>
 
-        // 1. Filtrage par onglets
-        tabButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                
-                currentCategory = this.getAttribute('data-filter');
-                filterDocuments();
-            });
-        });
-
-        // 2. Recherche textuelle
-        searchInput.addEventListener('input', filterDocuments);
-
-        // Algorithme de filtrage global
-        function filterDocuments() {
-            const query = searchInput.value.toLowerCase().trim();
-            let totalVisibleCards = 0;
-
-            sections.forEach(section => {
-                const category = section.getAttribute('data-category');
-                const matchesCategory = (currentCategory === 'all' || currentCategory === category);
-                
-                let visibleCardsInSection = 0;
-                const sectionCards = section.querySelectorAll('.doc-card');
-
-                sectionCards.forEach(card => {
-                    const searchData = card.getAttribute('data-title').toLowerCase();
-                    const cardTitle = card.querySelector('h3').textContent.toLowerCase();
-                    const cardDesc = card.querySelector('p').textContent.toLowerCase();
-                    
-                    const matchesSearch = searchData.includes(query) || cardTitle.includes(query) || cardDesc.includes(query);
-
-                    if (matchesCategory && matchesSearch) {
-                        card.style.display = 'flex';
-                        visibleCardsInSection++;
-                        totalVisibleCards++;
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-
-                // Masquer la section complète si aucune carte n'y est visible
-                if (visibleCardsInSection > 0) {
-                    section.style.display = 'block';
-                } else {
-                    section.style.display = 'none';
-                }
-            });
-
-            // Affichage du bloc "Aucun résultat"
-            if (totalVisibleCards === 0) {
-                noResults.style.display = 'block';
-            } else {
-                noResults.style.display = 'none';
-            }
-        }
-    });
-</script>
+<!-- Catalogue -->
+<div class="doc-grid">
+    {% for doc in catalog %}
+        <div class="doc-card">
+            <div class="doc-card-top">
+                <span class="doc-icon" style="background: {{ doc.color }}18; color: {{ doc.color }};">
+                    <i class="fa-solid {{ doc.icon }}"></i>
+                </span>
+                <div>
+                    <span class="doc-cat">{{ doc.category }}</span>
+                    <h3>{{ doc.title }}</h3>
+                </div>
+            </div>
+            <p>{{ doc.description }}</p>
+            <div class="doc-actions">
+                <a href="{% url 'documents:document_sample' doc.key %}" hx-boost="false" target="_blank"
+                   class="btn btn-outline btn-sm">
+                    <i class="fa-regular fa-file-pdf" style="color: #dc2626;"></i> Exemple (PDF)
+                </a>
+                {% if doc.generate_url %}
+                    <a href="{{ doc.generate_url }}" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-pen"></i> Générer
+                    </a>
+                {% else %}
+                    <button type="button" class="btn btn-secondary btn-sm" disabled title="Génération personnalisée à venir">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Générer
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
 {% endblock %}

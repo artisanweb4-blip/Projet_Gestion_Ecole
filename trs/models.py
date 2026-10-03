@@ -2,7 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from core.models import TimeStampMixin
 from courses.models import Course
-from teachers.models import TeacherProfile
+from teachers.models import Teacher as TeacherProfile
 
 class Semester(TimeStampMixin):
     """Semestre académique."""

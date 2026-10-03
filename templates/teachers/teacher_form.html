@@ -8,7 +8,7 @@
 {% block content %}
 <div class="header-top">
     <div class="page-title">
-        <h1>{% if object.pk %}Modifier l'enseignant{% else %}Ajouter un enseignant{% endif %}</h1>
+        <h1><span class="page-icon"><i class="fa-solid fa-chalkboard-user"></i></span>{% if object.pk %}Modifier l'enseignant{% else %}Ajouter un enseignant{% endif %}</h1>
         <p>{% if object.pk %}Mettez à jour les informations du profil de l'enseignant.{% else %}Remplissez les informations ci-dessous pour inscrire un nouvel enseignant.{% endif %}</p>
     </div>
     <div>

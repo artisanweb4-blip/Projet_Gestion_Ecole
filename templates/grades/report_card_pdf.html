@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Bulletin - {{ student.first_name }} {{ student.last_name }}</title>
+    <style>
+        /* CSS compatible xhtml2pdf : pas de flexbox/grid, tables uniquement */
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            color: #1e293b;
+            margin: 28px;
+        }
+
+        .header-table { width: 100%; margin-bottom: 6px; }
+        .school-name {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #1d3557;
+        }
+        .school-meta { font-size: 8pt; color: #64748b; }
+        .bulletin-title {
+            text-align: right;
+            font-size: 13pt;
+            font-weight: bold;
+            color: #e63946;
+            text-transform: uppercase;
+        }
+        .bulletin-sub {
+            text-align: right;
+            font-size: 9pt;
+            font-weight: bold;
+            color: #457b9d;
+        }
+
+        .rule { border-bottom: 2px solid #1d3557; margin: 6px 0 14px 0; }
+
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #1d3557;
+            padding: 8px 12px;
+            margin-bottom: 14px;
+            font-size: 9pt;
+        }
+
+        table.notes { width: 100%; border-collapse: collapse; font-size: 9pt; }
+        table.notes th {
+            background-color: #1d3557;
+            color: #ffffff;
+            padding: 6px 8px;
+            font-size: 8pt;
+            text-transform: uppercase;
+            text-align: left;
+        }
+        table.notes td { border: 0.5pt solid #cbd5e1; padding: 5px 8px; }
+        .center { text-align: center; }
+
+        table.totals { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10pt; }
+        table.totals td { border: 0.5pt solid #cbd5e1; padding: 6px 8px; }
+        .total-row { background-color: #e9ecef; font-weight: bold; }
+        .grand-row { background-color: #1d3557; color: #ffffff; font-weight: bold; font-size: 11pt; }
+
+        .summary-table { width: 100%; margin-top: 14px; font-size: 9pt; }
+        .summary-table td {
+            border: 0.5pt solid #cbd5e1;
+            padding: 8px;
+            text-align: center;
+            background-color: #f8f9fa;
+        }
+        .summary-label { font-size: 7pt; text-transform: uppercase; color: #64748b; font-weight: bold; }
+        .summary-value { font-size: 13pt; font-weight: bold; color: #1d3557; }
+
+        .signatures { width: 100%; margin-top: 34px; font-size: 9pt; }
+        .sign-line { border-top: 0.5pt solid #64748b; margin-top: 48px; width: 220px; }
+
+        .footer-note {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 7pt;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td>
+                <div class="school-name">{{ school.school_name|default:"Gestion d'École" }}</div>
+                <div class="school-meta">
+                    {{ school.address|default:"—" }}{% if school.phone %} · Tél : {{ school.phone }}{% endif %}{% if school.email %} · {{ school.email }}{% endif %}
+                </div>
+            </td>
+            <td>
+                <div class="bulletin-title">Bulletin de notes</div>
+                <div class="bulletin-sub">{{ period.name }} — Année {{ period.academic_year.name }}</div>
+            </td>
+        </tr>
+    </table>
+    <div class="rule"></div>
+
+    <div class="info-box">
+        <strong>Élève :</strong> {{ student.last_name }} {{ student.first_name }} &nbsp;&nbsp;
+        <strong>Matricule :</strong> {{ student.student_id }} &nbsp;&nbsp;
+        <strong>Classe :</strong> {{ student.class_group.name|default:"—" }} &nbsp;&nbsp;
+        <strong>Effectif classé :</strong> {{ total_ranked|default:"—" }}
+    </div>
+
+    <table class="notes">
+        <tr>
+            <th>Matière</th>
+            <th class="center">Coef.</th>
+            <th class="center">Moy. / 20</th>
+            <th class="center">Points</th>
+            <th>Appréciation</th>
+        </tr>
+        {% for row in rows %}
+            <tr>
+                <td><strong>{{ row.subject.name }}</strong></td>
+                <td class="center">{{ row.coefficient }}</td>
+                <td class="center">{% if row.average is not None %}{{ row.average }}{% else %}—{% endif %}</td>
+                <td class="center">{% if row.points is not None %}{{ row.points }}{% else %}—{% endif %}</td>
+                <td>{{ row.appreciation|default:"—" }}</td>
+            </tr>
+        {% endfor %}
+        <tr class="total-row">
+            <td>TOTAL</td>
+            <td class="center">{{ total_coef }}</td>
+            <td class="center">—</td>
+            <td class="center">{{ total_points }}</td>
+            <td></td>
+        </tr>
+        <tr class="grand-row">
+            <td colspan="2">MOYENNE GÉNÉRALE</td>
+            <td class="center">{% if general_average is not None %}{{ general_average }} / 20{% else %}N/A{% endif %}</td>
+            <td colspan="2">{{ mention|default:"—" }}</td>
+        </tr>
+    </table>
+
+    <table class="summary-table">
+        <tr>
+            <td>
+                <div class="summary-label">Rang</div>
+                <div class="summary-value">{% if rank %}{{ rank }}{% if total_ranked %}/{{ total_ranked }}{% endif %}{% else %}—{% endif %}</div>
+            </td>
+            <td>
+                <div class="summary-label">Moyenne de la classe</div>
+                <div class="summary-value">{% if class_average is not None %}{{ class_average }}{% else %}—{% endif %}</div>
+            </td>
+            <td>
+                <div class="summary-label">Mention</div>
+                <div class="summary-value">{{ mention|default:"—" }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="signatures">
+        <tr>
+            <td>
+                Signature du Chef d'établissement
+                <div class="sign-line"></div>
+            </td>
+            <td>
+                Signature du Parent / Tuteur
+                <div class="sign-line"></div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="footer-note">
+        Bulletin généré le {% now "d/m/Y H:i" %} — {{ school.school_name|default:"Gestion d'École" }}
+    </div>
+</body>
+</html>

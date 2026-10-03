@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import FeeStructure, StudentPayment
-from students.serializers import StudentProfileSerializer, ClassRoomSerializer
+from classes.serializers import ClassSerializer as ClassRoomSerializer
+from students.serializers import StudentSerializer as StudentProfileSerializer
 
 class FeeStructureSerializer(serializers.ModelSerializer):
     classroom_detail = ClassRoomSerializer(source='classroom', read_only=True)

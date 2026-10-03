@@ -9,7 +9,7 @@
 <!-- En-tête de la page -->
 <div class="header-top">
     <div class="page-title">
-        <h1>{% if object.pk %}Modifier le parent{% else %}Ajouter un parent{% endif %}</h1>
+        <h1><span class="page-icon"><i class="fa-solid fa-users"></i></span>{% if object.pk %}Modifier le parent{% else %}Ajouter un parent{% endif %}</h1>
         <p>{% if object.pk %}Mettez à jour les coordonnées du parent.{% else %}Saisissez les informations du nouveau responsable légal.{% endif %}</p>
     </div>
     <div>

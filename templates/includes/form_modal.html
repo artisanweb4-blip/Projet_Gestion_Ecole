@@ -1,0 +1,43 @@
+{# Contenu de modale générique : formulaire d'ajout / modification #}
+<div class="modal-head">
+    <h3>{{ modal_title|default:"Formulaire" }}</h3>
+    <button type="button" class="modal-close" data-close-modal aria-label="Fermer">&times;</button>
+</div>
+
+<form method="post"
+      hx-post="{{ modal_action }}"
+      hx-target="#modal-body"
+      hx-swap="innerHTML"
+      enctype="multipart/form-data"
+      class="modal-form">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span>{{ form.non_field_errors }}</span>
+        </div>
+    {% endif %}
+
+    <div class="form-grid-2">
+        {% for field in form.visible_fields %}
+            <div class="form-group {% if field.errors %}is-invalid{% endif %} {% if field.field.widget.input_type == 'file' %}full{% endif %}">
+                <label class="form-label" for="{{ field.id_for_label }}">
+                    {{ field.label }}{% if field.field.required %} <span class="required">*</span>{% endif %}
+                </label>
+                {{ field }}
+                {% for error in field.errors %}
+                    <div class="error-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal>Annuler</button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Enregistrer
+        </button>
+    </div>
+</form>

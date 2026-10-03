@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}{{ school.name }} — Plateforme{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-school"></i></span>{{ school.name }}</h1>
+        <p>Fiche détaillée de l'école sur la plateforme.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'platform_school_update' school.pk %}" class="btn btn-outline">
+            <i class="fa-solid fa-pen"></i> Modifier
+        </a>
+        <a href="{% url 'platform_dashboard' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Retour
+        </a>
+        <form method="post" action="{% url 'platform_school_toggle' school.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn {% if school.is_active %}btn-warning{% else %}btn-primary{% endif %}">
+                <i class="fa-solid {% if school.is_active %}fa-pause{% else %}fa-play{% endif %}"></i>
+                {% if school.is_active %}Suspendre{% else %}Réactiver{% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="metric-grid">
+    <div class="metric-card">
+        <span class="metric-icon {% if school.is_active %}is-green{% else %}is-red{% endif %}"><i class="fa-solid fa-circle-check"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Statut</span>
+            <span class="metric-value">{% if school.is_active %}Active{% else %}Suspendue{% endif %}</span>
+            <span class="metric-hint">Formule {{ school.get_plan_display }}</span>
+        </div>
+    </div>
+    <div class="metric-grid" style="margin-top: 16px;">
+        <div class="metric-card">
+            <span class="metric-icon is-green"><i class="fa-solid fa-user-graduate"></i></span>
+            <div class="metric-info">
+                <span class="metric-label">Élèves actifs</span>
+                <span class="metric-value">{{ nb_students }}</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <span class="metric-icon is-blue"><i class="fa-solid fa-chalkboard-user"></i></span>
+            <div class="metric-info">
+                <span class="metric-label">Enseignants</span>
+                <span class="metric-value">{{ nb_teachers }}</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <span class="metric-icon" style="color:#7c3aed;"><i class="fa-solid fa-door-open"></i></span>
+            <div class="metric-info">
+                <span class="metric-label">Classes</span>
+                <span class="metric-value">{{ nb_classes }}</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <span class="metric-icon" style="color:#d97706;"><i class="fa-solid fa-people-roof"></i></span>
+            <div class="metric-info">
+                <span class="metric-label">Parents</span>
+                <span class="metric-value">{{ nb_parents }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <span class="metric-icon is-blue"><i class="fa-solid fa-users"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Comptes rattachés</span>
+            <span class="metric-value">{{ school.users.count }}</span>
+            <span class="metric-hint">Comptes rattachés</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-amber"><i class="fa-solid fa-calendar"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Inscrite le</span>
+            <span class="metric-value" style="font-size: 1.1rem;">{{ school.created_at|date:"d/m/Y" }}</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-violet"><i class="fa-solid fa-fingerprint"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Code unique</span>
+            <span class="metric-value" style="font-size: 1rem;">{{ school.code }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-circle-info me-1 text-success"></i> Informations</h2>
+        </div>
+        <div class="summary-grid">
+            <div class="summary-item"><span class="summary-label">Adresse</span><span class="summary-value">{{ school.address|default:"—" }}</span></div>
+            <div class="summary-item"><span class="summary-label">Téléphone</span><span class="summary-value">{{ school.phone|default:"—" }}</span></div>
+            <div class="summary-item"><span class="summary-label">Email</span><span class="summary-value">{{ school.email|default:"—" }}</span></div>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-user-shield me-1 text-success"></i> Comptes de l'école</h2>
+        </div>
+        {% if school.users.all %}
+            <ul class="activity-list">
+                {% for user in school.users.all %}
+                    <li>
+                        <span class="avatar">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</span>
+                        <span>
+                            <strong>{{ user.get_full_name }}</strong><br>
+                            <span class="text-muted" style="font-size: 0.8rem;">{{ user.email }} · {{ user.get_role_display }}</span>
+                        </span>
+                        <span class="when">{% if user.is_active %}<span class="badge badge-success">Actif</span>{% else %}<span class="badge badge-danger">Inactif</span>{% endif %}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty-state"><i class="fa-solid fa-users"></i><p>Aucun compte rattaché.</p></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

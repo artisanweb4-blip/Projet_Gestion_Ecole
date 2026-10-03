@@ -1,0 +1,228 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion d'École — La plateforme de gestion scolaire complète</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23059669'/><text x='50' y='68' font-size='46' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'>G</text></svg>">
+    <link rel="stylesheet" href="{% static 'vendor/fonts/plus-jakarta.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
+    <style>
+        :root {
+            --primary: #059669; --primary-dark: #047857; --primary-light: #d1fae5;
+            --text: #1e293b; --muted: #64748b; --border: #e2e8f0; --bg: #f8fafc;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text); background: #fff; line-height: 1.6; }
+        a { text-decoration: none; }
+        .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+        /* Nav */
+        nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-logo {
+            width: 42px; height: 42px; border-radius: 12px; background: var(--primary);
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 0.85rem;
+        }
+        .brand-name { font-weight: 800; font-size: 1.05rem; }
+        .brand-name small { display: block; font-size: 0.7rem; color: var(--muted); font-weight: 500; }
+        .nav-actions { display: flex; gap: 10px; align-items: center; }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px;
+            border-radius: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+            border: 1px solid transparent; transition: all .15s ease; font-family: inherit;
+        }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-ghost { background: #fff; color: var(--text); border-color: var(--border); }
+        .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-lg { padding: 14px 28px; font-size: 1rem; }
+
+        /* Hero */
+        .hero { text-align: center; padding: 72px 0 56px; background: linear-gradient(180deg, #f0fdf4 0%, #fff 100%); }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px; background: var(--primary-light);
+            color: var(--primary-dark); padding: 7px 16px; border-radius: 999px;
+            font-size: 0.8rem; font-weight: 700; margin-bottom: 22px;
+        }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15; letter-spacing: -1px; }
+        .hero h1 span { color: var(--primary); }
+        .hero p { max-width: 640px; margin: 18px auto 30px; color: var(--muted); font-size: 1.05rem; }
+        .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+        /* Stats */
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 18px; margin-top: -30px; }
+        .stat {
+            background: #fff; border: 1px solid var(--border); border-radius: 16px;
+            padding: 22px; text-align: center; box-shadow: 0 8px 24px rgba(15,23,42,.06);
+        }
+        .stat b { display: block; font-size: 1.7rem; font-weight: 800; color: var(--primary); }
+        .stat span { font-size: 0.82rem; color: var(--muted); font-weight: 600; }
+
+        /* Sections */
+        section { padding: 64px 0; }
+        .section-title { text-align: center; margin-bottom: 42px; }
+        .section-title h2 { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.5px; }
+        .section-title p { color: var(--muted); margin-top: 8px; }
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .feature {
+            border: 1px solid var(--border); border-radius: 16px; padding: 26px;
+            transition: all .15s ease; background: #fff;
+        }
+        .feature:hover { border-color: var(--primary); box-shadow: 0 10px 30px rgba(5,150,105,.09); transform: translateY(-3px); }
+        .feature .fi {
+            width: 46px; height: 46px; border-radius: 12px; background: var(--primary-light);
+            color: var(--primary-dark); display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; margin-bottom: 14px;
+        }
+        .feature h3 { font-size: 1rem; font-weight: 800; margin-bottom: 6px; }
+        .feature p { font-size: 0.87rem; color: var(--muted); }
+
+        .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        .step { text-align: center; padding: 24px; }
+        .step .num {
+            width: 44px; height: 44px; margin: 0 auto 14px; border-radius: 50%;
+            background: var(--primary); color: #fff; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .step h3 { font-size: 0.98rem; font-weight: 800; margin-bottom: 5px; }
+        .step p { font-size: 0.85rem; color: var(--muted); }
+
+        .cta-band {
+            background: linear-gradient(135deg, var(--primary), #10b981);
+            border-radius: 22px; padding: 52px 32px; text-align: center; color: #fff;
+        }
+        .cta-band h2 { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.5px; }
+        .cta-band p { opacity: 0.9; margin: 10px 0 26px; }
+        .cta-band .btn { background: #fff; color: var(--primary-dark); }
+
+        footer { border-top: 1px solid var(--border); padding: 28px 0; text-align: center; color: var(--muted); font-size: 0.85rem; }
+        @media (max-width: 640px) { .nav-actions .btn-ghost { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <div class="brand">
+                <span class="brand-logo">GCE</span>
+                <span class="brand-name">Gestion d'École<small>Gestion complète d'école</small></span>
+            </div>
+            <div class="nav-actions">
+                <a href="{% url 'login' %}" class="btn btn-ghost">Se connecter</a>
+                <a href="{% url 'register_school' %}" class="btn btn-primary">Créer un compte école</a>
+            </div>
+        </nav>
+    </div>
+
+    <header class="hero">
+        <div class="container">
+            <span class="hero-badge"><i class="fa-solid fa-graduation-cap"></i> Plateforme de gestion scolaire</span>
+            <h1>Gérez votre école <span>simplement</span>, du premier élève au dernier bulletin.</h1>
+            <p>Élèves, enseignants, parents, classes, notes, bulletins avec rangs, comptabilité,
+               emplois du temps et documents officiels — tout est réuni dans une seule application
+               rapide et moderne.</p>
+            <div class="hero-actions">
+                <a href="{% url 'register_school' %}" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-school"></i> Inscrire mon école gratuitement
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-ghost btn-lg">J'ai déjà un compte</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat"><b>{{ nb_schools }}</b><span>Écoles actives</span></div>
+            <div class="stat"><b>{{ nb_students }}</b><span>Élèves suivis</span></div>
+            <div class="stat"><b>{{ nb_teachers }}</b><span>Enseignants</span></div>
+            <div class="stat"><b>{{ nb_classes }}</b><span>Classes</span></div>
+        </div>
+    </div>
+
+    <section>
+        <div class="container">
+            <div class="section-title">
+                <h2>Tous les modules dont votre école a besoin</h2>
+                <p>Une solution complète, pensée pour les établissements africains.</p>
+            </div>
+            <div class="features">
+                <div class="feature">
+                    <div class="fi"><i class="fa-solid fa-user-graduate"></i></div>
+                    <h3>Scolarité</h3>
+                    <p>Fiches élèves complètes (matricule auto, QR code), parents liés, classes et effectifs.</p>
+                </div>
+                <div class="feature">
+                    <div class="fi"><i class="fa-solid fa-pen-to-square"></i></div>
+                    <h3>Notes &amp; Bulletins</h3>
+                    <p>Saisie par classe/matière, moyennes pondérées, rangs, mentions et bulletins PDF/Excel.</p>
+                </div>
+                <div class="feature">
+                    <div class="fi"><i class="fa-solid fa-coins"></i></div>
+                    <h3>Comptabilité</h3>
+                    <p>Frais scolaires, paiements Orange Money / Wave / MTN, reçus numérotés, encaissements.</p>
+                </div>
+                <div class="feature">
+                    <div class="fi"><i class="fa-solid fa-calendar-days"></i></div>
+                    <h3>Organisation</h3>
+                    <p>Emplois du temps, calendrier académique et suivi des événements de l'année.</p>
+                </div>
+                <div class="feature">
+                    <div class="fi"><i class="fa-solid fa-folder-open"></i></div>
+                    <h3>Documents officiels</h3>
+                    <p>Certificats de scolarité, attestations, registres — générés en PDF en un clic.</p>
+                </div>
+                <div class="feature">
+                    <div class="fi"><i class="fa-solid fa-chart-column"></i></div>
+                    <h3>Tableau de bord</h3>
+                    <p>Indicateurs en temps réel : effectifs, performance par classe, finances.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section style="background: var(--bg);">
+        <div class="container">
+            <div class="section-title">
+                <h2>Démarrage en 3 étapes</h2>
+                <p>Aucune installation : créez votre école et commencez immédiatement.</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="num">1</div>
+                    <h3>Créez votre école</h3>
+                    <p>Remplissez le formulaire d'inscription — votre compte administrateur est créé instantanément.</p>
+                </div>
+                <div class="step">
+                    <div class="num">2</div>
+                    <h3>Ajoutez classes &amp; élèves</h3>
+                    <p>Programmes, matières, enseignants, puis les élèves avec leurs parents.</p>
+                </div>
+                <div class="step">
+                    <div class="num">3</div>
+                    <h3>Gérez au quotidien</h3>
+                    <p>Notes, bulletins, paiements, documents : tout votre personnel travaille ensemble.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <div class="cta-band">
+                <h2>Prêt à moderniser la gestion de votre école ?</h2>
+                <p>Créez votre espace en moins de 2 minutes. Aucune carte bancaire requise.</p>
+                <a href="{% url 'register_school' %}" class="btn btn-lg"><i class="fa-solid fa-rocket"></i> Créer un compte école</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            Gestion d'École · © {% now "Y" %} Tous droits réservés
+        </div>
+    </footer>
+</body>
+</html>

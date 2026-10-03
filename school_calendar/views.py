@@ -49,6 +49,58 @@ def academic_calendar_view(request):
         .order_by('start_date')[:5]
     )
 
+    # --- Grille mensuelle calculée côté serveur (sans FullCalendar/CDN) ---
+    import calendar as pycalendar
+    from datetime import date as dt_date, timedelta
+
+    month_str = request.GET.get('month') or ''
+    try:
+        year, month = (int(x) for x in month_str.split('-'))
+        first_day = dt_date(year, month, 1)
+    except (ValueError, TypeError):
+        today = timezone.localdate()
+        first_day = today.replace(day=1)
+    last_day = dt_date(
+        first_day.year + (1 if first_day.month == 12 else 0),
+        1 if first_day.month == 12 else first_day.month + 1,
+        1,
+    ) - timedelta(days=1)
+
+    category_id = request.GET.get('category') or ''
+    month_events = AcademicEvent.objects.filter(
+        start_date__date__lte=last_day, end_date__date__gte=first_day
+    ).select_related('category')
+    if category_id:
+        month_events = month_events.filter(category_id=category_id)
+    events_by_day = {}
+    for event in month_events:
+        d = max(event.start_date.date(), first_day)
+        end = min(event.end_date.date(), last_day)
+        while d <= end:
+            events_by_day.setdefault(d, []).append(event)
+            d += timedelta(days=1)
+
+    # Semaines du mois (lundi → dimanche)
+    weeks, current = [], first_day - timedelta(days=first_day.weekday())
+    today = timezone.localdate()
+    while current <= last_day:
+        week = []
+        for _ in range(7):
+            week.append({
+                'date': current,
+                'in_month': current.month == first_day.month,
+                'is_today': current == today,
+                'events': events_by_day.get(current, []),
+            })
+            current += timedelta(days=1)
+        weeks.append(week)
+
+    prev_month = (first_day - timedelta(days=1)).replace(day=1)
+    next_month = (last_day + timedelta(days=1))
+    def _qs(d):
+        base = f'?month={d.year}-{d.month:02d}'
+        return base + (f'&category={category_id}' if category_id else '')
+
     context = {
         'title': 'Calendrier Académique',
         'categories': EventCategory.objects.all(),
@@ -56,6 +108,11 @@ def academic_calendar_view(request):
         'upcoming_events': upcoming_events,
         'form': AcademicEventForm(),
         'cat_form': EventCategoryForm(),
+        'weeks': weeks,
+        'month_label': f'{pycalendar.month_name[first_day.month].capitalize()} {first_day.year}',
+        'prev_url': _qs(prev_month),
+        'next_url': _qs(next_month),
+        'f_category': category_id,
     }
     return render(request, 'calendar/academic_calendar.html', context)
 

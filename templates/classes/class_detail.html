@@ -8,7 +8,7 @@
 <div class="header-top">
     <div class="page-title">
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <h1>{{ object.name }}</h1>
+            <h1><span class="page-icon"><i class="fa-solid fa-school"></i></span>{{ object.name }}</h1>
             <span class="badge-level">{{ object.get_level_display }}</span>
             {% if object.section %}
                 <span class="badge-section">{{ object.get_section_display }}</span>
@@ -21,10 +21,10 @@
         <p>Vue d'ensemble et liste des élèves inscrits pour cette classe.</p>
     </div>
     <div style="display: flex; gap: 10px;">
-        <a href="{% url 'school_classes:list' %}" class="btn btn-secondary">
+        <a href="{% url 'classes:list' %}" class="btn btn-secondary">
             <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i> Retour
         </a>
-        <a href="{% url 'school_classes:edit' object.pk %}" class="btn btn-warning">
+        <a href="{% url 'classes:edit' object.pk %}" class="btn btn-warning">
             <i class="fa-regular fa-pen-to-square" style="margin-right: 8px;"></i> Modifier
         </a>
     </div>

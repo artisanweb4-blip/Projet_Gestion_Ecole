@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Comptabilité - {{ school.school_name|default:"Gestion d'École" }}{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-coins"></i></span>Comptabilité</h1>
+        <p>Suivi des encaissements, frais scolaires et paiements (FCFA).</p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'accounting:payment_add' %}" class="btn btn-primary"
+                hx-get="{% url 'accounting:payment_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-money-bill-wave"></i> Encaisser un paiement
+        </a>
+        <a href="{% url 'accounting:fee_add' %}" class="btn btn-secondary"
+                hx-get="{% url 'accounting:fee_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-plus"></i> Nouveau frais
+        </a>
+    </div>
+</div>
+
+<div class="metric-grid">
+    <div class="metric-card">
+        <span class="metric-icon is-green"><i class="fa-solid fa-sack-dollar"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Total encaissé</span>
+            <span class="metric-value">{{ total_all|intcomma }} F</span>
+            <span class="metric-hint">{{ count_all }} paiement(s)</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-blue"><i class="fa-solid fa-calendar-day"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Encaissé ce mois</span>
+            <span class="metric-value">{{ total_month|intcomma }} F</span>
+            <span class="metric-hint">{{ month_label|default:"Mois en cours" }}</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-amber"><i class="fa-solid fa-file-invoice-dollar"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Frais configurés</span>
+            <span class="metric-value">{{ fees_count }}</span>
+            <span class="metric-hint"><a href="{% url 'accounting:fees' %}">Gérer les frais</a></span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-violet"><i class="fa-solid fa-wallet"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Modes de paiement</span>
+            <span class="metric-value">{{ by_method|length }}</span>
+            <span class="metric-hint">utilisés</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-chart-pie me-1 text-success"></i> Répartition par mode de paiement</h2>
+        </div>
+        {% if by_method %}
+            {% for row in by_method %}
+                <div style="margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px;">
+                        <span>{{ row.n }} paiement(s)</span>
+                        <span>{{ row.total|intcomma }} F</span>
+                    </div>
+                    <div style="background: #f1f5f9; border-radius: 999px; height: 12px; overflow: hidden;">
+                        <div style="width: {{ row.percent }}%; height: 100%; border-radius: 999px; background: {{ row.color }};"></div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state"><i class="fa-solid fa-wallet"></i><p>Aucun paiement enregistré.</p></div>
+        {% endif %}
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-receipt me-1 text-success"></i> Derniers paiements</h2>
+            <a href="{% url 'accounting:payments' %}" class="text-muted" style="font-size: 0.82rem;">Tout voir</a>
+        </div>
+        {% if recent_payments %}
+            <ul class="activity-list">
+                {% for payment in recent_payments %}
+                    <li>
+                        <span class="metric-icon is-green" style="width: 36px; height: 36px; font-size: 0.85rem;"><i class="fa-solid fa-check"></i></span>
+                        <span>
+                            <strong>{{ payment.student.full_name }}</strong><br>
+                            <span class="text-muted" style="font-size: 0.8rem;">Reçu #{{ payment.receipt_number }} · {{ payment.get_payment_method_display }}</span>
+                        </span>
+                        <span class="when">{{ payment.amount_paid|intcomma }} F</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty-state"><i class="fa-solid fa-receipt"></i><p>Aucun paiement enregistré.</p></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,168 +1,127 @@
 {% extends "base.html" %}
-{% load static %}
 
-{% block title %}Programmes d'Études - Gestion École{% endblock %}
+{% block title %}Programmes & Matières - Gestion d'École{% endblock %}
 
 {% block content %}
-<!-- En-tête de la page -->
 <div class="header-top">
     <div class="page-title">
-        <h1>Programmes d'Études</h1>
-        <p>Gérez les programmes et parcours de formation de l'établissement.</p>
+        <h1><span class="page-icon"><i class="fa-solid fa-book-open"></i></span>Programmes &amp; Matières</h1>
+        <p>Gérez les programmes d'études et les matières enseignées avec leurs coefficients.</p>
     </div>
-    <div>
-        <a href="{% url 'courses:program_create' %}" class="btn btn-primary">
-            <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Nouveau programme
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'courses:program_create' %}" class="btn btn-primary"
+                hx-get="{% url 'courses:program_create' %}" hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-plus"></i> Nouveau programme
+        </a>
+        <a href="{% url 'courses:subject_create' %}" class="btn btn-secondary"
+                hx-get="{% url 'courses:subject_create' %}" hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-plus"></i> Nouvelle matière
         </a>
     </div>
 </div>
 
-<!-- Barre de recherche et filtres -->
-<div class="dashboard-card" style="padding: 20px; margin-bottom: 24px;">
-    <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
-        <div style="flex: 1; min-width: 280px; max-width: 500px;">
-            <input type="text" class="form-control" placeholder="Rechercher par nom, code..." id="programSearchInput" value="{{ request.GET.q|default:'' }}">
-        </div>
-        <div style="color: var(--text-muted); font-size: 14px; font-weight: 600;">
-            Total : {{ programs|default:object_list|length }} programme(s)
-        </div>
+<!-- ============================ PROGRAMMES ============================ -->
+<div class="dashboard-card">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fa-solid fa-book me-1 text-success"></i> Programmes d'études</h2>
+        <span class="badge badge-success">{{ programs|length }} programme(s)</span>
     </div>
+    {% if programs %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Nom du programme</th>
+                        <th class="text-center">Matières</th>
+                        <th class="text-center">Classes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for program in programs %}
+                        <tr>
+                            <td><span class="badge badge-secondary">{{ program.code }}</span></td>
+                            <td><strong>{{ program.name }}</strong></td>
+                            <td class="text-center">{{ program.program_subjects.all|length }}</td>
+                            <td class="text-center">{{ program.classes.all|length }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'courses:program_detail' program.pk %}" class="btn-action btn-view" title="Voir le détail">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'courses:program_update' program.pk %}" class="btn-action btn-edit" title="Modifier"
+                                            hx-get="{% url 'courses:program_update' program.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </a>
+                                    <a href="{% url 'courses:program_delete' program.pk %}" class="btn-action btn-delete" title="Supprimer"
+                                            hx-get="{% url 'courses:program_delete' program.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-book"></i>
+            <p>Aucun programme enregistré.<br>Cliquez sur « Nouveau programme » pour commencer.</p>
+        </div>
+    {% endif %}
 </div>
 
-<!-- Tableau des programmes -->
-<div class="dashboard-card" style="padding: 0; overflow: hidden;">
-    <div style="overflow-x: auto;">
-        <table class="custom-table">
-            <thead>
-                <tr>
-                    <th style="width: 140px;">Code</th>
-                    <th>Intitulé du Programme</th>
-                    <th>Description</th>
-                    <th style="text-align: right; width: 140px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for program in programs|default:object_list %}
-                <tr>
-                    <td>
-                        {% if program.code %}
-                            <span class="badge-classe">{{ program.code }}</span>
-                        {% else %}
-                            <span style="color: var(--text-muted); font-size: 12px;">—</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <strong style="color: var(--primary-dark); font-weight: 600;">{{ program.name }}</strong>
-                    </td>
-                    <td style="color: var(--text-muted);">
-                        {% if program.description %}
-                            {{ program.description|truncatewords:15 }}
-                        {% else %}
-                            <em style="color: var(--text-light);">Aucune description</em>
-                        {% endif %}
-                    </td>
-                    <td style="text-align: right;">
-                        <div class="action-buttons">
-                            <a href="{% url 'courses:program_detail' program.pk %}" class="btn-action btn-view" title="Voir les détails">
-                                <i class="fa-regular fa-eye"></i>
-                            </a>
-                            <a href="{% url 'courses:program_update' program.pk %}" class="btn-action btn-edit" title="Modifier">
-                                <i class="fa-regular fa-pen-to-square"></i>
-                            </a>
-                            <a href="{% url 'courses:program_delete' program.pk %}" class="btn-action btn-delete" title="Supprimer">
-                                <i class="fa-regular fa-trash-can"></i>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                        <i class="fa-solid fa-graduation-cap" style="font-size: 32px; margin-bottom: 12px; color: var(--text-light); display: block;"></i>
-                        Aucun programme enregistré.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<!-- ============================ MATIÈRES ============================ -->
+<div class="dashboard-card">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fa-solid fa-pen-to-square me-1 text-success"></i> Matières</h2>
+        <span class="badge badge-success">{{ subjects|length }} matière(s)</span>
     </div>
+    {% if subjects %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Nom de la matière</th>
+                        <th class="text-center">Programmes liés</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subject in subjects %}
+                        <tr>
+                            <td><span class="badge badge-secondary">{{ subject.code|default:"—" }}</span></td>
+                            <td><strong>{{ subject.name }}</strong></td>
+                            <td class="text-center">{{ subject.subject_programs.all|length }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'courses:subject_edit' subject.pk %}" class="btn-action btn-edit" title="Modifier"
+                                            hx-get="{% url 'courses:subject_edit' subject.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </a>
+                                    <a href="{% url 'courses:subject_delete' subject.pk %}" class="btn-action btn-delete" title="Supprimer"
+                                            hx-get="{% url 'courses:subject_delete' subject.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="text-muted" style="font-size: 0.8rem; margin-top: 12px;">
+            <i class="fa-solid fa-circle-info"></i>
+            Les coefficients par programme se règlent dans le formulaire du programme (section « Matières du programme »).
+        </p>
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <p>Aucune matière enregistrée.<br>Cliquez sur « Nouvelle matière » pour commencer.</p>
+        </div>
+    {% endif %}
 </div>
-
-<!-- Styles CSS réutilisés à l'identique de la page enseignants -->
-<style>
-    .custom-table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: left;
-        font-size: 14px;
-    }
-    .custom-table thead tr {
-        background-color: #F8FAFC;
-        border-bottom: 1px solid var(--border-color);
-    }
-    .custom-table th {
-        padding: 14px 20px;
-        font-weight: 600;
-        color: var(--text-muted);
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .custom-table td {
-        padding: 14px 20px;
-        border-bottom: 1px solid var(--border-color);
-        vertical-align: middle;
-        color: var(--text-main);
-    }
-    .custom-table tbody tr:hover { background-color: #F8FAFC; }
-
-    /* Badges */
-    .badge-classe {
-        background-color: #F1F5F9;
-        color: var(--text-main);
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        border: 1px solid var(--border-color);
-    }
-
-    /* Actions */
-    .action-buttons { display: inline-flex; gap: 8px; }
-    .btn-action {
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        font-size: 13px;
-        transition: all 0.15s ease;
-    }
-    .btn-view { background-color: #F1F5F9; color: var(--text-muted); }
-    .btn-view:hover { background-color: var(--primary-light); color: var(--primary-dark); }
-    .btn-edit { background-color: #FEF3C7; color: #D97706; }
-    .btn-edit:hover { background-color: #FDE68A; }
-    .btn-delete { background-color: #FEE2E2; color: #DC2626; }
-    .btn-delete:hover { background-color: #FCA5A5; color: #7F1D1D; }
-</style>
-
-<!-- Script JS de recherche identique -->
-<script>
-    let programSearchTimeout;
-    const programSearchInput = document.getElementById('programSearchInput');
-
-    if (programSearchInput) {
-        programSearchInput.addEventListener('keyup', function() {
-            clearTimeout(programSearchTimeout);
-            programSearchTimeout = setTimeout(() => {
-                const search = programSearchInput.value;
-                let url = window.location.pathname + "?";
-                if (search) url += `q=${search}`;
-                window.location.href = url;
-            }, 400);
-        });
-    }
-</script>
 {% endblock %}

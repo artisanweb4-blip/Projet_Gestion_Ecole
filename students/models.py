@@ -10,12 +10,24 @@ from django.core.files import File
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from core.scoping import SchoolManager, scoped_manager
+
 from core.models import TimeStampMixin
 
 User = get_user_model()
 
 
 class Student(TimeStampMixin):
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='students',
+        verbose_name="École",
+    )
     # --- Choices ---
     GENDER_CHOICES = [
         ('M', 'Masculin'),
@@ -46,7 +58,7 @@ class Student(TimeStampMixin):
     last_name = models.CharField(max_length=100, verbose_name='Nom')
     student_id = models.CharField(
         max_length=20,
-        unique=True,
+        unique=False,
         editable=False,
         verbose_name='Matricule',
     )
@@ -117,6 +129,12 @@ class Student(TimeStampMixin):
         related_name='students',
         verbose_name='Classe',
     )
+    parents = models.ManyToManyField(
+        'parents.Parent',
+        blank=True,
+        related_name='children',
+        verbose_name='Parents / Tuteurs',
+    )
     enrollment_date = models.DateField(
         default=date.today, verbose_name="Date d'inscription"
     )
@@ -131,6 +149,9 @@ class Student(TimeStampMixin):
     )
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['school', 'student_id'], name='unique_student_id_per_school')
+        ]
         ordering = ['-created_at']
         verbose_name = 'Élève'
         verbose_name_plural = 'Élèves'
@@ -139,6 +160,10 @@ class Student(TimeStampMixin):
         return f'{self.first_name} {self.last_name} ({self.student_id or "Sans matricule"})'
 
     # --- Aliases / Propriétés de compatibilité ---
+    @property
+    def full_name(self):
+        return f'{self.first_name} {self.last_name}'
+
     @property
     def matricule(self):
         return self.student_id

@@ -1,47 +1,72 @@
-from django.test import TestCase
-from django.core.exceptions import ValidationError
+from datetime import date, datetime
+
 from django.contrib.auth import get_user_model
-from students.models import ClassRoom, StudentProfile
-from teachers.models import TeacherProfile
-from courses.models import Course
-from trs.models import Semester, ClassroomRoom, TimeSlot, Schedule
+from django.core.exceptions import ValidationError
+from django.test import TestCase
+
+from classes.models import Class
+from courses.models import Course, Program, Subject
 from exams.models import Exam, ExamResult
 from finance.models import FeeStructure, StudentPayment
-from datetime import date, time, datetime
+from students.models import Student
+from teachers.models import Teacher
 
 User = get_user_model()
 
+
 class BusinessRulesTestCase(TestCase):
+    """Tests des règles métier (notes, reçus, matricules)."""
+
     def setUp(self):
-        self.admin = User.objects.create_superuser("admin@test.com", "admin", "pass123")
-        self.teacher_user = User.objects.create_user("teacher@test.com", "teacher", "pass123", role="TEACHER")
-        self.student_user = User.objects.create_user("student@test.com", "student", "pass123", role="STUDENT")
-
-        self.classroom = ClassRoom.objects.create(code="L3-INFO", name="Licence 3 Informatique")
-        self.teacher = TeacherProfile.objects.create(user=self.teacher_user, employee_id="TCH-001", specialty="Informatique")
-        self.student = StudentProfile.objects.create(user=self.student_user, student_number="STD-001", classroom=self.classroom)
-
-        self.course = Course.objects.create(code="INF101", name="Algorithmique", teacher=self.teacher, classroom=self.classroom)
-
-    def test_exam_score_range_validation(self):
-        """Vérifie que les notes doivent être comprises entre 0 et total_points (20)."""
-        exam = Exam.objects.create(title="Examen", course=self.course, date=datetime.now(), total_points=20.0)
-
-        # Note invalide > 20
-        with self.assertRaises(ValidationError):
-            res = ExamResult(exam=exam, student=self.student, score=25.0)
-            res.full_clean()
-
-    def test_payment_receipt_deletion_locking(self):
-        """Vérifie qu'un paiement ne peut pas être supprimé si le reçu a été émis."""
-        fee = FeeStructure.objects.create(name="Scolarité", amount=100000.0, due_date=date.today())
-        payment = StudentPayment.objects.create(
-            student=self.student,
-            fee_structure=fee,
-            amount_paid=100000.0,
-            receipt_number="REC-9999",
-            is_receipt_issued=True
+        self.admin = User.objects.create_superuser(
+            email="admin@test.com", username="admin",
+            first_name="Admin", last_name="GCE", password="pass123",
+        )
+        self.teacher_user = User.objects.create_user(
+            email="teacher@test.com", username="teacher",
+            first_name="Prof", last_name="Test", password="pass123", role="TEACHER",
+        )
+        self.teacher = Teacher.objects.create(
+            user=self.teacher_user, first_name="Prof", last_name="Test",
+            employee_id="TCH-001", specialization="Informatique",
+            hire_date=date(2020, 9, 1), phone="+237600000000",
+        )
+        self.program = Program.objects.create(code="COL", name="Collège")
+        self.klass = Class.objects.create(name="6ème A", level="6ème", program=self.program)
+        self.student = Student.objects.create(
+            first_name="Élève", last_name="Test", gender="M",
+            date_of_birth=date(2012, 1, 1), place_of_birth="Yaoundé",
+            address="Yaoundé", phone="+237600000001",
+            emergency_contact_name="Parent", emergency_contact_phone="+237600000002",
+            class_group=self.klass,
+        )
+        self.subject = Subject.objects.create(name="Algorithmique", code="ALGO")
+        self.course = Course.objects.create(
+            name="Algorithmique", subject=self.subject,
+            school_class=self.klass, teacher=self.teacher,
         )
 
+    def test_matricule_auto_generated(self):
+        self.assertTrue(self.student.student_id.startswith("STD-"))
+        self.assertIsNotNone(self.student.qr_code)
+        self.assertIsNotNone(self.student.barcode)
+
+    def test_exam_score_range_validation(self):
+        exam = Exam.objects.create(
+            title="Examen", course=self.course,
+            date=datetime.now(), total_points=20.0,
+        )
+        with self.assertRaises(ValidationError):
+            ExamResult.objects.create(exam=exam, student=self.student, score=25.0)
+
+    def test_payment_receipt_cannot_be_deleted(self):
+        fee = FeeStructure.objects.create(
+            name="Scolarité", amount=50000,
+            due_date=date(2025, 10, 15),
+        )
+        payment = StudentPayment.objects.create(
+            student=self.student, fee_structure=fee,
+            amount_paid=50000, receipt_number="REC-TEST-0001",
+        )
         with self.assertRaises(ValidationError):
             payment.delete()

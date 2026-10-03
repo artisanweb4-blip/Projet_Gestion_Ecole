@@ -1,12 +1,24 @@
 from django.conf import settings
 from django.db import models
 
+from core.scoping import SchoolManager, scoped_manager
+
 from classes.models import Class  # Votre modèle de classe
 from courses.models import Program, Subject  # Ajustez 'Subject' si besoin
 
 
 class Classroom(models.Model):
     """Salles de cours, laboratoires ou amphithéâtres."""
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='classrooms',
+        verbose_name="École",
+    )
 
     name = models.CharField(max_length=50, verbose_name='Nom de la salle')
     capacity = models.PositiveIntegerField(
@@ -34,6 +46,8 @@ class Classroom(models.Model):
 
 class TimeSlot(models.Model):
     """Créneau horaire d'un cours pour une classe."""
+    objects = scoped_manager('school_class__school')
+
 
     DAYS_OF_WEEK = [
         (1, 'Lundi'),

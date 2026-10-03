@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ doc.title }} — Exemplaire</title>
+    <style>
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 10.5pt; color: #1e293b; margin: 34px; }
+        .frame { border: 2px solid #059669; padding: 22px 26px; }
+        .frame-inner { border: 0.5pt solid #a7f3d0; padding: 24px 28px; }
+        .head-table { width: 100%; margin-bottom: 14px; }
+        .school-name { font-size: 14pt; font-weight: bold; color: #065f46; }
+        .school-meta { font-size: 8pt; color: #64748b; }
+        .doc-kind { text-align: right; font-size: 8pt; color: #94a3b8; }
+        h1 {
+            text-align: center; font-size: 15pt; color: #065f46;
+            text-transform: uppercase; letter-spacing: 2px; margin: 10px 0 4px 0;
+        }
+        .ref { text-align: center; font-size: 8pt; color: #64748b; margin-bottom: 16px; }
+        .rule { border-bottom: 2px solid #059669; margin: 8px 0 18px 0; }
+        .intro { font-size: 10.5pt; margin-bottom: 14px; }
+        table.fields { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+        table.fields td {
+            border: 0.5pt solid #cbd5e1; padding: 8px 12px; font-size: 9.5pt;
+        }
+        table.fields td.lbl { background: #f0fdf4; font-weight: bold; width: 38%; color: #065f46; }
+        .conclusion { font-size: 10pt; margin: 14px 0 10px 0; }
+        .sign-table { width: 100%; margin-top: 30px; font-size: 9pt; }
+        .sign-line { border-top: 0.5pt solid #64748b; margin-top: 46px; width: 200px; }
+        .footer-note { margin-top: 22px; text-align: center; font-size: 7.5pt; color: #94a3b8; }
+        .stamp {
+            display: inline-block; border: 1.5pt solid #059669; color: #059669;
+            border-radius: 6px; padding: 4px 10px; font-size: 8pt; font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="frame">
+        <div class="frame-inner">
+            <table class="head-table">
+                <tr>
+                    <td>
+                        <div class="school-name">{{ school.school_name|default:"Gestion d'École" }}</div>
+                        <div class="school-meta">
+                            {{ school.address|default:"—" }}{% if school.phone %} · Tél : {{ school.phone }}{% endif %}{% if school.email %} · {{ school.email }}{% endif %}
+                        </div>
+                    </td>
+                    <td class="doc-kind">
+                        Année scolaire 2025-2026<br>
+                        Réf. : {{ reference }}<br>
+                        Date : {{ date_str }}
+                    </td>
+                </tr>
+            </table>
+            <h1>{{ doc.title }}</h1>
+            <div class="ref">— EXEMPLAIRE DE DÉMONSTRATION —</div>
+            <div class="rule"></div>
+
+            <p class="intro">{{ intro }}</p>
+
+            <table class="fields">
+                {% for label, value in fields %}
+                    <tr>
+                        <td class="lbl">{{ label }}</td>
+                        <td>{{ value }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+
+            <p class="conclusion">{{ conclusion }}</p>
+
+            <table class="sign-table">
+                <tr>
+                    <td>
+                        Fait à {{ school.address|default:"..." }}, le {{ date_str }}
+                        <div style="margin-top: 10px;"><span class="stamp">EXEMPLAIRE</span></div>
+                    </td>
+                    <td>
+                        Le Directeur
+                        <div class="sign-line"></div>
+                    </td>
+                </tr>
+            </table>
+
+            <div class="footer-note">
+                Document généré par la plateforme Gestion d'École — Les informations ci-dessus sont fictives.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

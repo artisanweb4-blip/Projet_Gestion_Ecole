@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Paiements - Comptabilité{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-money-bill-wave"></i></span>Paiements</h1>
+        <p>Historique des encaissements (espèces, Orange Money, Wave, MTN...).</p>
+    </div>
+    <a href="{% url 'accounting:payment_add' %}" class="btn btn-primary"
+            hx-get="{% url 'accounting:payment_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+        <i class="fa-solid fa-money-bill-wave"></i> Encaisser un paiement
+    </a>
+</div>
+
+<div class="dashboard-card">
+    {% if payments %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Reçu #</th>
+                        <th>Élève</th>
+                        <th class="text-center">Montant</th>
+                        <th class="text-center">Mode</th>
+                        <th class="text-center">Date</th>
+                        <th>Frais rattaché</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                        <tr>
+                            <td><strong>{{ payment.receipt_number }}</strong></td>
+                            <td>{{ payment.student.full_name }}</td>
+                            <td class="text-center">{{ payment.amount_paid|intcomma }} F</td>
+                            <td class="text-center"><span class="badge badge-success">{{ payment.get_payment_method_display }}</span></td>
+                            <td class="text-center">{{ payment.payment_date|date:"d/m/Y H:i" }}</td>
+                            <td>{{ payment.fee_structure.name|default:"—" }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'accounting:payment_delete' payment.pk %}" class="btn-action btn-delete" title="Supprimer"
+                                            hx-get="{% url 'accounting:payment_delete' payment.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="text-muted" style="font-size: 0.8rem; margin-top: 12px;">
+            <i class="fa-solid fa-circle-info"></i> Un paiement dont le reçu officiel a été émis ne peut plus être supprimé.
+        </p>
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-receipt"></i>
+            <p>Aucun paiement enregistré.<br>Cliquez sur « Encaisser un paiement » pour commencer.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
