@@ -382,6 +382,80 @@ class Command(BaseCommand):
             setting.school = demo_school
             setting.save()
 
+        # ------------------------------------------------------------------
+        # 6. Plateforme : abonnements, profils (sexe/région), visites démo
+        # ------------------------------------------------------------------
+        from datetime import timedelta as _td
+
+        from django.utils import timezone as _tz
+
+        from accounts.models import PlatformSetting, SubscriptionPlan
+
+        gratuit, _ = SubscriptionPlan.objects.get_or_create(
+            name="Gratuit",
+            defaults={"price": 0, "duration_days": 30, "max_students": 100,
+                      "description": "Pour découvrir la plateforme.",
+                      "features": "1 classe\nJusqu'à 100 élèves\nBulletins PDF"},
+        )
+        standard, _ = SubscriptionPlan.objects.get_or_create(
+            name="Standard",
+            defaults={"price": 15000, "duration_days": 30,
+                      "description": "Pour les écoles en croissance.",
+                      "features": "Classes illimitées\nComptabilité complète\nEmplois du temps\nDocuments officiels"},
+        )
+        premium, _ = SubscriptionPlan.objects.get_or_create(
+            name="Premium",
+            defaults={"price": 35000, "duration_days": 30,
+                      "description": "Établissements exigeants.",
+                      "features": "Tout le Standard\nAnalytique avancée\nSupport prioritaire\nSauvegardes automatiques"},
+        )
+        self.stdout.write("  [OK] 3 abonnements (Gratuit / Standard / Premium)")
+
+        platform_setting = PlatformSetting.load()
+        if platform_setting.default_plan is None:
+            platform_setting.default_plan = standard
+            platform_setting.support_email = "support@gestion-ecole.ml"
+            platform_setting.save()
+
+        if demo_school.subscription is None:
+            demo_school.subscription = standard
+            demo_school.subscription_until = _tz.localdate() + _td(days=90)
+            demo_school.save(update_fields=['subscription', 'subscription_until'])
+
+        # Sexe / région des comptes (pour l'analytique)
+        GENDERS = ['F', 'M', 'M', 'F', 'M', 'F']
+        REGIONS = ['Bamako', 'Bamako', 'Sikasso', 'Ségou', 'Kayes', 'Koulikoro',
+                   'Mopti', 'Bamako', 'Sikasso', 'Gao']
+        for i, user in enumerate(User.objects.all()):
+            changed = []
+            if not user.gender:
+                user.gender = GENDERS[i % len(GENDERS)]; changed.append('gender')
+            if not user.region:
+                user.region = REGIONS[i % len(REGIONS)]; changed.append('region')
+            if changed:
+                user.save(update_fields=changed)
+        self.stdout.write("  [OK] profils visiteurs (sexe / région)")
+
+        # Historique de visites (14 jours) pour la page Analytique
+        from analytics.models import VisitLog
+
+        PATHS = ['/dashboard/', '/students/', '/accounting/', '/grades/',
+                 '/courses/', '/timetable/', '/documents/', '/calendar/list/']
+        users_list = list(User.objects.all())
+        created_visits = 0
+        for offset in range(14):
+            day = _tz.localdate() - _td(days=offset)
+            for idx, user in enumerate(users_list):
+                # rythme variable mais déterministe
+                nb_paths = (idx + offset) % 3 + 1
+                for p in range(nb_paths):
+                    _, was_created = VisitLog.objects.get_or_create(
+                        user=user, day=day, path=PATHS[(idx * 2 + p) % len(PATHS)],
+                        defaults={'ip_address': '127.0.0.1', 'user_agent': 'seed'},
+                    )
+                    created_visits += 1 if was_created else 0
+        self.stdout.write(f"  [OK] visites de démonstration ({created_visits} lignes)")
+
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS("=" * 58))
         self.stdout.write(self.style.SUCCESS("DONNÉES DE DÉMO CRÉÉES — Comptes d'accès :"))

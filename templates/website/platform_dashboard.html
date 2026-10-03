@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Plateforme — Écoles{% endblock %}
+{% block title %}Plateforme — Tableau de bord{% endblock %}
 
 {% block content %}
 <div class="header-top">
     <div class="page-title">
-        <h1><span class="page-icon"><i class="fa-solid fa-server"></i></span>Gestion globale des écoles</h1>
-        <p>Supervision de toutes les écoles inscrites sur la plateforme GCE.</p>
+        <h1><span class="page-icon"><i class="fa-solid fa-gauge-high"></i></span>Tableau de bord — Super Admin</h1>
+        <p>Vue globale de la plateforme : écoles, utilisateurs, finances et consultations.</p>
     </div>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <a href="{% url 'platform_users' %}" class="btn btn-secondary">
-            <i class="fa-solid fa-users-gear"></i> Utilisateurs
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'platform_schools' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-school"></i> Toutes les écoles
         </a>
         <button type="button" class="btn btn-primary"
                 hx-get="{% url 'platform_school_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
@@ -20,121 +20,154 @@
     </div>
 </div>
 
-<!-- KPIs plateforme -->
 <div class="metric-grid">
     <div class="metric-card">
         <span class="metric-icon is-green"><i class="fa-solid fa-school"></i></span>
         <div class="metric-info">
-            <span class="metric-label">Écoles actives</span>
-            <span class="metric-value">{{ nb_schools_active }} <small style="font-size: 0.9rem; color: var(--text-muted);">/ {{ nb_schools_total }}</small></span>
+            <span class="metric-label">Écoles créées</span>
+            <span class="metric-value">{{ nb_schools_total }}</span>
+            <span class="metric-hint">{{ nb_schools_active }} active(s) · {{ nb_schools_suspended }} suspendue(s) · +{{ nb_schools_month }} ce mois</span>
         </div>
     </div>
     <div class="metric-card">
         <span class="metric-icon is-blue"><i class="fa-solid fa-users"></i></span>
         <div class="metric-info">
-            <span class="metric-label">Comptes utilisateurs</span>
+            <span class="metric-label">Utilisateurs</span>
             <span class="metric-value">{{ nb_users }}</span>
-            <span class="metric-hint">{{ nb_admins }} admin · {{ nb_teachers_users }} prof · {{ nb_comptables }} compta · {{ nb_parents_users }} parents</span>
+            <span class="metric-hint">{{ nb_admins }} admin(s) · {{ nb_parents_users }} parent(s)</span>
         </div>
     </div>
     <div class="metric-card">
-        <span class="metric-icon is-amber"><i class="fa-solid fa-user-graduate"></i></span>
+        <span class="metric-icon is-green"><i class="fa-solid fa-user-graduate"></i></span>
         <div class="metric-info">
             <span class="metric-label">Élèves (toutes écoles)</span>
             <span class="metric-value">{{ nb_students }}</span>
-            <span class="metric-hint">{{ nb_classes }} classes · {{ nb_teachers }} enseignants</span>
+            <span class="metric-hint">{{ nb_classes }} classe(s) au total</span>
         </div>
     </div>
     <div class="metric-card">
-        <span class="metric-icon is-violet"><i class="fa-solid fa-sack-dollar"></i></span>
+        <span class="metric-icon is-blue"><i class="fa-solid fa-chalkboard-user"></i></span>
         <div class="metric-info">
-            <span class="metric-label">Encaissements globaux</span>
+            <span class="metric-label">Enseignants</span>
+            <span class="metric-value">{{ nb_teachers }}</span>
+            <span class="metric-hint">Toutes écoles confondues</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-green"><i class="fa-solid fa-coins"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Encaissements cumulés</span>
             <span class="metric-value">{{ total_payments|intcomma }} F</span>
+            <span class="metric-hint">{{ payments_month|intcomma }} F ce mois</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon {% if visits_today_users %}is-green{% else %}is-red{% endif %}">
+            <i class="fa-solid fa-chart-line"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Consultations aujourd'hui</span>
+            <span class="metric-value">{{ visits_today_users }}</span>
+            <span class="metric-hint">{{ visits_today_views }} page(s) · {{ visits30_users }} visiteur(s) sur 30 j</span>
         </div>
     </div>
 </div>
 
-<!-- Liste des écoles -->
-<div class="dashboard-card">
-    <div class="card-header">
-        <h2 class="card-title"><i class="fa-solid fa-building-columns me-1 text-success"></i> Écoles inscrites</h2>
-        <form method="get" style="display: flex; gap: 8px;">
-            <input type="text" name="q" class="form-control" placeholder="Rechercher une école..." value="{{ q }}" style="min-width: 220px;">
-            <button type="submit" class="btn btn-secondary btn-sm"><i class="fa-solid fa-search"></i></button>
-        </form>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px;" class="two-col">
+    <!-- Activité 14 jours -->
+    <div class="dashboard-card">
+        <div class="summary-item" style="margin-bottom: 10px;">
+            <span class="summary-label">Consultations — 14 derniers jours</span>
+        </div>
+        <div class="bar-chart bar-chart-columns">
+            {% for d in visits_daily %}
+                <div class="bar-col" title="{{ d.label }} : {{ d.users }} visiteur(s), {{ d.views }} page(s)">
+                    <span class="bar-col-count">{{ d.views }}</span>
+                    <div class="bar-col-fill" style="height: {% if d.views %}{{ d.pct }}{% else %}1{% endif %}%;"></div>
+                    <span class="bar-col-label">{{ d.label }}</span>
+                </div>
+            {% endfor %}
+        </div>
     </div>
-    {% if schools %}
-        <div class="table-container">
-            <table class="custom-table">
-                <thead>
+    <!-- Répartition abonnements -->
+    <div class="dashboard-card">
+        <div class="summary-item" style="margin-bottom: 10px;">
+            <span class="summary-label">Écoles par abonnement</span>
+        </div>
+        {% if plan_stats or schools_without_plan %}
+            <div class="hbar-list">
+                {% for plan in plan_stats %}
+                    <div class="hbar-item">
+                        <div class="hbar-head"><span>{{ plan.name }}</span><strong>{{ plan.nb }}</strong></div>
+                        <div class="hbar-track"><div class="hbar-fill" style="width: {% widthratio plan.nb plan_max 100 %}%;"></div></div>
+                    </div>
+                {% endfor %}
+                {% if schools_without_plan %}
+                    <div class="hbar-item">
+                        <div class="hbar-head"><span>Sans abonnement</span><strong>{{ schools_without_plan }}</strong></div>
+                        <div class="hbar-track"><div class="hbar-fill is-grey" style="width: {% widthratio schools_without_plan nb_schools_total 100 %}%;"></div></div>
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="empty-state"><i class="fa-solid fa-credit-card"></i><p>Aucun abonnement défini.</p></div>
+        {% endif %}
+        <a href="{% url 'platform_subscriptions' %}" class="btn btn-outline btn-sm" style="margin-top: 12px;">
+            <i class="fa-solid fa-credit-card"></i> Gérer les abonnements
+        </a>
+    </div>
+</div>
+
+<!-- Dernières écoles -->
+<div class="dashboard-card" style="margin-top: 18px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+        <span class="summary-label">Dernières écoles créées</span>
+        <a href="{% url 'platform_schools' %}" class="btn btn-outline btn-sm">
+            <i class="fa-solid fa-arrow-right"></i> Tout voir
+        </a>
+    </div>
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>École</th>
+                    <th>Abonnement</th>
+                    <th class="text-center">Comptes</th>
+                    <th class="text-center">Statut</th>
+                    <th class="text-center">Créée le</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for school in latest_schools %}
                     <tr>
-                        <th>École</th>
-                        <th class="text-center">Formule</th>
-                        <th class="text-center">Comptes</th>
-                        <th class="text-center">Élèves</th>
-                        <th class="text-center">Ens.</th>
-                        <th class="text-center">Classes</th>
-                        <th class="text-center">Statut</th>
-                        <th class="text-center">Inscrite le</th>
-                        <th>Actions</th>
+                        <td>
+                            <strong><i class="fa-solid fa-school" style="color: var(--primary); margin-right: 6px;"></i>{{ school.name }}</strong><br>
+                            <span class="text-muted" style="font-size: 0.78rem;">{{ school.code }}</span>
+                        </td>
+                        <td>
+                            {% if school.subscription %}
+                                <span class="badge badge-info">{{ school.subscription.name }}</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Aucun</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">{{ school.users.count }}</td>
+                        <td class="text-center">
+                            {% if school.is_active %}<span class="badge badge-success">Active</span>
+                            {% else %}<span class="badge badge-danger">Suspendue</span>{% endif %}
+                        </td>
+                        <td class="text-center">{{ school.created_at|date:"d/m/Y" }}</td>
+                        <td>
+                            <a href="{% url 'platform_school_detail' school.pk %}" class="btn-action btn-view" title="Voir">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {% for school in schools %}
-                        <tr>
-                            <td>
-                                <strong><i class="fa-solid fa-school" style="color: var(--primary); margin-right: 6px;"></i>{{ school.name }}</strong><br>
-                                <span class="text-muted" style="font-size: 0.78rem;">{{ school.code }}</span>
-                            </td>
-                            <td class="text-center">
-                                <span class="badge {% if school.plan == 'PREMIUM' %}badge-warning{% elif school.plan == 'GRATUIT' %}badge-secondary{% else %}badge-info{% endif %}">
-                                    {{ school.get_plan_display }}
-                                </span>
-                            </td>
-                            <td class="text-center">{{ school.nb_users }}</td>
-                            <td class="text-center">{{ school.nb_students }}</td>
-                            <td class="text-center">{{ school.nb_teachers }}</td>
-                            <td class="text-center">{{ school.nb_classes }}</td>
-                            <td class="text-center">
-                                {% if school.is_active %}
-                                    <span class="badge badge-success">Active</span>
-                                {% else %}
-                                    <span class="badge badge-danger">Suspendue</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-center">{{ school.created_at|date:"d/m/Y" }}</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <a href="{% url 'platform_school_update' school.pk %}" class="btn-action btn-edit" title="Modifier"
-                                            hx-get="{% url 'platform_school_update' school.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
-                                        <i class="fa-solid fa-pen"></i>
-                                    </a>
-                                    <a href="{% url 'platform_school_detail' school.pk %}" class="btn-action btn-view" title="Voir">
-                                        <i class="fa-regular fa-eye"></i>
-                                    </a>
-                                    <form method="post" action="{% url 'platform_school_toggle' school.pk %}" style="display: inline;">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn-action btn-entry"
-                                                title="{% if school.is_active %}Suspendre{% else %}Réactiver{% endif %}">
-                                            <i class="fa-solid {% if school.is_active %}fa-pause{% else %}fa-play{% endif %}"></i>
-                                        </button>
-                                    </form>
-                                    <button type="button" class="btn-action btn-delete" title="Supprimer"
-                                            hx-get="{% url 'platform_school_delete' school.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
-                                        <i class="fa-regular fa-trash-can"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <div class="empty-state">
-            <i class="fa-solid fa-school"></i>
-            <p>Aucune école inscrite pour le moment.<br>Cliquez sur « Nouvelle école » pour créer la première.</p>
-        </div>
-    {% endif %}
+                {% empty %}
+                    <tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-school"></i><p>Aucune école pour le moment.</p></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

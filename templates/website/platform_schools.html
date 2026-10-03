@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Plateforme — Écoles{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-school"></i></span>Écoles du système</h1>
+        <p>{{ nb_total }} école(s) créée(s) sur la plateforme — 20 par page.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'platform_dashboard' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-gauge-high"></i> Tableau de bord
+        </a>
+        <button type="button" class="btn btn-primary"
+                hx-get="{% url 'platform_school_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-plus"></i> Créer une école
+        </button>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="dashboard-card" style="padding: 14px 20px;">
+    <form method="get" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Rechercher (nom, code, email…)" style="flex: 1; min-width: 220px;">
+        <select name="status" class="form-control" style="max-width: 170px;">
+            <option value="">Tous les statuts</option>
+            <option value="active" {% if f_status == 'active' %}selected{% endif %}>Actives</option>
+            <option value="suspended" {% if f_status == 'suspended' %}selected{% endif %}>Suspendues</option>
+        </select>
+        <select name="abonnement" class="form-control" style="max-width: 200px;">
+            <option value="">Tous les abonnements</option>
+            <option value="none" {% if f_abonnement == 'none' %}selected{% endif %}>Sans abonnement</option>
+            {% for plan in plans %}
+                <option value="{{ plan.pk }}" {% if f_abonnement == plan.pk|stringformat:"s" %}selected{% endif %}>{{ plan.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-search"></i> Filtrer</button>
+    </form>
+</div>
+
+<div class="dashboard-card" style="margin-top: 16px;">
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>École</th>
+                    <th>Abonnement</th>
+                    <th class="text-center">Comptes</th>
+                    <th class="text-center">Élèves</th>
+                    <th class="text-center">Ens.</th>
+                    <th class="text-center">Classes</th>
+                    <th class="text-center">Statut</th>
+                    <th class="text-center">Créée le</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for school in schools %}
+                    <tr>
+                        <td>
+                            <strong><i class="fa-solid fa-school" style="color: var(--primary); margin-right: 6px;"></i>{{ school.name }}</strong><br>
+                            <span class="text-muted" style="font-size: 0.78rem;">{{ school.code }}{% if school.email %} · {{ school.email }}{% endif %}</span>
+                        </td>
+                        <td>
+                            {% if school.subscription %}
+                                <span class="badge badge-info">{{ school.subscription.name }}</span>
+                                {% if school.subscription_until %}<br><span class="text-muted" style="font-size: 0.72rem;">jusqu'au {{ school.subscription_until|date:"d/m/Y" }}</span>{% endif %}
+                            {% else %}
+                                <span class="badge badge-secondary">Aucun</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">{{ school.nb_users }}</td>
+                        <td class="text-center">{{ school.nb_students }}</td>
+                        <td class="text-center">{{ school.nb_teachers }}</td>
+                        <td class="text-center">{{ school.nb_classes }}</td>
+                        <td class="text-center">
+                            {% if school.is_active %}<span class="badge badge-success">Active</span>
+                            {% else %}<span class="badge badge-danger">Suspendue</span>{% endif %}
+                        </td>
+                        <td class="text-center">{{ school.created_at|date:"d/m/Y" }}</td>
+                        <td>
+                            <div style="display: flex; gap: 4px;">
+                                <a href="{% url 'platform_school_detail' school.pk %}" class="btn-action btn-view" title="Voir la fiche">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                <a href="{% url 'platform_school_update' school.pk %}" class="btn-action btn-edit" title="Modifier"
+                                        hx-get="{% url 'platform_school_update' school.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                    <i class="fa-solid fa-pen"></i>
+                                </a>
+                                <a href="{% url 'platform_school_subscription' school.pk %}" class="btn-action btn-entry" title="Attribuer un abonnement"
+                                        hx-get="{% url 'platform_school_subscription' school.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                    <i class="fa-solid fa-credit-card"></i>
+                                </a>
+                                <form method="post" action="{% url 'platform_school_toggle' school.pk %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-action btn-entry"
+                                            title="{% if school.is_active %}Suspendre{% else %}Réactiver{% endif %}">
+                                        <i class="fa-solid {% if school.is_active %}fa-pause{% else %}fa-play{% endif %}"></i>
+                                    </button>
+                                </form>
+                                <a href="{% url 'platform_school_delete' school.pk %}" class="btn-action btn-delete" title="Supprimer"
+                                        hx-get="{% url 'platform_school_delete' school.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                    <i class="fa-solid fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state"><i class="fa-solid fa-school"></i>
+                                <p>{% if q or f_status or f_abonnement %}Aucune école ne correspond aux filtres.{% else %}Aucune école créée pour le moment.{% endif %}</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&status={{ f_status }}&abonnement={{ f_abonnement }}">« Précédent</a>
+            {% endif %}
+            <span>Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }} ({{ page_obj.paginator.count }} écoles)</span>
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&q={{ q }}&status={{ f_status }}&abonnement={{ f_abonnement }}">Suivant »</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

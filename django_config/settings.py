@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'admissions',      # Demandes d'admission (API)
     'assignments',     # Devoirs (API)
     'exams',           # Examens (API)
+    'analytics',       # Analytique (visites de la plateforme)
 ]
 
 MIDDLEWARE = [
@@ -85,6 +86,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'core.scoping.CurrentSchoolMiddleware',
+    'analytics.middleware.VisitTrackingMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_htmx.middleware.HtmxMiddleware',

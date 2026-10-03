@@ -42,6 +42,16 @@ def register_school(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
 
+    from accounts.models import PlatformSetting
+    setting = PlatformSetting.load()
+    if not setting.public_registration_enabled:
+        messages.error(
+            request,
+            "Les inscriptions d'écoles sont actuellement fermées. "
+            "Merci de contacter le support de la plateforme."
+        )
+        return redirect('login')
+
     form = SchoolRegistrationForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
         school = form.save(commit=False)
@@ -59,6 +69,15 @@ def register_school(request):
         admin.school = school
         admin.is_staff = True
         admin.save()
+
+        # Abonnement par défaut configuré côté plateforme
+        if setting.default_plan:
+            from datetime import timedelta
+            from django.utils import timezone
+            school.subscription = setting.default_plan
+            school.subscription_until = timezone.localdate() + timedelta(
+                days=setting.default_plan.duration_days)
+            school.save(update_fields=['subscription', 'subscription_until'])
 
         # Paramètres de l'établissement dédiés à cette nouvelle école
         from school_settings.models import SchoolSetting

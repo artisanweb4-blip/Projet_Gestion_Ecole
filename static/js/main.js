@@ -141,13 +141,22 @@
     // Met à jour le lien actif du menu après chaque navigation boostée
     function updateActiveMenu() {
         var path = window.location.pathname;
-        document.querySelectorAll('.menu-link').forEach(function (link) {
+        var links = Array.prototype.slice.call(
+            document.querySelectorAll('.menu-link')
+        );
+        // Correspondance exacte ou préfixe propre ; le lien le plus
+        // spécifique (préfixe le plus long) gagne.
+        var best = null;
+        links.forEach(function (link) {
             var href = link.getAttribute('href');
-            if (!href || href === '#') { return; }
-            // Correspondance exacte ou préfixe propre (/grades/ couvre /grades/entry/...)
-            var isActive = href === path ||
-                (href !== '/' && path.indexOf(href) === 0);
-            link.classList.toggle('active', isActive);
+            var match = href && href !== '/' && path.indexOf(href) === 0;
+            if (match && (best === null || href.length > best.length)) {
+                best = href;
+            }
+        });
+        links.forEach(function (link) {
+            var href = link.getAttribute('href');
+            link.classList.toggle('active', href !== null && href === best);
         });
     }
 

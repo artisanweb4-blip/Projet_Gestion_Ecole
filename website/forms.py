@@ -3,7 +3,7 @@ Formulaires publics (inscription d'une école) et plateforme (super admin).
 """
 from django import forms
 
-from accounts.models import School, User
+from accounts.models import PlatformSetting, School, SubscriptionPlan, User
 
 
 class _SchoolAdminFieldsMixin(forms.Form):
@@ -61,6 +61,15 @@ class SchoolRegistrationForm(_SchoolAdminFieldsMixin, forms.ModelForm):
 class PlatformSchoolForm(_SchoolAdminFieldsMixin, forms.ModelForm):
     """Création d'une école par le super admin (plateforme)."""
 
+    subscription = forms.ModelChoiceField(
+        label="Abonnement", required=False, empty_label="— Aucun —",
+        queryset=SubscriptionPlan.objects.filter(is_active=True),
+    )
+    subscription_until = forms.DateField(
+        label="Valable jusqu'au", required=False,
+        widget=forms.DateInput(attrs={'type': 'date'}),
+    )
+
     class Meta:
         model = School
         fields = ['name', 'plan', 'address', 'phone', 'email']
@@ -103,9 +112,19 @@ class PlatformUserForm(forms.ModelForm):
         help_text="Au moins 6 caractères.",
     )
 
+    gender = forms.ChoiceField(
+        label="Sexe", required=False,
+        choices=[('', '— Non renseigné —')] + list(User.GENDER_CHOICES),
+    )
+    region = forms.ChoiceField(
+        label="Région", required=False,
+        choices=[('', '— Non renseignée —')] + list(User.REGION_CHOICES),
+    )
+
     class Meta:
         model = User
-        fields = ['school', 'role', 'first_name', 'last_name', 'email']
+        fields = ['school', 'role', 'first_name', 'last_name', 'email',
+                  'gender', 'region']
         widgets = {
             'first_name': forms.TextInput(attrs={'placeholder': 'Prénom'}),
             'last_name': forms.TextInput(attrs={'placeholder': 'Nom'}),
@@ -150,3 +169,46 @@ class PlatformUserPasswordForm(forms.Form):
         if pwd != cleaned.get('password_confirm'):
             raise forms.ValidationError("Les deux mots de passe ne correspondent pas.")
         return cleaned
+
+
+class PlatformSchoolSubscriptionForm(forms.ModelForm):
+    """Attribution / modification de l'abonnement d'une école."""
+
+    class Meta:
+        model = School
+        fields = ['subscription', 'subscription_until']
+        widgets = {
+            'subscription_until': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['subscription'].queryset = SubscriptionPlan.objects.order_by('price')
+        self.fields['subscription'].empty_label = "— Aucun —"
+
+
+class PlatformSubscriptionForm(forms.ModelForm):
+    """Création / modification d'une formule d'abonnement."""
+
+    class Meta:
+        model = SubscriptionPlan
+        fields = ['name', 'price', 'duration_days', 'max_students',
+                  'description', 'features', 'is_active']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 2}),
+            'features': forms.Textarea(attrs={'rows': 4}),
+        }
+
+
+class PlatformSettingsForm(forms.ModelForm):
+    """Paramètres généraux de la plateforme."""
+
+    class Meta:
+        model = PlatformSetting
+        fields = ['platform_name', 'support_email',
+                  'public_registration_enabled', 'default_plan']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['default_plan'].queryset = SubscriptionPlan.objects.order_by('price')
+        self.fields['default_plan'].empty_label = "— Aucun —"
