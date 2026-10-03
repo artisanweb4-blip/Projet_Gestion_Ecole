@@ -55,9 +55,17 @@ class PasswordResetView(APIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     """ViewSet CRUD réservé à l'administrateur pour gérer l'ensemble des comptes utilisateurs."""
-    queryset = User.objects.all().order_by('-created_at')
     serializer_class = UserSerializer
     permission_classes = [IsAdminUserRole]
+
+    def get_queryset(self):
+        # Isolation multi-écoles : évalué par requête
+        user = self.request.user
+        if user.is_superuser:
+            return User.objects.all().order_by('-created_at')
+        if getattr(user, 'school_id', None):
+            return User.objects.filter(school_id=user.school_id).order_by('-created_at')
+        return User.objects.filter(pk=user.pk)
     search_fields = ['username', 'first_name', 'last_name', 'email', 'role']
     filterset_fields = ['role', 'is_active']
 

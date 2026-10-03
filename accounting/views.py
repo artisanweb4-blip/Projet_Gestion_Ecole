@@ -85,10 +85,15 @@ class FeeListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
     template_name = 'accounting/fee_list.html'
     context_object_name = 'fees'
     allowed_roles = ALLOWED_ROLES
-    queryset = FeeStructure.objects.select_related('classroom').order_by('-due_date')
+
+    def get_queryset(self):
+        # IMPORTANT : évalué par requête (isolation multi-écoles)
+        return (FeeStructure.objects.select_related('classroom')
+                .order_by('-due_date'))
 
 
 class FeeCreateView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, CreateView):
+    allowed_roles = ALLOWED_ROLES
     model = FeeStructure
     form_class = FeeForm
     template_name = 'accounting/fee_form.html'
@@ -102,6 +107,7 @@ class FeeCreateView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, Create
 
 
 class FeeUpdateView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, UpdateView):
+    allowed_roles = ALLOWED_ROLES
     model = FeeStructure
     form_class = FeeForm
     template_name = 'accounting/fee_form.html'
@@ -112,6 +118,7 @@ class FeeUpdateView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, Update
 
 
 class FeeDeleteView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, DeleteView):
+    allowed_roles = ALLOWED_ROLES
     model = FeeStructure
     template_name = 'accounting/fee_confirm_delete.html'
     success_url = reverse_lazy('accounting:fees')
@@ -134,6 +141,7 @@ class PaymentListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
 
 
 class PaymentCreateView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, CreateView):
+    allowed_roles = ALLOWED_ROLES
     model = StudentPayment
     form_class = PaymentForm
     template_name = 'accounting/payment_form.html'
@@ -154,6 +162,7 @@ class PaymentCreateView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, Cr
 
 
 class PaymentDeleteView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, DeleteView):
+    allowed_roles = ALLOWED_ROLES
     model = StudentPayment
     template_name = 'accounting/payment_confirm_delete.html'
     success_url = reverse_lazy('accounting:payments')

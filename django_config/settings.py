@@ -87,6 +87,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'core.scoping.CurrentSchoolMiddleware',
     'analytics.middleware.VisitTrackingMiddleware',
+    'core.middleware_cache.NoCacheHtmlMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_htmx.middleware.HtmxMiddleware',
