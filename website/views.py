@@ -60,6 +60,17 @@ def register_school(request):
         admin.is_staff = True
         admin.save()
 
+        # Paramètres de l'établissement dédiés à cette nouvelle école
+        from school_settings.models import SchoolSetting
+        SchoolSetting.objects.get_or_create(
+            school=school,
+            defaults={
+                'school_name': school.name,
+                'address': school.address, 'phone': school.phone,
+                'email': school.email,
+            },
+        )
+
         auth_login(request, admin)
         messages.success(
             request,

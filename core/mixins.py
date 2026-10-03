@@ -88,7 +88,8 @@ class HtmxCrudMixin:
 
     def form_valid(self, form):
         # Isolation multi-écoles : rattache l'objet à l'école de l'utilisateur
-        assign_school(form.instance, self.request.user)
+        # Les vues de suppression utilisent un formulaire simple (sans instance)
+        assign_school(getattr(form, 'instance', None), self.request.user)
         response = super().form_valid(form)
         if self.request.htmx:
             messages.success(self.request, self.success_message)

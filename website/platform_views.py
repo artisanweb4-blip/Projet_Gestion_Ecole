@@ -11,6 +11,7 @@ from django.views.generic import (
     DeleteView,
     DetailView,
     ListView,
+    FormView,
     TemplateView,
     UpdateView,
     View,
@@ -234,9 +235,8 @@ class PlatformUserToggleView(SuperadminRequiredMixin, View):
         return redirect('platform_users')
 
 
-class PlatformUserPasswordView(SuperadminRequiredMixin, HtmxCrudMixin, UpdateView):
-    """Réinitialisation du mot de passe d'un compte (form_packé)."""
-    model = User
+class PlatformUserPasswordView(SuperadminRequiredMixin, HtmxCrudMixin, FormView):
+    """Réinitialisation du mot de passe d'un compte (modale + page complète)."""
     form_class = PlatformUserPasswordForm
     template_name = 'website/platform_user_password.html'
     success_url = reverse_lazy('platform_users')
@@ -244,10 +244,22 @@ class PlatformUserPasswordView(SuperadminRequiredMixin, HtmxCrudMixin, UpdateVie
     modal_title = "Réinitialiser le mot de passe"
     success_message = "Mot de passe réinitialisé."
 
+    def dispatch(self, request, *args, **kwargs):
+        self.target_user = get_object_or_404(User, pk=kwargs['pk'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['target_user'] = self.target_user
+        return context
+
     def form_valid(self, form):
-        self.object.set_password(form.cleaned_data['password'])
-        self.object.save(update_fields=['password'])
-        messages.success(self.request, self.success_message)
+        self.target_user.set_password(form.cleaned_data['password'])
+        self.target_user.save(update_fields=['password'])
+        messages.success(
+            self.request,
+            f"Mot de passe de « {self.target_user.email} » réinitialisé."
+        )
         if self.request.htmx:
             from django_htmx.http import HttpResponseClientRedirect
             return HttpResponseClientRedirect(str(self.get_success_url()))
