@@ -1,5 +1,7 @@
 from datetime import date
 from django.db import models
+
+from core.scoping import SchoolManager, scoped_manager
 from django.contrib.auth import get_user_model
 from core.models import TimeStampMixin
 
@@ -7,6 +9,16 @@ User = get_user_model()
 
 
 class Teacher(TimeStampMixin):
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='teachers',
+        verbose_name="École",
+    )
     user = models.OneToOneField(
         User, 
         on_delete=models.SET_NULL, 

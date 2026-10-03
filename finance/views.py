@@ -12,6 +12,10 @@ class FeeStructureViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['classroom', 'academic_year']
 
+    def get_queryset(self):
+        # Isolation multi-écoles : évalué par requête (gestionnaire filtrant)
+        return FeeStructure.objects.all().order_by('-due_date')
+
 
 class StudentPaymentViewSet(viewsets.ModelViewSet):
     queryset = StudentPayment.objects.all().order_by('-payment_date')
@@ -20,6 +24,9 @@ class StudentPaymentViewSet(viewsets.ModelViewSet):
     filterset_fields = ['student', 'fee_structure', 'payment_method', 'is_receipt_issued']
     search_fields = ['receipt_number', 'student__user__first_name', 'student__user__last_name']
 
+    def get_queryset(self):
+        # Isolation multi-écoles : évalué par requête (gestionnaire filtrant)
+        return StudentPayment.objects.all().order_by('-payment_date')
     def destroy(self, request, *args, **kwargs):
         """Intercepteur pour appliquer le verrouillage des reçus lors de la suppression."""
         instance = self.get_object()

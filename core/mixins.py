@@ -3,6 +3,8 @@ from django.contrib.auth.mixins import AccessMixin
 from django.shortcuts import redirect, render
 from django_htmx.http import HttpResponseClientRedirect
 
+from core.scoping import assign_school
+
 
 class RoleRequiredMixin(AccessMixin):
     """
@@ -85,6 +87,8 @@ class HtmxCrudMixin:
         return super().render_to_response(context, **response_kwargs)
 
     def form_valid(self, form):
+        # Isolation multi-écoles : rattache l'objet à l'école de l'utilisateur
+        assign_school(form.instance, self.request.user)
         response = super().form_valid(form)
         if self.request.htmx:
             messages.success(self.request, self.success_message)

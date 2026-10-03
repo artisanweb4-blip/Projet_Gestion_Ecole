@@ -1,3 +1,5 @@
+from django.contrib.auth.views import LoginView as DjangoLoginView
+
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -58,3 +60,19 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUserRole]
     search_fields = ['username', 'first_name', 'last_name', 'email', 'role']
     filterset_fields = ['role', 'is_active']
+
+
+class SchoolLoginView(DjangoLoginView):
+    """Connexion : refuse les comptes rattachés à une école suspendue."""
+
+    def form_valid(self, form):
+        user = form.get_user()
+        school = getattr(user, 'school', None)
+        if school is not None and not school.is_active:
+            form.add_error(
+                None,
+                "Cet établissement est actuellement suspendu. "
+                "Merci de contacter l'administrateur de la plateforme."
+            )
+            return self.form_invalid(form)
+        return super().form_valid(form)

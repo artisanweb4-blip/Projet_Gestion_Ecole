@@ -1,4 +1,6 @@
 from django.db import models
+
+from core.scoping import SchoolManager, scoped_manager
 from django.core.exceptions import ValidationError
 from core.models import TimeStampMixin
 from courses.models import Course
@@ -6,6 +8,8 @@ from students.models import Student as StudentProfile
 
 class Assignment(TimeStampMixin):
     """Devoir à rendre par les étudiants."""
+    objects = scoped_manager('course__school_class__school')
+
     title = models.CharField(max_length=200, verbose_name="Titre du devoir")
     description = models.TextField(verbose_name="Consignes / Description")
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='assignments', verbose_name="Cours concerné")
@@ -23,6 +27,8 @@ class Assignment(TimeStampMixin):
 
 class AssignmentSubmission(TimeStampMixin):
     """Rendu de devoir par un étudiant avec correction et note de l'enseignant."""
+    objects = scoped_manager('student__school')
+
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions', verbose_name="Devoir")
     student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='submissions', verbose_name="Étudiant")
     submission_text = models.TextField(blank=True, null=True, verbose_name="Réponse en ligne")

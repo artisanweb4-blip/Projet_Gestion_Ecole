@@ -1,10 +1,22 @@
 import uuid
 from django.core.exceptions import ValidationError
 from django.db import models
+
+from core.scoping import SchoolManager, scoped_manager
 from core.models import TimeStampMixin
 
 
 class Program(TimeStampMixin):
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='programs',
+        verbose_name="École",
+    )
     code = models.CharField(
         max_length=20, unique=True, verbose_name="Code du programme"
     )
@@ -22,6 +34,16 @@ class Program(TimeStampMixin):
 
 
 class Subject(TimeStampMixin):
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='subjects',
+        verbose_name="École",
+    )
     name = models.CharField(max_length=150, verbose_name="Nom de la matière")
     code = models.CharField(
         max_length=50,
@@ -61,6 +83,8 @@ class Subject(TimeStampMixin):
 
 
 class ProgramSubject(TimeStampMixin):
+    objects = scoped_manager('program__school')
+
     program = models.ForeignKey(
         Program, on_delete=models.CASCADE, related_name='program_subjects'
     )
@@ -103,6 +127,8 @@ class ProgramSubject(TimeStampMixin):
 
 class Course(TimeStampMixin):
     """Un cours : une matière enseignée à une classe par un enseignant."""
+    objects = scoped_manager('school_class__school')
+
     code = models.CharField(
         max_length=20,
         unique=True,
@@ -157,6 +183,8 @@ class Course(TimeStampMixin):
 
 class Enrollment(TimeStampMixin):
     """Inscription d'un élève à un cours."""
+    objects = scoped_manager('student__school')
+
     course = models.ForeignKey(
         Course,
         on_delete=models.CASCADE,

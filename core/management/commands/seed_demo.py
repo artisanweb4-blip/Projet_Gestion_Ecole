@@ -343,6 +343,45 @@ class Command(BaseCommand):
         parent_user.set_password("parent123")
         parent_user.save()
 
+        # ------------------------------------------------------------------
+        # 5. Isolation multi-écoles : tout rattacher à l'école de la démo
+        # ------------------------------------------------------------------
+        from accounts.models import School as PlatformSchool
+        from school_settings.models import SchoolSetting as SchoolSettingModel
+
+        setting = SchoolSettingModel.objects.first()
+        demo_school, created = PlatformSchool.objects.get_or_create(
+            name=(setting.school_name if setting and setting.school_name else "École Démo"),
+            defaults={"address": (setting.address if setting else "") or "",
+                      "phone": (setting.phone if setting else "") or "",
+                      "email": (setting.email if setting else "") or ""},
+        )
+        MODELS = [
+            ("students.models", "Student"), ("teachers.models", "Teacher"),
+            ("classes.models", "Class"), ("parents.models", "Parent"),
+            ("courses.models", "Program"), ("courses.models", "Subject"),
+            ("grades.models", "AcademicYear"), ("grades.models", "Period"),
+            ("timetable.models", "Classroom"),
+            ("school_calendar.models", "EventCategory"),
+            ("school_calendar.models", "AcademicEvent"),
+            ("admissions.models", "AdmissionApplication"),
+            ("documents.models", "DocumentModele"),
+        ]
+        import importlib as _il
+        for mod_name, cls_name in MODELS:
+            model = getattr(_il.import_module(mod_name), cls_name)
+            updated = model.objects.filter(school__isnull=True).update(school=demo_school)
+            if updated:
+                self.stdout.write(f"  [OK] {cls_name}: {updated} rattache(s) a l'ecole")
+
+        n_users = User.objects.filter(school__isnull=True).update(school=demo_school)
+        if n_users:
+            self.stdout.write(f"  [OK] Users: {n_users} rattache(s) a l'ecole")
+
+        if setting and setting.school_id is None:
+            setting.school = demo_school
+            setting.save()
+
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS("=" * 58))
         self.stdout.write(self.style.SUCCESS("DONNÉES DE DÉMO CRÉÉES — Comptes d'accès :"))

@@ -5,6 +5,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
+
+from accounts import views as accounts_views
 from django.urls import include, path
 
 urlpatterns = [
@@ -18,7 +20,7 @@ urlpatterns = [
     path('', include('dashboard.urls')),
 
     # Authentification (session web)
-    path('accounts/login/', auth_views.LoginView.as_view(
+    path('accounts/login/', accounts_views.SchoolLoginView.as_view(
         template_name='registration/login.html',
         redirect_authenticated_user=True,
     ), name='login'),

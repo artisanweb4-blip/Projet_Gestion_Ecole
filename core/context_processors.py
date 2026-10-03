@@ -11,6 +11,8 @@ MENU = [
     {'section': 'Plateforme'},
     {'label': 'Écoles (Super Admin)', 'url_name': 'platform_dashboard',
      'icon': 'fa-server', 'prefix': '/platform', 'superuser_only': True},
+    {'label': 'Utilisateurs (plateforme)', 'url_name': 'platform_users',
+     'icon': 'fa-users-gear', 'prefix': '/platform/users', 'superuser_only': True},
     {'section': 'Scolarité'},
     {'label': 'Élèves', 'url_name': 'students:list', 'icon': 'fa-user-graduate', 'prefix': '/students'},
     {'label': 'Enseignants', 'url_name': 'teachers:list', 'icon': 'fa-chalkboard-user', 'prefix': '/teachers'},

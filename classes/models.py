@@ -1,8 +1,20 @@
 from django.db import models
+
+from core.scoping import SchoolManager, scoped_manager
 from core.models import TimeStampMixin
 
 
 class Class(TimeStampMixin):
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='classes',
+        verbose_name="École",
+    )
     LEVEL_CHOICES = [
         # --- Cycle Fondamental / Collège ---
         ('1ère', '1ère année'),

@@ -71,6 +71,9 @@
                         <th>École</th>
                         <th class="text-center">Formule</th>
                         <th class="text-center">Comptes</th>
+                        <th class="text-center">Élèves</th>
+                        <th class="text-center">Ens.</th>
+                        <th class="text-center">Classes</th>
                         <th class="text-center">Statut</th>
                         <th class="text-center">Inscrite le</th>
                         <th>Actions</th>
@@ -80,8 +83,8 @@
                     {% for school in schools %}
                         <tr>
                             <td>
-                                <strong>{{ school.name }}</strong><br>
-                                <span class="text-muted" style="font-size: 0.78rem;">{{ school.email|default:school.address|default:"—" }}</span>
+                                <strong><i class="fa-solid fa-school" style="color: var(--primary); margin-right: 6px;"></i>{{ school.name }}</strong><br>
+                                <span class="text-muted" style="font-size: 0.78rem;">{{ school.code }}</span>
                             </td>
                             <td class="text-center">
                                 <span class="badge {% if school.plan == 'PREMIUM' %}badge-warning{% elif school.plan == 'GRATUIT' %}badge-secondary{% else %}badge-info{% endif %}">
@@ -89,6 +92,9 @@
                                 </span>
                             </td>
                             <td class="text-center">{{ school.nb_users }}</td>
+                            <td class="text-center">{{ school.nb_students }}</td>
+                            <td class="text-center">{{ school.nb_teachers }}</td>
+                            <td class="text-center">{{ school.nb_classes }}</td>
                             <td class="text-center">
                                 {% if school.is_active %}
                                     <span class="badge badge-success">Active</span>
@@ -99,6 +105,10 @@
                             <td class="text-center">{{ school.created_at|date:"d/m/Y" }}</td>
                             <td>
                                 <div class="action-buttons">
+                                    <a href="{% url 'platform_school_update' school.pk %}" class="btn-action btn-edit" title="Modifier"
+                                            hx-get="{% url 'platform_school_update' school.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </a>
                                     <a href="{% url 'platform_school_detail' school.pk %}" class="btn-action btn-view" title="Voir">
                                         <i class="fa-regular fa-eye"></i>
                                     </a>

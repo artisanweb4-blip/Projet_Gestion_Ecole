@@ -8,9 +8,15 @@
         <h1><span class="page-icon"><i class="fa-solid fa-users-gear"></i></span>Utilisateurs de la plateforme</h1>
         <p>Tous les comptes, toutes écoles confondues.</p>
     </div>
-    <a href="{% url 'platform_dashboard' %}" class="btn btn-secondary">
-        <i class="fa-solid fa-arrow-left"></i> Retour aux écoles
-    </a>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'platform_dashboard' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Retour aux écoles
+        </a>
+        <button type="button" class="btn btn-primary"
+                hx-get="{% url 'platform_user_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-user-plus"></i> Ajouter un utilisateur
+        </button>
+    </div>
 </div>
 
 <div class="dashboard-card">
@@ -36,6 +42,7 @@
                         <th>École</th>
                         <th class="text-center">Statut</th>
                         <th class="text-center">Créé le</th>
+                        <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -56,6 +63,23 @@
                                 {% if user.is_active %}<span class="badge badge-success">Actif</span>{% else %}<span class="badge badge-danger">Inactif</span>{% endif %}
                             </td>
                             <td class="text-center">{{ user.created_at|date:"d/m/Y" }}</td>
+                            <td class="text-center">
+                                <form method="post" action="{% url 'platform_user_toggle' user.pk %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-action btn-entry"
+                                            title="{% if user.is_active %}Désactiver{% else %}Activer{% endif %}">
+                                        <i class="fa-solid fa-power-off"></i>
+                                    </button>
+                                </form>
+                                <a href="{% url 'platform_user_password' user.pk %}" class="btn-action btn-entry" title="Réinitialiser le mot de passe"
+                                        hx-get="{% url 'platform_user_password' user.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                    <i class="fa-solid fa-key"></i>
+                                </a>
+                                <a href="{% url 'platform_user_delete' user.pk %}" class="btn-action btn-delete" title="Supprimer"
+                                        hx-get="{% url 'platform_user_delete' user.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                    <i class="fa-solid fa-trash"></i>
+                                </a>
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>

@@ -9,6 +9,9 @@
         <p>Fiche détaillée de l'école sur la plateforme.</p>
     </div>
     <div style="display: flex; gap: 10px;">
+        <a href="{% url 'platform_school_update' school.pk %}" class="btn btn-outline">
+            <i class="fa-solid fa-pen"></i> Modifier
+        </a>
         <a href="{% url 'platform_dashboard' %}" class="btn btn-secondary">
             <i class="fa-solid fa-arrow-left"></i> Retour
         </a>
@@ -31,11 +34,43 @@
             <span class="metric-hint">Formule {{ school.get_plan_display }}</span>
         </div>
     </div>
+    <div class="metric-grid" style="margin-top: 16px;">
+        <div class="metric-card">
+            <span class="metric-icon is-green"><i class="fa-solid fa-user-graduate"></i></span>
+            <div class="metric-info">
+                <span class="metric-label">Élèves actifs</span>
+                <span class="metric-value">{{ nb_students }}</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <span class="metric-icon is-blue"><i class="fa-solid fa-chalkboard-user"></i></span>
+            <div class="metric-info">
+                <span class="metric-label">Enseignants</span>
+                <span class="metric-value">{{ nb_teachers }}</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <span class="metric-icon" style="color:#7c3aed;"><i class="fa-solid fa-door-open"></i></span>
+            <div class="metric-info">
+                <span class="metric-label">Classes</span>
+                <span class="metric-value">{{ nb_classes }}</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <span class="metric-icon" style="color:#d97706;"><i class="fa-solid fa-people-roof"></i></span>
+            <div class="metric-info">
+                <span class="metric-label">Parents</span>
+                <span class="metric-value">{{ nb_parents }}</span>
+            </div>
+        </div>
+    </div>
+
     <div class="metric-card">
         <span class="metric-icon is-blue"><i class="fa-solid fa-users"></i></span>
         <div class="metric-info">
             <span class="metric-label">Comptes rattachés</span>
             <span class="metric-value">{{ school.users.count }}</span>
+            <span class="metric-hint">Comptes rattachés</span>
         </div>
     </div>
     <div class="metric-card">

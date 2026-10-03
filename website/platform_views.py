@@ -12,6 +12,7 @@ from django.views.generic import (
     DetailView,
     ListView,
     TemplateView,
+    UpdateView,
     View,
 )
 
@@ -22,7 +23,12 @@ from teachers.models import Teacher
 from core.mixins import HtmxCrudMixin
 from finance.models import StudentPayment
 
-from .forms import PlatformSchoolForm
+from .forms import (
+    PlatformSchoolForm,
+    PlatformSchoolUpdateForm,
+    PlatformUserForm,
+    PlatformUserPasswordForm,
+)
 
 
 class SuperadminRequiredMixin(LoginRequiredMixin):
@@ -47,6 +53,9 @@ class PlatformDashboardView(SuperadminRequiredMixin, TemplateView):
 
         schools = School.objects.annotate(
             nb_users=Count('users', distinct=True),
+            nb_students=Count('students', distinct=True),
+            nb_teachers=Count('teachers', distinct=True),
+            nb_classes=Count('classes', distinct=True),
         ).order_by('-created_at')
 
         query = self.request.GET.get('q')
@@ -114,6 +123,16 @@ class PlatformSchoolDetailView(SuperadminRequiredMixin, DetailView):
     template_name = 'website/platform_school_detail.html'
     context_object_name = 'school'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        school = self.object
+        context['nb_students'] = school.students.filter(is_active=True).count()
+        context['nb_teachers'] = school.teachers.filter(is_active=True).count()
+        context['nb_classes'] = school.classes.count()
+        context['nb_parents'] = school.parents.count()
+        context['school_users'] = school.users.select_related('school').order_by('role', 'email')
+        return context
+
 
 class PlatformSchoolToggleView(SuperadminRequiredMixin, View):
     """Active / suspend une école."""
@@ -162,3 +181,93 @@ class PlatformUsersView(SuperadminRequiredMixin, ListView):
         context['q'] = self.request.GET.get('q', '')
         context['f_role'] = self.request.GET.get('role', '')
         return context
+
+
+class PlatformSchoolUpdateView(SuperadminRequiredMixin, HtmxCrudMixin, UpdateView):
+    """Modification d'une école (nom, formule, coordonnées)."""
+    model = School
+    form_class = PlatformSchoolUpdateForm
+    template_name = 'website/platform_school_form.html'
+    success_url = reverse_lazy('platform_dashboard')
+    partial_template = 'includes/form_modal.html'
+    modal_title = "Modifier l'école"
+    success_message = "École mise à jour."
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = f"Modifier — {self.object.name}"
+        return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        return response
+
+
+class PlatformUserCreateView(SuperadminRequiredMixin, HtmxCrudMixin, CreateView):
+    """Création d'un compte utilisateur global (plateforme)."""
+    model = User
+    form_class = PlatformUserForm
+    template_name = 'website/platform_user_form.html'
+    success_url = reverse_lazy('platform_users')
+    partial_template = 'includes/form_modal.html'
+    modal_title = 'Nouvel utilisateur'
+    success_message = "Utilisateur créé avec succès."
+
+    def form_valid(self, form):
+        form.instance.username = form.cleaned_data['email'].split('@')[0]
+        form.instance.set_password(form.cleaned_data['password'])
+        return super().form_valid(form)
+
+
+class PlatformUserToggleView(SuperadminRequiredMixin, View):
+    """Active / désactive un compte utilisateur."""
+
+    def post(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        if user.pk == request.user.pk:
+            messages.error(request, "Vous ne pouvez pas désactiver votre propre compte.")
+            return redirect('platform_users')
+        user.is_active = not user.is_active
+        user.save(update_fields=['is_active'])
+        state = "activé" if user.is_active else "désactivé"
+        messages.success(request, f"Compte « {user.email} » {state}.")
+        return redirect('platform_users')
+
+
+class PlatformUserPasswordView(SuperadminRequiredMixin, HtmxCrudMixin, UpdateView):
+    """Réinitialisation du mot de passe d'un compte (form_packé)."""
+    model = User
+    form_class = PlatformUserPasswordForm
+    template_name = 'website/platform_user_password.html'
+    success_url = reverse_lazy('platform_users')
+    partial_template = 'includes/form_modal.html'
+    modal_title = "Réinitialiser le mot de passe"
+    success_message = "Mot de passe réinitialisé."
+
+    def form_valid(self, form):
+        self.object.set_password(form.cleaned_data['password'])
+        self.object.save(update_fields=['password'])
+        messages.success(self.request, self.success_message)
+        if self.request.htmx:
+            from django_htmx.http import HttpResponseClientRedirect
+            return HttpResponseClientRedirect(str(self.get_success_url()))
+        return redirect(self.get_success_url())
+
+
+class PlatformUserDeleteView(SuperadminRequiredMixin, HtmxCrudMixin, DeleteView):
+    """Suppression d'un compte utilisateur."""
+    model = User
+    template_name = 'website/platform_user_delete.html'
+    success_url = reverse_lazy('platform_users')
+    partial_template = 'includes/delete_modal.html'
+    modal_title = 'Supprimer ce compte'
+    success_message = "Compte supprimé."
+
+    def form_valid(self, form):
+        if self.object.pk == self.request.user.pk:
+            messages.error(self.request, "Vous ne pouvez pas supprimer votre propre compte.")
+            return redirect(self.get_success_url())
+        if self.object.is_superuser and User.objects.filter(is_superuser=True).count() <= 1:
+            messages.error(self.request, "Impossible de supprimer le dernier super administrateur.")
+            return redirect(self.get_success_url())
+        return super().form_valid(form)

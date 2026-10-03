@@ -1,8 +1,20 @@
 from django.db import models
+
+from core.scoping import SchoolManager, scoped_manager
 from courses.models import Program
 
 
 class EventCategory(models.Model):
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='event_categories',
+        verbose_name="École",
+    )
     name = models.CharField(max_length=100, verbose_name="Nom de la catégorie")
     color = models.CharField(
         max_length=7, default="#3B82F6", verbose_name="Couleur Hex (ex: #3B82F6)"
@@ -17,6 +29,16 @@ class EventCategory(models.Model):
 
 
 class AcademicEvent(models.Model):
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='academic_events',
+        verbose_name="École",
+    )
     title = models.CharField(max_length=200, verbose_name="Titre")
     category = models.ForeignKey(
         EventCategory,

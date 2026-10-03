@@ -1,4 +1,6 @@
 from django.db import models
+
+from core.scoping import SchoolManager, scoped_manager
 from django.core.exceptions import ValidationError
 from core.models import TimeStampMixin
 from courses.models import Course
@@ -6,6 +8,8 @@ from students.models import Student as StudentProfile
 
 class Exam(TimeStampMixin):
     """Examen d'évaluation (Partiel, Épreuve finale, Contrôle continu)."""
+    objects = scoped_manager('course__school_class__school')
+
     EXAM_TYPES = (
         ('CC', 'Contrôle Continu'),
         ('PARTIAL', 'Examen Partiel'),
@@ -51,6 +55,8 @@ class Question(TimeStampMixin):
 
 class ExamResult(TimeStampMixin):
     """Note obtenue par un étudiant à un examen."""
+    objects = scoped_manager('student__school')
+
     exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name='results', verbose_name="Examen")
     student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='exam_results', verbose_name="Étudiant")
     score = models.FloatField(verbose_name="Note obtenue")

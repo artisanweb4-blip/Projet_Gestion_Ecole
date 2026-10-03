@@ -1,7 +1,19 @@
 # parents/models.py
 from django.db import models
 
+from core.scoping import SchoolManager, scoped_manager
+
 class Parent(models.Model):
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='parents',
+        verbose_name="École",
+    )
     CIVILITY_CHOICES = [
         ('M', 'Monsieur'),
         ('Mme', 'Madame'),

@@ -12,12 +12,24 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from core.scoping import SchoolManager, scoped_manager
+
 from classes.models import Class
 from courses.models import Subject
 from students.models import Student
 
 
 class AcademicYear(models.Model):
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='academic_years',
+        verbose_name="École",
+    )
     name = models.CharField(max_length=20, unique=True, verbose_name="Année scolaire")
     start_date = models.DateField(verbose_name="Date de début")
     end_date = models.DateField(verbose_name="Date de fin")
@@ -34,6 +46,16 @@ class AcademicYear(models.Model):
 
 class Period(models.Model):
     """Période de notation : trimestre, semestre, mois..."""
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='periods',
+        verbose_name="École",
+    )
     PERIOD_TYPES = [
         ('TRIMESTRE', 'Trimestre'),
         ('SEMESTRE', 'Semestre'),
@@ -62,6 +84,8 @@ class Period(models.Model):
 
 
 class Evaluation(models.Model):
+    objects = scoped_manager('classroom__school')
+
     EVAL_TYPES = [
         ('DEVOIR', 'Devoir'),
         ('INTERRO', 'Interrogation'),
@@ -102,6 +126,8 @@ class Evaluation(models.Model):
 
 
 class Grade(models.Model):
+    objects = scoped_manager('student__school')
+
     student = models.ForeignKey(
         Student, on_delete=models.CASCADE, related_name="grades",
         verbose_name="Élève",
