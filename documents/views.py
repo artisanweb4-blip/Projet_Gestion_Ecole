@@ -280,25 +280,18 @@ def generate_certificat_scolarite(request):
 
 
 def generate_certificat_frequentation(request):
-    """
-    Exemple de génération pour le certificat de fréquentation
-    """
-    # Adaptable selon la structure du certificat de fréquentation
-    return render(request, 'documents/certificat_frequentation_pdf.html')
+    """Certificat de fréquentation : renvoie l'exemplaire PDF du catalogue."""
+    return redirect('documents:document_sample', key='certificat_frequentation')
 
 
 def generate_certificat_transfert(request):
-    """
-    Exemple de génération pour le certificat d'abandon / transfert
-    """
-    return render(request, 'documents/certificat_transfert_pdf.html')
+    """Certificat de transfert : renvoie l'exemplaire PDF du catalogue."""
+    return redirect('documents:document_sample', key='certificat_transfert')
 
 
 def registre_presence(request):
-    """
-    Vue d'affichage ou d'impression du registre d'appel par classe
-    """
-    return render(request, 'documents/registre_presence_pdf.html')
+    """Registre de présence : renvoie l'exemplaire PDF du catalogue."""
+    return redirect('documents:document_sample', key='registre_presence')
 
 
 @login_required

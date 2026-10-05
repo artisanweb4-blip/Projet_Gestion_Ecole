@@ -292,7 +292,7 @@ class Command(BaseCommand):
         # ------------------------------------------------------------------
         fee, _ = FeeStructure.objects.get_or_create(
             name="Scolarité — 1ère tranche (2025-2026)",
-            classroom=Class.objects.filter(school=demo_school).order_by('id').first(),
+            classroom=Class.objects.order_by('id').first(),  # rattaché plus bas à l'école (section 5)
             defaults={"amount": 75000, "due_date": date(2025, 10, 15), "academic_year": "2025-2026"},
         )
         methods = ["CASH", "ORANGE_MONEY", "WAVE", "MTN_MOMO"]
