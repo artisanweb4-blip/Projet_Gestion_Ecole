@@ -10,8 +10,18 @@
     <link rel="stylesheet" href="{% static 'vendor/fonts/plus-jakarta.css' %}">
     <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
     <!-- CSS du projet -->
-    <link rel="stylesheet" href="{% static 'css/custom.css' %}?v=20261005">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}?v=20261005b">
     {% block extra_css %}{% endblock %}
+    <style>
+        /* Chargement de modale : styles inline = toujours à jour, même avec
+           un CSS en cache ancien. */
+        .modal-loading { display: flex; align-items: center; gap: 10px;
+            padding: 30px 26px; color: #64748b; font-size: 14px; font-weight: 600; }
+        .modal-spinner { width: 18px; height: 18px; flex: 0 0 auto;
+            border: 3px solid #e2e8f0; border-top-color: #059669;
+            border-radius: 50%; animation: gcespin .7s linear infinite; }
+        @keyframes gcespin { to { transform: rotate(360deg); } }
+    </style>
 </head>
 <body>
     <div class="app-layout">
@@ -136,28 +146,50 @@
 
         // Mémorise le lien déclencheur (pour le secours pleine page)
         var lastUrl = null;
+        var pendingNav = null;
+
+        // Indicateur de chargement injecté IMMÉDIATEMENT au clic : l'utilisateur
+        // voit un retour visuel instantané, même si le serveur est lent, et on
+        // sait à tout moment si le contenu est arrivé.
+        function showLoading() {
+            var b = body(); var o = overlay();
+            if (o && b) {
+                b.innerHTML = '<div class="modal-loading" data-loading="1">' +
+                    '<span class="modal-spinner"></span>Chargement du formulaire…</div>';
+                window.gceOpenModal();
+            }
+        }
+
         document.addEventListener('click', function (e) {
             var trig = e.target.closest('[hx-target="#modal-body"]');
             if (trig) {
-                lastUrl = trig.getAttribute('href') || trig.getAttribute('hx-get');
-                // Garde anti-modale-vide : si le contenu n'est pas arrivé,
-                // on ouvre le formulaire en pleine page.
-                setTimeout(function () {
-                    var o = overlay(); var b = body();
-                    if (o && o.classList.contains('show') &&
-                        b && !b.innerHTML.trim()) {
+                var url = trig.getAttribute('href') || trig.getAttribute('hx-get');
+                if (!url) { return; }
+                // Si HTMX n'est pas chargé (fichier manquant/bloqué) : ne rien
+                // faire → le navigateur suit le href → formulaire pleine page.
+                if (typeof window.htmx === 'undefined') { return; }
+                lastUrl = url;
+                clearTimeout(pendingNav);
+                showLoading();
+                // Garde anti-modale-vide : si le contenu n'est toujours pas
+                // arrivé après 2,5 s, on bascule sur le formulaire pleine page.
+                pendingNav = setTimeout(function () {
+                    var b = body();
+                    if (b && b.querySelector('[data-loading="1"]')) {
                         window.gceCloseModal();
-                        if (lastUrl) { window.location.href = lastUrl; }
+                        window.location.href = lastUrl;
                     }
-                }, 1500);
+                }, 2500);
+                return;
             }
             // Fermetures (arrière-plan / croix)
+            clearTimeout(pendingNav);
             if (e.target === overlay()) { window.gceCloseModal(); }
             if (e.target.closest('[data-close-modal]')) { window.gceCloseModal(); }
         });
 
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') { window.gceCloseModal(); }
+            if (e.key === 'Escape') { clearTimeout(pendingNav); window.gceCloseModal(); }
         });
 
         // Ouverture dès que le contenu de la modale est injecté
@@ -183,8 +215,8 @@
     })();
     </script>
 
-    <script defer src="{% static 'vendor/js/htmx.min.js' %}"></script>
-    <script defer src="{% static 'js/main.js' %}?v=20261005"></script>
+    <script defer src="{% static 'vendor/js/htmx.min.js' %}?v=20261005b"></script>
+    <script defer src="{% static 'js/main.js' %}?v=20261005b"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
