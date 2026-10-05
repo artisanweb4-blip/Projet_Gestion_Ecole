@@ -13,8 +13,7 @@
         <a href="{% url 'platform_schools' %}" class="btn btn-secondary">
             <i class="fa-solid fa-school"></i> Écoles
         </a>
-        <a href="{% url 'platform_subscription_add' %}" class="btn btn-primary"
-                hx-get="{% url 'platform_subscription_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+        <a href="{% url 'platform_subscription_add' %}" class="btn btn-primary">
             <i class="fa-solid fa-plus"></i> Nouvel abonnement
         </a>
     </div>
@@ -66,12 +65,10 @@
                     </ul>
                 {% endif %}
                 <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 6px;">
-                    <a href="{% url 'platform_subscription_update' plan.pk %}" class="btn btn-outline btn-sm"
-                            hx-get="{% url 'platform_subscription_update' plan.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                    <a href="{% url 'platform_subscription_update' plan.pk %}" class="btn btn-outline btn-sm">
                         <i class="fa-solid fa-pen"></i> Modifier
                     </a>
-                    <a href="{% url 'platform_subscription_delete' plan.pk %}" class="btn btn-danger btn-sm"
-                            hx-get="{% url 'platform_subscription_delete' plan.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                    <a href="{% url 'platform_subscription_delete' plan.pk %}" class="btn btn-danger btn-sm">
                         <i class="fa-solid fa-trash"></i> Supprimer
                     </a>
                 </div>
@@ -83,8 +80,7 @@
         <div class="empty-state">
             <i class="fa-solid fa-credit-card"></i>
             <p>Aucun abonnement défini. Créez votre première formule (ex. Gratuit, Standard, Premium).</p>
-            <a href="{% url 'platform_subscription_add' %}" class="btn btn-primary" style="margin-top: 10px;"
-                    hx-get="{% url 'platform_subscription_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+            <a href="{% url 'platform_subscription_add' %}" class="btn btn-primary" style="margin-top: 10px;">
                 <i class="fa-solid fa-plus"></i> Créer un abonnement
             </a>
         </div>

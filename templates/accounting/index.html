@@ -10,12 +10,10 @@
         <p>Suivi des encaissements, frais scolaires et paiements (FCFA).</p>
     </div>
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <a href="{% url 'accounting:payment_add' %}" class="btn btn-primary"
-                hx-get="{% url 'accounting:payment_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+        <a href="{% url 'accounting:payment_add' %}" class="btn btn-primary">
             <i class="fa-solid fa-money-bill-wave"></i> Encaisser un paiement
         </a>
-        <a href="{% url 'accounting:fee_add' %}" class="btn btn-secondary"
-                hx-get="{% url 'accounting:fee_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+        <a href="{% url 'accounting:fee_add' %}" class="btn btn-secondary">
             <i class="fa-solid fa-plus"></i> Nouveau frais
         </a>
     </div>

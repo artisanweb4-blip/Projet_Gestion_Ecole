@@ -11,7 +11,7 @@
         <p>Gérez les dossiers et les informations des élèves de l'établissement.</p>
     </div>
     <div>
-        <a href="{% url 'students:add' %}" class="btn btn-primary" hx-get="{% url 'students:add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+        <a href="{% url 'students:add' %}" class="btn btn-primary">
             <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Nouvel élève
         </a>
     </div>
@@ -94,10 +94,10 @@
                             <a href="{% url 'students:detail' student.pk %}" class="btn-action btn-view" title="Voir le profil">
                                 <i class="fa-regular fa-eye"></i>
                             </a>
-                            <a href="{% url 'students:edit' student.pk %}" class="btn-action btn-edit" title="Modifier" hx-get="{% url 'students:edit' student.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                            <a href="{% url 'students:edit' student.pk %}" class="btn-action btn-edit" title="Modifier">
                                 <i class="fa-regular fa-pen-to-square"></i>
                             </a>
-                            <a href="{% url 'students:delete' student.pk %}" class="btn-action btn-delete" title="Supprimer" hx-get="{% url 'students:delete' student.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                            <a href="{% url 'students:delete' student.pk %}" class="btn-action btn-delete" title="Supprimer">
                                 <i class="fa-regular fa-trash-can"></i>
                             </a>
                         </div>

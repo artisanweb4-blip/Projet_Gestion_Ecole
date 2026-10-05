@@ -12,8 +12,7 @@
         <a href="{% url 'platform_dashboard' %}" class="btn btn-secondary">
             <i class="fa-solid fa-gauge-high"></i> Tableau de bord
         </a>
-        <a href="{% url 'platform_school_add' %}" class="btn btn-primary"
-                hx-get="{% url 'platform_school_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+        <a href="{% url 'platform_school_add' %}" class="btn btn-primary">
             <i class="fa-solid fa-plus"></i> Créer une école
         </a>
     </div>
@@ -84,12 +83,10 @@
                                 <a href="{% url 'platform_school_detail' school.pk %}" class="btn-action btn-view" title="Voir la fiche">
                                     <i class="fa-solid fa-eye"></i>
                                 </a>
-                                <a href="{% url 'platform_school_update' school.pk %}" class="btn-action btn-edit" title="Modifier"
-                                        hx-get="{% url 'platform_school_update' school.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                <a href="{% url 'platform_school_update' school.pk %}" class="btn-action btn-edit" title="Modifier">
                                     <i class="fa-solid fa-pen"></i>
                                 </a>
-                                <a href="{% url 'platform_school_subscription' school.pk %}" class="btn-action btn-entry" title="Attribuer un abonnement"
-                                        hx-get="{% url 'platform_school_subscription' school.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                <a href="{% url 'platform_school_subscription' school.pk %}" class="btn-action btn-entry" title="Attribuer un abonnement">
                                     <i class="fa-solid fa-credit-card"></i>
                                 </a>
                                 <form method="post" action="{% url 'platform_school_toggle' school.pk %}" style="display: inline;">
@@ -99,8 +96,7 @@
                                         <i class="fa-solid {% if school.is_active %}fa-pause{% else %}fa-play{% endif %}"></i>
                                     </button>
                                 </form>
-                                <a href="{% url 'platform_school_delete' school.pk %}" class="btn-action btn-delete" title="Supprimer"
-                                        hx-get="{% url 'platform_school_delete' school.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                <a href="{% url 'platform_school_delete' school.pk %}" class="btn-action btn-delete" title="Supprimer">
                                     <i class="fa-solid fa-trash"></i>
                                 </a>
                             </div>

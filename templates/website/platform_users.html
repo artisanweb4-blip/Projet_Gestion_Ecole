@@ -12,8 +12,7 @@
         <a href="{% url 'platform_dashboard' %}" class="btn btn-secondary">
             <i class="fa-solid fa-arrow-left"></i> Retour aux écoles
         </a>
-        <a href="{% url 'platform_user_add' %}" class="btn btn-primary"
-                hx-get="{% url 'platform_user_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+        <a href="{% url 'platform_user_add' %}" class="btn btn-primary">
             <i class="fa-solid fa-user-plus"></i> Ajouter un utilisateur
         </a>
     </div>
@@ -71,12 +70,10 @@
                                         <i class="fa-solid fa-power-off"></i>
                                     </button>
                                 </form>
-                                <a href="{% url 'platform_user_password' user.pk %}" class="btn-action btn-entry" title="Réinitialiser le mot de passe"
-                                        hx-get="{% url 'platform_user_password' user.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                <a href="{% url 'platform_user_password' user.pk %}" class="btn-action btn-entry" title="Réinitialiser le mot de passe">
                                     <i class="fa-solid fa-key"></i>
                                 </a>
-                                <a href="{% url 'platform_user_delete' user.pk %}" class="btn-action btn-delete" title="Supprimer"
-                                        hx-get="{% url 'platform_user_delete' user.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                <a href="{% url 'platform_user_delete' user.pk %}" class="btn-action btn-delete" title="Supprimer">
                                     <i class="fa-solid fa-trash"></i>
                                 </a>
                             </td>

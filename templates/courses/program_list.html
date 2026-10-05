@@ -9,12 +9,10 @@
         <p>Gérez les programmes d'études et les matières enseignées avec leurs coefficients.</p>
     </div>
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <a href="{% url 'courses:program_create' %}" class="btn btn-primary"
-                hx-get="{% url 'courses:program_create' %}" hx-target="#modal-body" hx-swap="innerHTML">
+        <a href="{% url 'courses:program_create' %}" class="btn btn-primary">
             <i class="fa-solid fa-plus"></i> Nouveau programme
         </a>
-        <a href="{% url 'courses:subject_create' %}" class="btn btn-secondary"
-                hx-get="{% url 'courses:subject_create' %}" hx-target="#modal-body" hx-swap="innerHTML">
+        <a href="{% url 'courses:subject_create' %}" class="btn btn-secondary">
             <i class="fa-solid fa-plus"></i> Nouvelle matière
         </a>
     </div>
@@ -50,12 +48,10 @@
                                     <a href="{% url 'courses:program_detail' program.pk %}" class="btn-action btn-view" title="Voir le détail">
                                         <i class="fa-regular fa-eye"></i>
                                     </a>
-                                    <a href="{% url 'courses:program_update' program.pk %}" class="btn-action btn-edit" title="Modifier"
-                                            hx-get="{% url 'courses:program_update' program.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                    <a href="{% url 'courses:program_update' program.pk %}" class="btn-action btn-edit" title="Modifier">
                                         <i class="fa-regular fa-pen-to-square"></i>
                                     </a>
-                                    <a href="{% url 'courses:program_delete' program.pk %}" class="btn-action btn-delete" title="Supprimer"
-                                            hx-get="{% url 'courses:program_delete' program.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                    <a href="{% url 'courses:program_delete' program.pk %}" class="btn-action btn-delete" title="Supprimer">
                                         <i class="fa-regular fa-trash-can"></i>
                                     </a>
                                 </div>
@@ -98,12 +94,10 @@
                             <td class="text-center">{{ subject.subject_programs.all|length }}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{% url 'courses:subject_edit' subject.pk %}" class="btn-action btn-edit" title="Modifier"
-                                            hx-get="{% url 'courses:subject_edit' subject.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                    <a href="{% url 'courses:subject_edit' subject.pk %}" class="btn-action btn-edit" title="Modifier">
                                         <i class="fa-regular fa-pen-to-square"></i>
                                     </a>
-                                    <a href="{% url 'courses:subject_delete' subject.pk %}" class="btn-action btn-delete" title="Supprimer"
-                                            hx-get="{% url 'courses:subject_delete' subject.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                    <a href="{% url 'courses:subject_delete' subject.pk %}" class="btn-action btn-delete" title="Supprimer">
                                         <i class="fa-regular fa-trash-can"></i>
                                     </a>
                                 </div>
