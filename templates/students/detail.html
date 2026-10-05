@@ -363,24 +363,6 @@
                 {% endif %}
             </div>
 
-            <!-- SECTION 3 : SANTÉ -->
-            <div class="section-title">
-                <i class="fa-solid fa-heart-pulse"></i> Informations Médicales
-            </div>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="label">Groupe sanguin</span>
-                    <span class="value" style="color: #dc2626;">{{ student.blood_group|default:"Non renseigné" }}</span>
-                </div>
-                <div class="info-item span-2">
-                    <span class="label">Allergies</span>
-                    <span class="value">{{ student.allergies|default:"Aucune" }}</span>
-                </div>
-                <div class="info-item full-width">
-                    <span class="label">Antécédents médicaux</span>
-                    <span class="value">{{ student.medical_notes|default:"Aucun antécédent particulier." }}</span>
-                </div>
-            </div>
 
         </div>
     </div>

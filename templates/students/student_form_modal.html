@@ -19,9 +19,39 @@
         </div>
     {% endif %}
 
+    <!-- ====== Photo de l'élève ====== -->
+    <div class="form-group full">
+        <label class="form-label">Photo de l'élève</label>
+        <div style="display:flex; align-items:center; gap:14px; padding:12px; border:1px dashed #cbd5e1; border-radius:10px; background:#f8fafc;">
+            {% if form.instance.photo %}
+                <img src="{{ form.instance.photo.url }}" alt="Photo actuelle"
+                     style="width:64px; height:64px; object-fit:cover; border-radius:10px; border:2px solid #059669;">
+            {% else %}
+                <div style="width:64px; height:64px; flex:0 0 auto; border-radius:10px; background:#e2e8f0; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:24px;">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+            {% endif %}
+            <div style="flex:1; min-width:0;">
+                {{ form.photo }}
+                {% if form.instance.photo %}
+                    <small style="display:block; margin-top:4px; color:#64748b; font-size:0.75rem;">
+                        Laissez vide pour conserver la photo actuelle.
+                    </small>
+                {% else %}
+                    <small style="display:block; margin-top:4px; color:#64748b; font-size:0.75rem;">
+                        Formats acceptés : JPG, PNG.
+                    </small>
+                {% endif %}
+            </div>
+        </div>
+        {% for error in form.photo.errors %}
+            <div class="error-feedback">{{ error }}</div>
+        {% endfor %}
+    </div>
+
     <div class="form-grid-2">
         {% for field in form.visible_fields %}
-            {% if field.name != 'parents' and field.name != 'allergies' and field.name != 'medical_notes' %}
+            {% if field.name != 'parents' and field.name != 'allergies' and field.name != 'medical_notes' and field.name != 'photo' %}
                 <div class="form-group {% if field.errors %}is-invalid{% endif %} {% if field.field.widget.input_type == 'file' %}full{% endif %}">
                     <label class="form-label" for="{{ field.id_for_label }}">
                         {{ field.label }}{% if field.field.required %} <span class="required">*</span>{% endif %}
@@ -75,11 +105,11 @@
                         <input type="text" name="parent_last_name" class="form-control" placeholder="Nom de famille">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Email</label>
+                        <label class="form-label">Email <span class="text-muted">(facultatif)</span></label>
                         <input type="email" name="parent_email" class="form-control" placeholder="email@exemple.com">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Téléphone</label>
+                        <label class="form-label">Téléphone <span class="text-muted">(facultatif)</span></label>
                         <input type="text" name="parent_phone" class="form-control" placeholder="+223 00 00 00 00">
                     </div>
                     <div class="form-group full">

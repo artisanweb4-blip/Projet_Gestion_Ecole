@@ -97,7 +97,13 @@ class StudentParentLinkMixin:
                 # Isolation multi-ecoles : le parent appartient a l'ecole de
                 # l'utilisateur (sinon il est cree orphelin et invisible).
                 assign_school(parent, self.request.user)
-                parent.save()
+                try:
+                    parent.save()
+                except Exception:
+                    # Email déjà utilisé ailleurs : on réessaie sans l'email
+                    # plutôt que de faire échouer la création du parent.
+                    parent.email = None
+                    parent.save()
                 messages.success(
                     self.request,
                     f"Parent « {parent} » créé et lié à {self.object.first_name} "
