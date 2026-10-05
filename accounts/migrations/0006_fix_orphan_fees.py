@@ -8,9 +8,13 @@ from django.db import migrations
 
 
 def fix_orphans(apps, schema_editor):
-    School = apps.get_model('accounts', 'School')
-    Class = apps.get_model('classes', 'Class')
-    FeeStructure = apps.get_model('finance', 'FeeStructure')
+    try:
+        School = apps.get_model('accounts', 'School')
+        Class = apps.get_model('classes', 'Class')
+        FeeStructure = apps.get_model('finance', 'FeeStructure')
+    except LookupError:
+        # Sécurité : ne jamais bloquer les migrations pour ce rattrapage.
+        return
 
     if School.objects.count() != 1:
         return
@@ -25,6 +29,9 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('accounts', '0005_subscriptionplan_school_subscription_until_and_more'),
+        # Modèles utilisés par la fonction de données :
+        ('classes', '0003_class_school'),
+        ('finance', '0001_initial'),
     ]
 
     operations = [

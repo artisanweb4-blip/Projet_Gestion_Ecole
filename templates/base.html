@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="{% static 'vendor/fonts/plus-jakarta.css' %}">
     <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
     <!-- CSS du projet -->
-    <link rel="stylesheet" href="{% static 'css/custom.css' %}?v=20261003b">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}?v=20261005">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -105,8 +105,86 @@
         </div>
     </div>
 
+    <script>
+    // ================================================================
+    // MODALES : socle inline TOUJOURS à jour (le HTML n'est jamais mis
+    // en cache). Garantit l'ouverture des formulaires ajout / modifier
+    // / suppression, même si le JS en cache est ancien ou si la
+    // requête HTMX échoue : dans ce cas on bascule sur le formulaire
+    // en pleine page (fallback sans JavaScript).
+    // ================================================================
+    (function () {
+        'use strict';
+
+        function overlay() { return document.getElementById('modalOverlay'); }
+        function body() { return document.getElementById('modal-body'); }
+
+        window.gceOpenModal = function () {
+            var o = overlay();
+            if (!o) return;
+            o.classList.add('show');
+            o.setAttribute('aria-hidden', 'false');
+        };
+        window.gceCloseModal = function () {
+            var o = overlay();
+            if (!o) return;
+            o.classList.remove('show');
+            o.setAttribute('aria-hidden', 'true');
+            var b = body(); if (b) { b.innerHTML = ''; }
+            document.body.style.overflow = '';
+        };
+
+        // Mémorise le lien déclencheur (pour le secours pleine page)
+        var lastUrl = null;
+        document.addEventListener('click', function (e) {
+            var trig = e.target.closest('[hx-target="#modal-body"]');
+            if (trig) {
+                lastUrl = trig.getAttribute('href') || trig.getAttribute('hx-get');
+                // Garde anti-modale-vide : si le contenu n'est pas arrivé,
+                // on ouvre le formulaire en pleine page.
+                setTimeout(function () {
+                    var o = overlay(); var b = body();
+                    if (o && o.classList.contains('show') &&
+                        b && !b.innerHTML.trim()) {
+                        window.gceCloseModal();
+                        if (lastUrl) { window.location.href = lastUrl; }
+                    }
+                }, 1500);
+            }
+            // Fermetures (arrière-plan / croix)
+            if (e.target === overlay()) { window.gceCloseModal(); }
+            if (e.target.closest('[data-close-modal]')) { window.gceCloseModal(); }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { window.gceCloseModal(); }
+        });
+
+        // Ouverture dès que le contenu de la modale est injecté
+        document.addEventListener('htmx:afterSwap', function (e) {
+            var b = body();
+            if (b && e.target && e.target.id === 'modal-body') {
+                window.gceOpenModal();
+            }
+        });
+
+        // Échec de la requête de modale → formulaire pleine page
+        function fallbackFullPage(e) {
+            var elt = e.detail && e.detail.elt;
+            if (elt && elt.getAttribute &&
+                elt.getAttribute('hx-target') === '#modal-body' &&
+                (elt.getAttribute('hx-get') || elt.getAttribute('href'))) {
+                window.location.href =
+                    elt.getAttribute('href') || elt.getAttribute('hx-get');
+            }
+        }
+        document.addEventListener('htmx:sendError', fallbackFullPage);
+        document.addEventListener('htmx:responseError', fallbackFullPage);
+    })();
+    </script>
+
     <script defer src="{% static 'vendor/js/htmx.min.js' %}"></script>
-    <script defer src="{% static 'js/main.js' %}?v=20261003b"></script>
+    <script defer src="{% static 'js/main.js' %}?v=20261005"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
