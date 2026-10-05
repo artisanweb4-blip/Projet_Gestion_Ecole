@@ -1,3 +1,4 @@
+from core.scoping import get_current_school
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -16,7 +17,9 @@ def academic_calendar_view(request):
         if 'add_category' in request.POST:
             cat_form = EventCategoryForm(request.POST)
             if cat_form.is_valid():
-                cat_form.save()
+                obj = cat_form.save(commit=False)
+                obj.school = get_current_school()
+                obj.save()
                 messages.success(
                     request, 'Catégorie ajoutée avec succès.'
                 )
@@ -31,7 +34,9 @@ def academic_calendar_view(request):
         elif 'add_event' in request.POST:
             event_form = AcademicEventForm(request.POST)
             if event_form.is_valid():
-                event_form.save()
+                obj = event_form.save(commit=False)
+                obj.school = get_current_school()
+                obj.save()
                 messages.success(
                     request, 'Événement ajouté avec succès.'
                 )
