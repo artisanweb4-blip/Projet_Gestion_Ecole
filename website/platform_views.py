@@ -22,6 +22,7 @@ from django.views.generic import (
 )
 
 from accounts.models import PlatformSetting, School, SubscriptionPlan, User
+from accounts.utils import unique_username
 from analytics.models import VisitLog
 from classes.models import Class
 from students.models import Student
@@ -143,7 +144,7 @@ class PlatformSchoolCreateView(SuperadminRequiredMixin, HtmxCrudMixin, CreateVie
         response = super().form_valid(form)
         admin = User.objects.create_user(
             email=form.cleaned_data['admin_email'],
-            username=form.cleaned_data['admin_email'].split('@')[0],
+            username=unique_username(form.cleaned_data['admin_email']),
             password=form.cleaned_data['admin_password'],
             first_name=form.cleaned_data['admin_first_name'],
             last_name=form.cleaned_data['admin_last_name'],
@@ -255,7 +256,7 @@ class PlatformUserCreateView(SuperadminRequiredMixin, HtmxCrudMixin, CreateView)
     success_message = "Utilisateur créé avec succès."
 
     def form_valid(self, form):
-        form.instance.username = form.cleaned_data['email'].split('@')[0]
+        form.instance.username = unique_username(form.cleaned_data['email'])
         form.instance.set_password(form.cleaned_data['password'])
         return super().form_valid(form)
 

@@ -7,6 +7,13 @@ class FeeForm(forms.ModelForm):
     class Meta:
         model = FeeStructure
         fields = ['name', 'classroom', 'amount', 'due_date', 'academic_year']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Un frais DOIT être rattaché à une classe : sans cela, il serait
+        # invisible et inmodifiable pour l'école (isolation multi-écoles).
+        self.fields['classroom'].required = True
+        self.fields['classroom'].empty_label = "— Choisir la classe —"
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',

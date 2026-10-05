@@ -8,6 +8,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
 from accounts.models import School, User
+from accounts.utils import unique_username
 from classes.models import Class
 from students.models import Student
 from teachers.models import Teacher
@@ -60,7 +61,7 @@ def register_school(request):
 
         admin = User.objects.create_user(
             email=form.cleaned_data['admin_email'],
-            username=form.cleaned_data['admin_email'].split('@')[0],
+            username=unique_username(form.cleaned_data['admin_email']),
             password=form.cleaned_data['admin_password'],
             first_name=form.cleaned_data['admin_first_name'],
             last_name=form.cleaned_data['admin_last_name'],
