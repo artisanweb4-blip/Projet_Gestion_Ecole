@@ -21,7 +21,7 @@
 
     <div class="form-grid-2">
         {% for field in form.visible_fields %}
-            {% if field.name != 'parents' %}
+            {% if field.name != 'parents' and field.name != 'allergies' and field.name != 'medical_notes' %}
                 <div class="form-group {% if field.errors %}is-invalid{% endif %} {% if field.field.widget.input_type == 'file' %}full{% endif %}">
                     <label class="form-label" for="{{ field.id_for_label }}">
                         {{ field.label }}{% if field.field.required %} <span class="required">*</span>{% endif %}

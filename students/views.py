@@ -11,6 +11,7 @@ from django.views.generic import (
 )
 
 from core.mixins import HtmxCrudMixin, RoleRequiredMixin
+from core.scoping import assign_school
 from parents.models import Parent
 
 from .forms import StudentForm
@@ -76,34 +77,52 @@ class StudentParentLinkMixin:
         if not first or not last:
             return
 
-        email = (self.request.POST.get('parent_email') or '').strip().lower()
-        parent = None
-        if email:
-            parent = Parent.objects.filter(email__iexact=email).first()
-        if parent is None:
-            parent = Parent.objects.filter(
-                first_name__iexact=first, last_name__iexact=last
-            ).first()
-        if parent is None:
-            parent = Parent.objects.create(
-                civility=self.request.POST.get('parent_civility') or 'M',
-                first_name=first, last_name=last, email=email or None,
-                phone=(self.request.POST.get('parent_phone') or '').strip() or None,
-                profession=(self.request.POST.get('parent_profession') or '').strip() or None,
-                address=(self.request.POST.get('parent_address') or '').strip() or None,
-            )
-            messages.success(
+        try:
+            email = (self.request.POST.get('parent_email') or '').strip().lower()
+            parent = None
+            if email:
+                parent = Parent.objects.filter(email__iexact=email).first()
+            if parent is None:
+                parent = Parent.objects.filter(
+                    first_name__iexact=first, last_name__iexact=last
+                ).first()
+            if parent is None:
+                parent = Parent(
+                    civility=self.request.POST.get('parent_civility') or 'M',
+                    first_name=first, last_name=last, email=email or None,
+                    phone=(self.request.POST.get('parent_phone') or '').strip() or None,
+                    profession=(self.request.POST.get('parent_profession') or '').strip() or None,
+                    address=(self.request.POST.get('parent_address') or '').strip() or None,
+                )
+                # Isolation multi-ecoles : le parent appartient a l'ecole de
+                # l'utilisateur (sinon il est cree orphelin et invisible).
+                assign_school(parent, self.request.user)
+                parent.save()
+                messages.success(
+                    self.request,
+                    f"Parent « {parent} » créé et lié à {self.object.first_name} "
+                    f"{self.object.last_name}."
+                )
+            else:
+                messages.info(
+                    self.request,
+                    f"Parent existant « {parent} » lié à {self.object.first_name} "
+                    f"{self.object.last_name}."
+                )
+            # Un parent orphe lie auparavant (ancien bug) est ratache a l'ecole
+            # de l'utilisateur pour redevenir visible.
+            if parent.school_id is None:
+                assign_school(parent, self.request.user)
+                parent.save()
+            self.object.parents.add(parent)
+        except Exception:
+            # La creation du parent ne doit JAMAIS faire echouer
+            # l'enregistrement de l'eleve.
+            messages.warning(
                 self.request,
-                f"Parent « {parent} » créé et lié à {self.object.first_name} "
-                f"{self.object.last_name}."
+                "L'élève est enregistré, mais la création du parent a échoué. "
+                "Vous pouvez lier le parent depuis sa fiche."
             )
-        else:
-            messages.info(
-                self.request,
-                f"Parent existant « {parent} » lié à {self.object.first_name} "
-                f"{self.object.last_name}."
-            )
-        self.object.parents.add(parent)
 
 
 class StudentCreateView(StudentParentLinkMixin, LoginRequiredMixin, RoleRequiredMixin,

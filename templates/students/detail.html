@@ -225,9 +225,6 @@
             <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Matricule : <strong style="color: #0f172a;">{{ student.student_id }}</strong></p>
         </div>
         <div class="action-btns">
-            <a href="{% url 'students:edit' student.pk %}" class="btn-custom-edit">
-                <i class="fa-solid fa-pen-to-square"></i> Modifier
-            </a>
             <a href="{% url 'students:list' %}" class="btn-custom-back">
                 <i class="fa-solid fa-arrow-left"></i> Retour
             </a>

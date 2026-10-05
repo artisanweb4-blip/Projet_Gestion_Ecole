@@ -12,8 +12,10 @@ class StudentForm(forms.ModelForm):
             'class_group', 'parents', 'is_active', 'documents'
         ]
         widgets = {
-            'parents': forms.SelectMultiple(attrs={'size': 4}),
-            'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
+            'parents': forms.SelectMultiple(attrs={'size': 1,
+                'title': 'Liste déroulante — maintenez Ctrl pour choisir plusieurs parents'}),
+            'date_of_birth': forms.DateInput(attrs={'type': 'date'},
+                                             format='%Y-%m-%d'),
             'address': forms.Textarea(attrs={'rows': 3}),
             'medical_notes': forms.Textarea(attrs={'rows': 2}),
         }
