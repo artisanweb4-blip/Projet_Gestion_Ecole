@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Frais de scolarité par niveau - Comptabilité{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-layer-group"></i></span>Frais de scolarité par niveau</h1>
+        <p>Grille officielle {{ current_year|default:"2026-2027" }} : chaque classe hérite du frais de son niveau.</p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'accounting:tuition_add' %}" class="btn btn-primary"
+                hx-get="{% url 'accounting:tuition_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-plus"></i> Définir un frais
+        </a>
+        <a href="{% url 'accounting:index' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Comptabilité
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} alert-dismiss">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="dashboard-card">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fa-solid fa-file-invoice-dollar me-1 text-success"></i> Grille des frais</h2>
+        <span class="badge badge-success">{{ tuitions|length }} ligne(s)</span>
+    </div>
+    {% if tuitions %}
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Niveau</th>
+                    <th>Périodicité</th>
+                    <th class="text-center">Montant</th>
+                    <th class="text-center">Année académique</th>
+                    <th class="text-center">Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tuition in tuitions %}
+                <tr>
+                    <td><strong>{{ tuition.get_level_display }}</strong></td>
+                    <td>{{ tuition.get_periodicity_display }}</td>
+                    <td class="text-center"><strong>{{ tuition.amount|intcomma }} F</strong></td>
+                    <td class="text-center">{{ tuition.academic_year }}</td>
+                    <td class="text-center">
+                        {% if tuition.is_active %}
+                            <span class="badge badge-success">Actif</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Inactif</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 6px;">
+                            <a href="{% url 'accounting:tuition_edit' tuition.pk %}" class="btn-action btn-edit" title="Modifier"
+                                    hx-get="{% url 'accounting:tuition_edit' tuition.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                            <a href="{% url 'accounting:tuition_delete' tuition.pk %}" class="btn-action btn-delete" title="Supprimer"
+                                    hx-get="{% url 'accounting:tuition_delete' tuition.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 48px 16px; color: #64748b;">
+        <i class="fa-solid fa-layer-group" style="font-size: 40px; opacity: .3;"></i>
+        <p>Aucun frais défini. Cliquez sur « Définir un frais » pour créer la grille
+        (un montant par niveau : mensuel, trimestriel, semestriel ou annuel).</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,7 +1,68 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% load static %}
 
-{% block title %}Détails {{ object.name }} - Gestion École{% endblock %}
+{% block title %}Détails {{ object.name }} - Gestion École
+<!-- ===================== SITUATION DES PAIEMENTS ===================== -->
+<div class="dashboard-card" style="margin-top: 18px;">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fa-solid fa-coins me-1 text-success"></i> Situation des paiements — Scolarité</h2>
+        <span class="badge {% if finance.class_percent >= 100 %}badge-success{% else %}badge-secondary{% endif %}">
+            Classe : {{ finance.class_percent|floatformat:0 }}% encaissé
+        </span>
+    </div>
+    <p class="text-muted" style="margin: 0 0 10px; font-size: 0.85rem;">
+        Barème attendu (toutes périodicités confondues) :
+        <strong>{{ finance.class_expected|intcomma }} F</strong> ·
+        Encaissé : <strong>{{ finance.class_paid|intcomma }} F</strong> ·
+        Reliquat cumulé : <strong style="color: #dc2626;">{{ finance.class_reliquat|intcomma }} F</strong>
+    </p>
+    {% if finance.rows %}
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Élève</th>
+                    <th class="text-center">Attendu</th>
+                    <th class="text-center">Payé</th>
+                    <th class="text-center">Reliquat</th>
+                    <th class="text-center">Niveau de paiement</th>
+                    <th class="text-center">Encaisser</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in finance.rows %}
+                <tr>
+                    <td><strong>{{ row.student.last_name }} {{ row.student.first_name }}</strong></td>
+                    <td class="text-center">{% if row.expected is None %}—{% else %}{{ row.expected|intcomma }} F{% endif %}</td>
+                    <td class="text-center">{{ row.paid|intcomma }} F</td>
+                    <td class="text-center">
+                        {% if row.reliquat is None %}—
+                        {% elif row.reliquat > 0 %}<span style="color:#dc2626;">{{ row.reliquat|intcomma }} F</span>
+                        {% else %}<span class="badge badge-success">SOLDÉ</span>{% endif %}
+                    </td>
+                    <td class="text-center" style="min-width: 130px;">
+                        <div style="background:#e2e8f0; border-radius:6px; height:8px; width:100%; overflow:hidden;">
+                            <div style="background:{% if row.percent >= 100 %}#059669{% elif row.percent > 0 %}#f59e0b{% else %}#94a3b8{% endif %}; height:8px; width:{{ row.percent|floatformat:0 }}%;"></div>
+                        </div>
+                        <small>{{ row.percent|floatformat:0 }}%</small>
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'accounting:payment_add' %}?classroom={{ object.pk }}" class="btn-action btn-edit" title="Encaisser">
+                            <i class="fa-solid fa-money-bill-wave"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">Aucun élève actif dans cette classe.</p>
+    {% endif %}
+</div>
+
+{% endblock %}
 
 {% block content %}
 <!-- En-tête de la page -->

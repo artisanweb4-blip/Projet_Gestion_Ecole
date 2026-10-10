@@ -37,9 +37,45 @@ class ClassDetailView(DetailView):
         return Class.objects.select_related('program', 'responsible')
 
     def get_context_data(self, **kwargs):
+        from accounting.views import student_finance_summary
+        from django.db.models import Sum
+        from finance.models import TuitionFee
+
         context = super().get_context_data(**kwargs)
+        obj = self.object
         # On passe directement la queryset d'élèves actifs au template
-        context['students'] = self.object.students.filter(is_active=True)
+        students = obj.students.filter(is_active=True).select_related('class_group')
+        context['students'] = students
+
+        # --- Situation des paiements de la classe (scolarité) ---
+        expected_total = TuitionFee.objects.filter(
+            school=obj.school, level=obj.level, academic_year='2026-2027',
+            is_active=True,
+        ).aggregate(t=Sum('amount'))['t'] if obj.school and obj.level else None
+
+        rows, paid_total = [], 0
+        for student in students:
+            summary = student_finance_summary(student)
+            paid_total += summary['paid']
+            paid_f = float(summary['paid'])
+            percent = (paid_f / float(expected_total) * 100) if expected_total else 0
+            rows.append({
+                'student': student,
+                'expected': summary['expected'],
+                'paid': summary['paid'],
+                'reliquat': summary['reliquat'],
+                'percent': min(round(percent, 1), 100),
+            })
+
+        expected_f = float(expected_total) if expected_total else 0
+        class_percent = (float(paid_total) / expected_f * 100) if expected_f else 0
+        context['finance'] = {
+            'rows': rows,
+            'class_expected': expected_total if expected_total is not None else 0,
+            'class_paid': paid_total,
+            'class_reliquat': (expected_total - paid_total) if expected_total is not None else None,
+            'class_percent': min(round(class_percent, 1), 100),
+        }
         return context
 
 

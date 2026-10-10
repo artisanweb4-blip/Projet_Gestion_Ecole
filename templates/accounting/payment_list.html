@@ -25,7 +25,8 @@
                         <th class="text-center">Montant</th>
                         <th class="text-center">Mode</th>
                         <th class="text-center">Date</th>
-                        <th>Frais rattaché</th>
+                        <th>Période</th>
+                        <th class="text-center">Reçu A5</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -37,7 +38,14 @@
                             <td class="text-center">{{ payment.amount_paid|intcomma }} F</td>
                             <td class="text-center"><span class="badge badge-success">{{ payment.get_payment_method_display }}</span></td>
                             <td class="text-center">{{ payment.payment_date|date:"d/m/Y H:i" }}</td>
-                            <td>{{ payment.fee_structure.name|default:"—" }}</td>
+                            <td>
+                                {{ payment.get_periodicity_display }}{% if payment.period_label %} · {{ payment.period_label }}{% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'accounting:payment_receipt' payment.pk %}" target="_blank" class="btn-action btn-view" title="Télécharger le reçu A5 (PDF)">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </a>
+                            </td>
                             <td>
                                 <div class="action-buttons">
                                     <a href="{% url 'accounting:payment_delete' payment.pk %}" class="btn-action btn-delete" title="Supprimer">

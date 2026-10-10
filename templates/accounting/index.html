@@ -13,8 +13,13 @@
         <a href="{% url 'accounting:payment_add' %}" class="btn btn-primary">
             <i class="fa-solid fa-money-bill-wave"></i> Encaisser un paiement
         </a>
-        <a href="{% url 'accounting:fee_add' %}" class="btn btn-secondary">
-            <i class="fa-solid fa-plus"></i> Nouveau frais
+        <a href="{% url 'accounting:tuition_add' %}" class="btn btn-secondary"
+                hx-get="{% url 'accounting:tuition_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-layer-group"></i> Définir un frais
+        </a>
+        <a href="{% url 'accounting:expense_add' %}" class="btn btn-secondary"
+                hx-get="{% url 'accounting:expense_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-money-bill-transfer"></i> Nouvelle dépense
         </a>
     </div>
 </div>
@@ -37,11 +42,29 @@
         </div>
     </div>
     <div class="metric-card">
-        <span class="metric-icon is-amber"><i class="fa-solid fa-file-invoice-dollar"></i></span>
+        <span class="metric-icon is-red"><i class="fa-solid fa-money-bill-transfer"></i></span>
         <div class="metric-info">
-            <span class="metric-label">Frais configurés</span>
-            <span class="metric-value">{{ fees_count }}</span>
-            <span class="metric-hint"><a href="{% url 'accounting:fees' %}">Gérer les frais</a></span>
+            <span class="metric-label">Dépenses du mois</span>
+            <span class="metric-value">{{ expenses_month|intcomma }} F</span>
+            <span class="metric-hint"><a href="{% url 'accounting:expenses' %}">Gérer les dépenses</a></span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-green"><i class="fa-solid fa-scale-balanced"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Solde du mois</span>
+            <span class="metric-value" style="color: {% if balance_month >= 0 %}#059669{% else %}#dc2626{% endif %};">
+                {{ balance_month|intcomma }} F
+            </span>
+            <span class="metric-hint">Encaissements − dépenses</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-amber"><i class="fa-solid fa-layer-group"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Frais par niveau</span>
+            <span class="metric-value">{{ tuitions_count }}</span>
+            <span class="metric-hint"><a href="{% url 'accounting:tuitions' %}">Gérer la grille</a></span>
         </div>
     </div>
     <div class="metric-card">

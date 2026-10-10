@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Dépenses - Comptabilité{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-money-bill-transfer"></i></span>Dépenses</h1>
+        <p>Suivi des sorties d'argent par catégorie, filtrables par mois.</p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'accounting:expense_add' %}" class="btn btn-primary"
+                hx-get="{% url 'accounting:expense_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-plus"></i> Nouvelle dépense
+        </a>
+        <a href="{% url 'accounting:index' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Comptabilité
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} alert-dismiss">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="dashboard-card" style="margin-bottom: 16px;">
+    <form method="get" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: end;">
+        <div>
+            <label class="form-label" style="font-size: 12px; color: #64748b; display: block; margin-bottom: 4px;">Mois</label>
+            <input type="month" name="month" value="{{ month }}" class="form-control">
+        </div>
+        <div>
+            <label class="form-label" style="font-size: 12px; color: #64748b; display: block; margin-bottom: 4px;">Catégorie</label>
+            <select name="category" class="form-control">
+                <option value="">— Toutes les catégories —</option>
+                {% for value, label in categories %}
+                    <option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filtrer</button>
+        <a href="{% url 'accounting:expenses' %}" class="btn btn-outline"><i class="fa-solid fa-rotate-left"></i> Réinitialiser</a>
+    </form>
+</div>
+
+<div class="dashboard-card">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fa-solid fa-receipt me-1 text-danger"></i> Dépenses</h2>
+        <span class="badge badge-danger">Total : {{ total|intcomma }} F</span>
+    </div>
+    {% if expenses %}
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Catégorie</th>
+                    <th>Libellé</th>
+                    <th class="text-center">Montant</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr>
+                    <td>{{ expense.expense_date|date:"d/m/Y" }}</td>
+                    <td><span class="badge badge-secondary">{{ expense.get_category_display }}</span></td>
+                    <td><strong>{{ expense.label }}</strong></td>
+                    <td class="text-center" style="color: #dc2626;"><strong>-{{ expense.amount|intcomma }} F</strong></td>
+                    <td>
+                        <div style="display: flex; gap: 6px;">
+                            <a href="{% url 'accounting:expense_edit' expense.pk %}" class="btn-action btn-edit" title="Modifier"
+                                    hx-get="{% url 'accounting:expense_edit' expense.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                            <a href="{% url 'accounting:expense_delete' expense.pk %}" class="btn-action btn-delete" title="Supprimer"
+                                    hx-get="{% url 'accounting:expense_delete' expense.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 48px 16px; color: #64748b;">
+        <i class="fa-solid fa-money-bill-transfer" style="font-size: 40px; opacity: .3;"></i>
+        <p>Aucune dépense pour ce filtre. Cliquez sur « Nouvelle dépense » pour l'enregistrer.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

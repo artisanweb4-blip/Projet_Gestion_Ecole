@@ -1,0 +1,135 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Reçu {{ payment.receipt_number }}</title>
+    <style>
+        /* Reçu A5 — compatible xhtml2pdf : tables uniquement */
+        @page {
+            size: A5 portrait;
+            margin: 1.1cm;
+        }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 9.5pt; color: #1e293b; }
+        .header { width: 100%; margin-bottom: 8px; }
+        .school-name { font-size: 14pt; font-weight: bold; color: #065f46; }
+        .school-info { font-size: 8pt; color: #475569; }
+        .title-box {
+            width: 100%; background: #059669; color: #ffffff;
+            padding: 6px 10px; text-align: center; margin: 8px 0;
+        }
+        .title-box .t { font-size: 13pt; font-weight: bold; }
+        .receipt-no { font-size: 9pt; }
+        table.data { width: 100%; border-collapse: collapse; margin: 6px 0; }
+        table.data th, table.data td {
+            border: 0.6pt solid #94a3b8; padding: 4px 6px; font-size: 9pt;
+            text-align: left;
+        }
+        table.data th { background: #f1f5f9; color: #334155; }
+        .amount-big {
+            font-size: 14pt; font-weight: bold; color: #065f46;
+        }
+        .reliquat { color: #b91c1c; font-weight: bold; }
+        .ok { color: #065f46; font-weight: bold; }
+        .small { font-size: 8pt; color: #64748b; }
+        .sign { width: 100%; margin-top: 18px; }
+        .sign td { text-align: center; font-size: 8.5pt; color: #475569; }
+        .footer { margin-top: 10px; text-align: center; font-size: 7.5pt; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+    <table class="header">
+        <tr>
+            <td style="width: 12%; text-align: center; vertical-align: middle; font-size: 16pt; color: #059669;"><b>GCE</b></td>
+            <td style="vertical-align: middle;">
+                <span class="school-name">{{ school.name|default:"École" }}</span><br>
+                <span class="school-info">
+                    {% if school.address %}{{ school.address }}{% endif %}
+                    {% if school.phone %} · Tél : {{ school.phone }}{% endif %}
+                    {% if school.email %} · {{ school.email }}{% endif %}
+                </span>
+            </td>
+        </tr>
+    </table>
+
+    <div class="title-box">
+        <span class="t">REÇU DE PAIEMENT</span><br>
+        <span class="receipt-no">N° {{ payment.receipt_number }}</span>
+    </div>
+
+    <table class="data">
+        <tr>
+            <th style="width: 35%;">Date et heure</th>
+            <td>{{ now|date:"d/m/Y à H:i" }}</td>
+        </tr>
+        <tr>
+            <th>Année académique</th>
+            <td>{{ academic_year }}</td>
+        </tr>
+        <tr>
+            <th>Élève</th>
+            <td><b>{{ student.last_name }} {{ student.first_name }}</b></td>
+        </tr>
+        <tr>
+            <th>Matricule</th>
+            <td>{{ student.student_id }}</td>
+        </tr>
+        <tr>
+            <th>Classe</th>
+            <td>{{ classroom|default:"—" }}{% if classroom %} ({{ classroom.get_level_display }}){% endif %}</td>
+        </tr>
+    </table>
+
+    <table class="data">
+        <tr>
+            <th style="width: 35%;">Périodicité</th>
+            <td>{{ payment.get_periodicity_display }}</td>
+        </tr>
+        <tr>
+            <th>Période concernée</th>
+            <td>{{ payment.period_label|default:"—" }}</td>
+        </tr>
+        <tr>
+            <th>Mode de règlement</th>
+            <td>{{ payment.get_payment_method_display }}</td>
+        </tr>
+        <tr>
+            <th>Montant payé</th>
+            <td class="amount-big">{{ payment.amount_paid|intcomma }} FCFA</td>
+        </tr>
+    </table>
+
+    <table class="data">
+        <tr>
+            <th style="width: 35%;">Frais de scolarité ({{ payment.get_periodicity_display|lower }})</th>
+            <td>{% if expected %}{{ expected|intcomma }} FCFA{% else %}Non défini{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Total déjà payé ({{ payment.get_periodicity_display|lower }})</th>
+            <td>{{ paid_periodicity|intcomma }} FCFA</td>
+        </tr>
+        <tr>
+            <th><b>RELIQUAT restant</b></th>
+            <td class="{% if reliquat and reliquat > 0 %}reliquat{% else %}ok{% endif %}">
+                {% if reliquat is None %}—
+                {% elif reliquat > 0 %}{{ reliquat|intcomma }} FCFA
+                {% else %}0 FCFA — SOLDE{% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <table class="sign">
+        <tr>
+            <td>Le Caissier<br><br><br>_____________________</td>
+            <td>Le Représentant du parent<br><br><br>_____________________</td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        Ce reçu est délivré par {{ school.name|default:"l'école" }} — à conserver.
+        Reçu émis le {{ now|date:"d/m/Y H:i" }}.
+    </div>
+
+</body>
+</html>
