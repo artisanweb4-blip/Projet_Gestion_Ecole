@@ -120,7 +120,7 @@ class AccountingIndexView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        payments = StudentPayment.objects.select_related('student', 'fee_structure')
+        payments = StudentPayment.objects.select_related('student')
         total_all = payments.aggregate(t=Sum('amount_paid'))['t'] or 0
         count_all = payments.count()
 
@@ -224,7 +224,7 @@ class PaymentListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
     def get_queryset(self):
         return (
             StudentPayment.objects
-            .select_related('student', 'fee_structure', 'student__class_group')
+            .select_related('student', 'student__class_group')
             .order_by('-payment_date')
         )
 
