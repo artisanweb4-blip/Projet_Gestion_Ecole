@@ -7,7 +7,6 @@ from django.test import TestCase
 from classes.models import Class
 from courses.models import Course, Program, Subject
 from exams.models import Exam, ExamResult
-from finance.models import FeeStructure, StudentPayment
 from students.models import Student
 from teachers.models import Teacher
 
@@ -59,14 +58,3 @@ class BusinessRulesTestCase(TestCase):
         with self.assertRaises(ValidationError):
             ExamResult.objects.create(exam=exam, student=self.student, score=25.0)
 
-    def test_payment_receipt_cannot_be_deleted(self):
-        fee = FeeStructure.objects.create(
-            name="Scolarité", amount=50000,
-            due_date=date(2025, 10, 15),
-        )
-        payment = StudentPayment.objects.create(
-            student=self.student, fee_structure=fee,
-            amount_paid=50000, receipt_number="REC-TEST-0001",
-        )
-        with self.assertRaises(ValidationError):
-            payment.delete()

@@ -9,7 +9,8 @@
         <h1><span class="page-icon"><i class="fa-solid fa-money-bill-wave"></i></span>Paiements</h1>
         <p>Historique des encaissements (espèces, Orange Money, Wave, MTN...).</p>
     </div>
-    <a href="{% url 'accounting:payment_add' %}" class="btn btn-primary">
+    <a href="{% url 'accounting:payment_add' %}" class="btn btn-primary"
+            hx-get="{% url 'accounting:payment_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
         <i class="fa-solid fa-money-bill-wave"></i> Encaisser un paiement
     </a>
 </div>

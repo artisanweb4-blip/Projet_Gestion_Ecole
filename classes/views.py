@@ -48,10 +48,12 @@ class ClassDetailView(DetailView):
         context['students'] = students
 
         # --- Situation des paiements de la classe (scolarité) ---
-        expected_total = TuitionFee.objects.filter(
+        tuition_rows = (TuitionFee.objects.filter(
             school=obj.school, level=obj.level, academic_year='2026-2027',
             is_active=True,
-        ).aggregate(t=Sum('amount'))['t'] if obj.school and obj.level else None
+        ) if obj.school and obj.level else TuitionFee.objects.none())
+        context['tuition_rows'] = tuition_rows
+        expected_total = tuition_rows.aggregate(t=Sum('amount'))['t']
 
         rows, paid_total = [], 0
         for student in students:

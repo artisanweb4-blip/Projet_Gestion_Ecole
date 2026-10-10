@@ -1,4 +1,4 @@
-{# Enregistrement d'un paiement : par élève ou par classe, avec périodicité #}
+{# Encaissement : D'ABORD la classe, puis l'élève de cette classe (ou toute la classe) #}
 <div class="modal-head">
     <h3>{{ modal_title|default:"Enregistrer un paiement" }}</h3>
     <button type="button" class="modal-close" data-close-modal aria-label="Fermer">&times;</button>
@@ -17,11 +17,17 @@
     {% endif %}
 
     <div class="form-group">
-        <label class="form-label">Mode de paiement <span class="required">*</span></label>
+        <label class="form-label" for="{{ form.classroom.id_for_label }}">Classe <span class="required">*</span></label>
+        {{ form.classroom }}
+        {% for error in form.classroom.errors %}<div class="error-feedback">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Qui paie ? <span class="required">*</span></label>
         <div style="display:flex; gap:18px; padding:6px 2px;">
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
                 <input type="radio" name="mode" value="ELEVE" class="form-check-input"
-                       {% if form.mode.value != 'CLASSE' %}checked{% endif %}> Par élève
+                       {% if form.mode.value != 'CLASSE' %}checked{% endif %}> Un élève de la classe
             </label>
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
                 <input type="radio" name="mode" value="CLASSE" class="form-check-input"
@@ -31,27 +37,16 @@
         {% for error in form.mode.errors %}<div class="error-feedback">{{ error }}</div>{% endfor %}
     </div>
 
-    <div class="form-group" id="row-classroom">
-        <label class="form-label" for="{{ form.classroom.id_for_label }}">Classe <span class="text-muted">(mode « toute la classe »)</span></label>
-        {{ form.classroom }}
-        {% for error in form.classroom.errors %}<div class="error-feedback">{{ error }}</div>{% endfor %}
-    </div>
-
     <div class="form-group" id="row-student">
         <label class="form-label" for="{{ form.student.id_for_label }}">Élève <span class="required">*</span></label>
-        <select name="student" id="{{ form.student.id_for_label }}" class="form-control">
-            <option value="">— Choisir l'élève —</option>
-            {% regroup form.fields.student.queryset by class_group as by_class %}
-            {% for group in by_class %}
-                {% if group.grouper %}
-                <optgroup label="{{ group.grouper.name }}">
-                    {% for s in group.list %}
-                    <option value="{{ s.pk }}" {% if form.student.value|stringformat:"s" == s.pk|stringformat:"s" %}selected{% endif %}>
-                        {{ s.last_name }} {{ s.first_name }}
-                    </option>
-                    {% endfor %}
-                </optgroup>
-                {% endif %}
+        <select name="student" id="{{ form.student.id_for_label }}" class="form-control"
+                {% if not form.classroom.value %}disabled{% endif %}>
+            <option value="">— Choisissez d'abord la classe —</option>
+            {% for s in form.fields.student.queryset %}
+                <option value="{{ s.pk }}" data-class="{{ s.class_group_id }}"
+                        {% if form.student.value|stringformat:"s" == s.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ s.last_name }} {{ s.first_name }}
+                </option>
             {% endfor %}
         </select>
         {% for error in form.student.errors %}<div class="error-feedback">{{ error }}</div>{% endfor %}
@@ -88,18 +83,13 @@
     <div class="modal-footer">
         <button type="button" class="btn btn-outline" data-close-modal>Annuler</button>
         <button type="submit" class="btn btn-primary">
-            <i class="fa-solid fa-floppy-disk"></i> Enregistrer {% if form.mode.value == 'CLASSE' %}pour toute la classe{% endif %}
+            <i class="fa-solid fa-floppy-disk"></i> Enregistrer
         </button>
     </div>
 </form>
 
 <script>
 (function () {
-    if (window.__gcePaymentFormBound) { return; }
-    window.__gcePaymentFormBound = true;
-
-    function form() { return document.querySelector('.modal-form[action*="payments/add"], form[action*="payments/add"]'); }
-    // Le formulaire de paiement est le seul à contenir input[name="mode"]
     function f() {
         var forms = document.querySelectorAll('form');
         for (var i = 0; i < forms.length; i++) {
@@ -110,48 +100,62 @@
     function refresh() {
         var form = f();
         if (!form) { return; }
+        var cls = form.querySelector('[name="classroom"]');
         var mode = (form.querySelector('input[name="mode"]:checked') || {}).value || 'ELEVE';
+        var sel = form.querySelector('[name="student"]');
         var rowStudent = document.getElementById('row-student');
-        var rowClassroom = document.getElementById('row-classroom');
-        if (rowStudent) { rowStudent.style.display = mode === 'ELEVE' ? '' : 'none'; }
-        if (rowClassroom) { rowClassroom.style.display = mode === 'CLASSE' ? '' : 'none'; }
-        var labels = { MOIS: 'Ex : Octobre 2026', TRIMESTRE: 'Ex : Trimestre 1',
-                       SEMESTRE: 'Ex : Semestre 1', ANNUEL: 'Ex : Année 2026-2027' };
+
+        // 1) La liste d'élèves ne montre QUE les élèves de la classe choisie
+        if (sel) {
+            var classId = cls ? cls.value : '';
+            var options = sel.querySelectorAll('option[data-class]');
+            var first = true;
+            options.forEach(function (opt) {
+                var show = classId && opt.getAttribute('data-class') === classId;
+                opt.style.display = show ? '' : 'none';
+                if (show && first && !sel.value) { sel.value = opt.value; first = false; }
+            });
+            var none = !classId;
+            sel.disabled = none;
+            if (none) { sel.value = ''; }
+            // Option d'aide en tête de liste
+            var helper = sel.querySelector('option[data-helper]');
+            if (!helper) {
+                helper = document.createElement('option');
+                helper.setAttribute('data-helper', '1');
+                helper.value = '';
+                sel.insertBefore(helper, sel.firstChild);
+            }
+            helper.textContent = none ? "— Choisissez d'abord la classe —"
+                                      : "— Choisir l'élève —";
+        }
+        // 2) Le choix « Un élève / Toute la classe » masque la liste d'élèves
+        if (rowStudent) { rowStudent.style.display = mode === 'CLASSE' ? 'none' : ''; }
+
+        // 3) Indication du montant attendu selon la classe et la périodicité
         var per = form.querySelector('[name="periodicity"]');
         var pl = form.querySelector('[name="period_label"]');
-        if (per && pl && !pl.value) { pl.placeholder = labels[per.value] || ''; }
-    }
-    function fetchHint() {
-        var form = f();
-        if (!form) { return; }
-        var cls = form.querySelector('[name="classroom"]');
-        var per = form.querySelector('[name="periodicity"]');
         var hint = document.getElementById('tuition-hint');
-        var clsId = (modeIsClasse()) ? (cls && cls.value) : (window.__gceLastClassId || '');
-        if (!hint) { return; }
-        if (!clsId) { hint.textContent = ''; return; }
-        hint.textContent = 'Recherche du frais…';
-        var url = '/accounting/payments/ajax/tuition/?classroom=' + clsId + '&periodicity=' + (per ? per.value : 'ANNUEL');
-        if (window.fetch) {
-            fetch(url).then(function (r) { return r.json(); }).then(function (d) {
-                hint.textContent = d.hint || '';
-            }).catch(function () { hint.textContent = ''; });
-        }
-    }
-    function modeIsClasse() {
-        var form = f();
-        var m = form && form.querySelector('input[name="mode"]:checked');
-        return m && m.value === 'CLASSE';
+        var labels = { MOIS: 'Ex : Octobre 2026', TRIMESTRE: 'Ex : Trimestre 1',
+                       SEMESTRE: 'Ex : Semestre 1', ANNUEL: 'Ex : Année 2026-2027' };
+        if (pl && per && !pl.value) { pl.placeholder = labels[per.value] || ''; }
+        if (hint && cls && cls.value) {
+            hint.textContent = 'Recherche du frais attendu…';
+            if (window.fetch) {
+                fetch('/accounting/payments/ajax/tuition/?classroom=' + cls.value +
+                      '&periodicity=' + (per ? per.value : 'ANNUEL'))
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) { hint.textContent = d.hint || ''; })
+                    .catch(function () { hint.textContent = ''; });
+            }
+        } else if (hint) { hint.textContent = ''; }
     }
     document.addEventListener('change', function (e) {
         if (!f()) { return; }
-        if (e.target.matches('input[name="mode"], [name="periodicity"]')) { refresh(); fetchHint(); }
-        if (e.target.matches('[name="classroom"]')) {
-            window.__gceLastClassId = e.target.value;
-            fetchHint();
+        if (e.target.matches('[name="classroom"], [name="periodicity"], input[name="mode"]')) {
+            refresh();
         }
     });
-    document.addEventListener('DOMContentLoaded', refresh);
-    setTimeout(refresh, 50);
+    setTimeout(refresh, 60);
 })();
 </script>

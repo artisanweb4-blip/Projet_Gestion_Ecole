@@ -25,10 +25,4 @@ urlpatterns = [
     path('expenses/add/', views.ExpenseCreateView.as_view(), name='expense_add'),
     path('expenses/<int:pk>/edit/', views.ExpenseUpdateView.as_view(), name='expense_edit'),
     path('expenses/<int:pk>/delete/', views.ExpenseDeleteView.as_view(), name='expense_delete'),
-
-    # Tranches & échéances (historique)
-    path('fees/', views.FeeListView.as_view(), name='fees'),
-    path('fees/add/', views.FeeCreateView.as_view(), name='fee_add'),
-    path('fees/<int:pk>/edit/', views.FeeUpdateView.as_view(), name='fee_edit'),
-    path('fees/<int:pk>/delete/', views.FeeDeleteView.as_view(), name='fee_delete'),
 ]

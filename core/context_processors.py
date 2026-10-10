@@ -40,8 +40,6 @@ MENU = [
      'roles': ['ADMIN', 'COMPTABLE']},
     {'label': 'Dépenses', 'url_name': 'accounting:expenses', 'icon': 'fa-money-bill-transfer', 'prefix': '/accounting/expenses',
      'roles': ['ADMIN', 'COMPTABLE']},
-    {'label': 'Tranches & échéances', 'url_name': 'accounting:fees', 'icon': 'fa-file-invoice-dollar', 'prefix': '/accounting/fees',
-     'roles': ['ADMIN', 'COMPTABLE']},
     {'section': 'Organisation'},
     {'label': 'Emploi du temps', 'url_name': 'timetable:index', 'icon': 'fa-calendar-days', 'prefix': '/timetable'},
     {'label': 'Calendrier scolaire', 'url_name': 'school_calendar:calendar', 'icon': 'fa-calendar-check', 'prefix': '/calendar'},

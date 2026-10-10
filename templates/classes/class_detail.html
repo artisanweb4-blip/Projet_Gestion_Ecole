@@ -11,7 +11,18 @@
             Classe : {{ finance.class_percent|floatformat:0 }}% encaissé
         </span>
     </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin: 0 0 10px;">
+        {% for t in tuition_rows %}
+            <span class="badge badge-secondary">
+                {{ t.get_periodicity_display }} : <strong>{{ t.amount|intcomma }} F</strong>
+            </span>
+        {% empty %}
+            <span class="badge badge-secondary">Aucun frais défini pour le niveau {{ object.get_level_display }} — <a href="{% url 'accounting:tuition_add' %}">définir</a></span>
+        {% endfor %}
+    </div>
     <p class="text-muted" style="margin: 0 0 10px; font-size: 0.85rem;">
+        Taux de paiement de la classe :
+        <strong>{{ finance.class_percent|floatformat:0 }}%</strong> ·
         Barème attendu (toutes périodicités confondues) :
         <strong>{{ finance.class_expected|intcomma }} F</strong> ·
         Encaissé : <strong>{{ finance.class_paid|intcomma }} F</strong> ·
@@ -26,7 +37,7 @@
                     <th class="text-center">Attendu</th>
                     <th class="text-center">Payé</th>
                     <th class="text-center">Reliquat</th>
-                    <th class="text-center">Niveau de paiement</th>
+                    <th class="text-center">Taux de paiement</th>
                     <th class="text-center">Encaisser</th>
                 </tr>
             </thead>
@@ -48,7 +59,8 @@
                         <small>{{ row.percent|floatformat:0 }}%</small>
                     </td>
                     <td class="text-center">
-                        <a href="{% url 'accounting:payment_add' %}?classroom={{ object.pk }}" class="btn-action btn-edit" title="Encaisser">
+                        <a href="{% url 'accounting:payment_add' %}?classroom={{ object.pk }}" class="btn-action btn-edit" title="Encaisser"
+                                    hx-get="{% url 'accounting:payment_add' %}?classroom={{ object.pk }}" hx-target="#modal-body" hx-swap="innerHTML">
                             <i class="fa-solid fa-money-bill-wave"></i>
                         </a>
                     </td>

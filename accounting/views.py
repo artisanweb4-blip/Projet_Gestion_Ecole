@@ -31,10 +31,10 @@ from xhtml2pdf import pisa
 from classes.models import Class
 from core.mixins import HtmxCrudMixin, RoleRequiredMixin
 from core.scoping import assign_school
-from finance.models import Expense, FeeStructure, StudentPayment, TuitionFee
+from finance.models import Expense, StudentPayment, TuitionFee
 from students.models import Student
 
-from .forms import ExpenseForm, FeeForm, PaymentModeForm, TuitionFeeForm
+from .forms import ExpenseForm, PaymentModeForm, TuitionFeeForm
 
 ALLOWED_ROLES = ['ADMIN', 'COMPTABLE']
 
@@ -130,7 +130,6 @@ class AccountingIndexView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
             payment_date__gte=month_start
         ).aggregate(t=Sum('amount_paid'))['t'] or 0
 
-        fees_count = FeeStructure.objects.count()
         by_method = (
             payments.values('payment_method')
             .annotate(total=Sum('amount_paid'), n=Count('id'))
@@ -151,7 +150,6 @@ class AccountingIndexView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
             'total_all': total_all,
             'count_all': count_all,
             'total_month': total_month,
-            'fees_count': fees_count,
             'by_method': by_method,
             'method_colors': METHOD_COLORS,
             'expenses_month': expenses_month,
@@ -478,57 +476,3 @@ class ExpenseDeleteView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, De
     partial_template = 'includes/delete_modal.html'
     modal_title = 'Supprimer cette dépense'
     success_message = 'Dépense supprimée.'
-
-
-# ---------------------------------------------------------------------------
-# Tranches & échéances (historique, conservé pour compatibilité)
-# ---------------------------------------------------------------------------
-class FeeListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
-    template_name = 'accounting/fee_list.html'
-    context_object_name = 'fees'
-    allowed_roles = ALLOWED_ROLES
-
-    def get_queryset(self):
-        return (FeeStructure.objects
-                .select_related('classroom')
-                .order_by('classroom__name', 'due_date'))
-
-
-class FeeCreateView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, CreateView):
-    allowed_roles = ALLOWED_ROLES
-    model = FeeStructure
-    form_class = FeeForm
-    template_name = 'accounting/fee_form.html'
-    success_url = reverse_lazy('accounting:fees')
-    partial_template = 'includes/form_modal.html'
-    modal_title = 'Nouveau frais'
-    success_message = 'Frais enregistré.'
-
-    def form_valid(self, form):
-        assign_school(form.instance, self.request.user)
-        response = super().form_valid(form)
-        if self.request.htmx:
-            messages.success(self.request, self.success_message)
-            return HttpResponseClientRedirect(str(self.get_success_url()))
-        return response
-
-
-class FeeUpdateView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, UpdateView):
-    allowed_roles = ALLOWED_ROLES
-    model = FeeStructure
-    form_class = FeeForm
-    template_name = 'accounting/fee_form.html'
-    success_url = reverse_lazy('accounting:fees')
-    partial_template = 'includes/form_modal.html'
-    modal_title = 'Modifier le frais'
-    success_message = 'Frais mis à jour.'
-
-
-class FeeDeleteView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, DeleteView):
-    allowed_roles = ALLOWED_ROLES
-    model = FeeStructure
-    template_name = 'accounting/fee_confirm_delete.html'
-    success_url = reverse_lazy('accounting:fees')
-    partial_template = 'includes/delete_modal.html'
-    modal_title = 'Supprimer ce frais'
-    success_message = 'Frais supprimé.'
