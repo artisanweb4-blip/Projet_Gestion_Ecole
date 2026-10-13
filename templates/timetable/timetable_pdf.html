@@ -1,0 +1,97 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Emploi du temps — {{ classroom.name }}</title>
+    <style>
+        /* A4 paysage — compatible xhtml2pdf : tables uniquement */
+        @page { size: A4 landscape; margin: 1cm; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 9pt; color: #1e293b; }
+        .header { width: 100%; margin-bottom: 4px; }
+        .school-name { font-size: 15pt; font-weight: bold; color: #065f46; }
+        .school-info { font-size: 8pt; color: #475569; }
+        .title-box {
+            width: 100%; background: #059669; color: #ffffff;
+            padding: 5px 8px; text-align: center; margin: 6px 0;
+        }
+        .title-box .t { font-size: 12.5pt; font-weight: bold; }
+        .subtitle { font-size: 9pt; }
+        table.grid { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        table.grid th, table.grid td {
+            border: 0.6pt solid #94a3b8; padding: 4px 5px; font-size: 8.5pt;
+            vertical-align: top; text-align: center;
+        }
+        table.grid th { background: #ecfdf5; color: #065f46; font-weight: bold; }
+        .hour { background: #f1f5f9; font-weight: bold; color: #334155; width: 11%; }
+        .course { font-weight: bold; color: #0f172a; }
+        .meta { font-size: 7.5pt; color: #475569; }
+        .footer { margin-top: 10px; text-align: center; font-size: 7.5pt; color: #94a3b8; }
+        .sign { width: 100%; margin-top: 16px; }
+        .sign td { text-align: center; font-size: 8pt; color: #475569; }
+    </style>
+</head>
+<body>
+
+    <table class="header">
+        <tr>
+            <td style="width: 10%; text-align: center; font-size: 15pt; color: #059669;"><b>GCE</b></td>
+            <td style="vertical-align: middle;">
+                <span class="school-name">{{ school.name|default:"École" }}</span><br>
+                <span class="school-info">
+                    {% if school.address %}{{ school.address }}{% endif %}
+                    {% if school.phone %} · Tél : {{ school.phone }}{% endif %}
+                    {% if school.email %} · {{ school.email }}{% endif %}
+                </span>
+            </td>
+        </tr>
+    </table>
+
+    <div class="title-box">
+        <span class="t">EMPLOI DU TEMPS — {{ classroom.name }}</span><br>
+        <span class="subtitle">
+            {% if program %}Programme : {{ program.name }} · {% endif %}
+            Niveau : {{ classroom.get_level_display }} · Année académique 2026-2027
+        </span>
+    </div>
+
+    <table class="grid">
+        <tr>
+            <th class="hour">Horaires</th>
+            {% for day_num, day_name in days %}
+                <th>{{ day_name }}</th>
+            {% endfor %}
+        </tr>
+        {% for row in grid %}
+        <tr>
+            <td class="hour">{{ row.label }}</td>
+            {% for cell_items in row.cells %}
+            <td>
+                {% for s in cell_items %}
+                    <span class="course">{{ s.subject.name }}</span><br>
+                    {% if s.teacher %}<span class="meta">{{ s.teacher.last_name }} {{ s.teacher.first_name }}</span><br>{% endif %}
+                    {% if s.classroom %}<span class="meta">Salle : {{ s.classroom.name }}</span>{% endif %}
+                {% empty %}
+                    &nbsp;
+                {% endfor %}
+            </td>
+            {% endfor %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="text-align:center; padding: 20px;">Aucun cours programmé pour cette classe.</td></tr>
+        {% endfor %}
+    </table>
+
+    <table class="sign">
+        <tr>
+            <td>Le Directeur des Études<br><br><br>_____________________</td>
+            <td>Le Représentant des enseignants<br><br><br>_____________________</td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        Document généré par {{ school.name|default:"l'école" }} le {{ now|date:"d/m/Y à H:i" }} — Gestion d'École
+    </div>
+
+</body>
+</html>

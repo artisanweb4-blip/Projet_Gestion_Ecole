@@ -72,11 +72,11 @@ class TimeSlot(models.Model):
         verbose_name='Matière',
     )
     teacher = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        'teachers.Teacher',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='teaching_slots',
+        related_name='time_slots',
         verbose_name='Enseignant',
     )
     classroom = models.ForeignKey(
@@ -98,6 +98,12 @@ class TimeSlot(models.Model):
         verbose_name = 'Créneau horaire'
         verbose_name_plural = 'Créneaux horaires'
         ordering = ['day_of_week', 'start_time']
+
+    @property
+    def teacher_full_name(self):
+        if self.teacher_id:
+            return f"{self.teacher.last_name} {self.teacher.first_name}".strip()
+        return ''
 
     def __str__(self):
         return f"{self.school_class} - {self.subject} ({self.get_day_of_week_display()} {self.start_time.strftime('%H:%M')}-{self.end_time.strftime('%H:%M')})"
