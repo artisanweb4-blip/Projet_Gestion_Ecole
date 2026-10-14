@@ -4,6 +4,7 @@ Vues du module Notes & Bulletins :
 - Saisie des notes par classe / matière (grille)
 - Bulletins (moyennes, coefficients, rangs) + exports PDF & Excel
 """
+import os
 from io import BytesIO
 
 import openpyxl
@@ -21,7 +22,7 @@ from xhtml2pdf import pisa
 
 from classes.models import Class
 from courses.models import Subject
-from school_settings.models import SchoolSetting
+from school_settings.models import GeneralSetting, SchoolSetting
 from students.models import Student
 
 from .forms import PeriodForm, EvaluationForm, ExcelImportForm
@@ -47,11 +48,43 @@ def _school():
         return None
 
 
+def _bulletin_header_context(school_setting):
+    """Contexte d'en-tête des bulletins : infos onglet École (avec repli),
+    logo résolu sur disque et tutelles / république (Paramètres → Général)."""
+    school = getattr(school_setting, 'school', None)
+    logo_path = None
+    if school_setting is not None and getattr(school_setting, 'logo', None):
+        try:
+            if school_setting.logo.storage.exists(school_setting.logo.name):
+                logo_path = school_setting.logo.path
+        except Exception:
+            logo_path = None
+    return {
+        'school_name': (getattr(school_setting, 'school_name', None)
+                        or getattr(school, 'name', None) or "Gestion d'École"),
+        'school_address': (getattr(school_setting, 'address', None)
+                           or getattr(school, 'address', None)),
+        'school_phone': (getattr(school_setting, 'phone', None)
+                         or getattr(school, 'phone', None)),
+        'school_email': (getattr(school_setting, 'email', None)
+                         or getattr(school, 'email', None)),
+        'logo_path': logo_path,
+        'general': GeneralSetting.load(),
+    }
+
+
 def _render_pdf(template_src, context, filename):
     """Génère un PDF à partir d'un template HTML (xhtml2pdf)."""
     html = render_to_string(template_src, context)
     result = BytesIO()
-    pdf = pisa.pisaDocument(BytesIO(html.encode('UTF-8')), result, encoding='UTF-8')
+
+    def _link(uri, rel):
+        # Ressources locales (logo de l'école) résolues sur le disque
+        return uri if uri and os.path.exists(uri) else None
+
+    pdf = pisa.pisaDocument(
+        BytesIO(html.encode('UTF-8')), result, encoding='UTF-8',
+        link_callback=_link)
     if pdf.err:
         return HttpResponse(
             "Erreur lors de la génération du PDF.", status=500
@@ -521,90 +554,197 @@ def export_bulletin_excel(request, student_id, period_id):
     ws = wb.active
     ws.title = "Bulletin"
 
-    school = _school()
+    school_setting = _school()
+    school = school_setting
+    ctx = _bulletin_header_context(school_setting)
 
-    font_header = Font(name='Arial', size=14, bold=True, color='1D3557')
-    font_sub = Font(name='Arial', size=11, bold=True)
-    font_th = Font(name='Arial', size=10, bold=True, color='FFFFFF')
+    font_name = Font(name='Arial', size=16, bold=True, color='065F46')
+    font_rep = Font(name='Arial', size=10, bold=True, color='0F172A')
+    font_band = Font(name='Arial', size=12, bold=True, color='FFFFFF')
+    font_sub = Font(name='Arial', size=9, color='FFFFFF')
+    font_th = Font(name='Arial', size=9, bold=True, color='FFFFFF')
+    font_lbl = Font(name='Arial', size=8, bold=True, color='64748B')
+    font_big = Font(name='Arial', size=13, bold=True, color='1D3557')
+    fill_band = PatternFill(start_color='1D3557', end_color='1D3557', fill_type='solid')
     fill_th = PatternFill(start_color='1D3557', end_color='1D3557', fill_type='solid')
-    fill_total = PatternFill(start_color='E9ECEF', end_color='E9ECEF', fill_type='solid')
+    fill_total = PatternFill(start_color='E2E8F0', end_color='E2E8F0', fill_type='solid')
+    fill_soft = PatternFill(start_color='F8F9FA', end_color='F8F9FA', fill_type='solid')
     thin_border = Border(
-        left=Side(style='thin', color='DEE2E6'), right=Side(style='thin', color='DEE2E6'),
-        top=Side(style='thin', color='DEE2E6'), bottom=Side(style='thin', color='DEE2E6'),
+        left=Side(style='thin', color='CBD5E1'), right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='CBD5E1'), bottom=Side(style='thin', color='CBD5E1'),
     )
+    centered = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    left_al = Alignment(horizontal='left', vertical='center', wrap_text=True)
 
-    ws['A1'] = school.school_name or "Gestion d'École" if school else "Gestion d'École"
-    ws['A1'].font = font_header
-    ws['A2'] = f"BULLETIN DE NOTES — {period.name} ({period.academic_year.name})"
-    ws['A2'].font = font_sub
+    # --- En-tête officiel : tutelles | école | république + devise ---
+    general = ctx['general']
+    ws.merge_cells('A1:B1')
+    c = ws['A1']
+    c.value = (general.ministry or '')
+    c.font = Font(name='Arial', size=8, bold=True, color='0F172A')
+    c.alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
+    if general.directorate:
+        ws.merge_cells('A2:B2')
+        ws['A2'] = general.directorate
+        ws['A2'].font = Font(name='Arial', size=8, color='0F172A')
+        ws['A2'].alignment = Alignment(horizontal='left', vertical='top')
 
-    ws['A4'] = f"Élève : {student.last_name} {student.first_name}"
-    ws['A5'] = f"Classe : {student.class_group.name if student.class_group else 'N/A'}"
-    ws['D4'] = f"Matricule : {student.student_id}"
-    ws['D5'] = f"Année scolaire : {period.academic_year.name}"
+    ws.merge_cells('C1:C2')
+    c = ws['C1']
+    c.value = ctx['school_name']
+    c.font = font_name
+    c.alignment = centered
 
-    headers = ["Matière", "Coefficient", "Moyenne / 20", "Points (Moy × Coef)", "Appréciation"]
+    ws.merge_cells('D1:E1')
+    c = ws['D1']
+    c.value = (general.country_name or '')
+    c.font = font_rep
+    c.alignment = centered
+    ws.merge_cells('D2:E2')
+    c = ws['D2']
+    c.value = (general.motto or '')
+    c.font = Font(name='Arial', size=9, color='0F172A')
+    c.alignment = centered
+
+    # --- Bandeau titre ---
+    ws.merge_cells('A4:E4')
+    c = ws['A4']
+    c.value = f"BULLETIN DE NOTES — {period.name} — Année scolaire {period.academic_year.name}"
+    c.font = font_band
+    c.fill = fill_band
+    c.alignment = centered
+    ws.row_dimensions[4].height = 24
+
+    # --- Identité élève ---
+    ws.merge_cells('A5:B5')
+    ws['A5'] = f"Élève : {student.last_name} {student.first_name}"
+    ws['A5'].font = Font(name='Arial', size=9, bold=True)
+    ws.merge_cells('C5:D5')
+    ws['C5'] = f"Matricule : {student.student_id}"
+    ws['C5'].font = Font(name='Arial', size=9)
+    ws['E5'] = f"Classe : {student.class_group.name if student.class_group else 'N/A'}"
+    ws['E5'].font = Font(name='Arial', size=9)
+
+    # --- Tableau des notes ---
+    headers = ["Matière", "Coef.", "Moyenne / 20", "Points", "Appréciation"]
     ws.append([])
     ws.append(headers)
     for col_num in range(1, 6):
         cell = ws.cell(row=7, column=col_num)
         cell.font = font_th
         cell.fill = fill_th
-        cell.alignment = Alignment(horizontal='center' if col_num > 1 else 'left')
+        cell.alignment = centered
+        cell.border = thin_border
+    ws.row_dimensions[7].height = 18
 
     current_row = 8
     for row in rows:
         ws.append([
             row['subject'].name,
             row['coefficient'],
-            row['average'] if row['average'] is not None else "N/A",
-            row['points'] if row['points'] is not None else "-",
-            row['appreciation'],
+            row['average'] if row['average'] is not None else "—",
+            row['points'] if row['points'] is not None else "—",
+            row['appreciation'] or "—",
         ])
         for col_num in range(1, 6):
             cell = ws.cell(row=current_row, column=col_num)
             cell.border = thin_border
-            if col_num > 1:
-                cell.alignment = Alignment(horizontal='center')
+            cell.alignment = centered if col_num > 1 else left_al
         current_row += 1
 
-    ws.append([
-        "TOTAL", total_coef, "-", round(sum(r['points'] for r in rows if r['points']), 2), "-"
-    ])
+    total_points = round(sum(r['points'] for r in rows if r['points']), 2)
+    ws.append(["TOTAL", total_coef, "—", total_points, "—"])
     for col_num in range(1, 6):
         cell = ws.cell(row=current_row, column=col_num)
-        cell.font = Font(bold=True)
+        cell.font = Font(name='Arial', size=9, bold=True)
+        cell.fill = fill_total
         cell.border = thin_border
+        cell.alignment = centered if col_num > 1 else left_al
     current_row += 1
 
     ws.append([
-        "MOYENNE GÉNÉRALE",
-        "-",
-        general_avg if general_avg is not None else "N/A",
-        "-",
-        mention_for(general_avg),
+        "MOYENNE GÉNÉRALE", "",
+        (general_avg if general_avg is not None else "N/A"),
+        mention_for(general_avg), "",
     ])
+    ws.merge_cells(start_row=current_row, start_column=4, end_row=current_row, end_column=5)
     for col_num in range(1, 6):
         cell = ws.cell(row=current_row, column=col_num)
-        cell.font = Font(bold=True)
-        cell.fill = fill_total
+        cell.font = Font(name='Arial', size=10, bold=True, color='FFFFFF')
+        cell.fill = fill_band
         cell.border = thin_border
-        if col_num > 1:
-            cell.alignment = Alignment(horizontal='center')
+        cell.alignment = centered
+    ws.row_dimensions[current_row].height = 20
     current_row += 2
 
-    ws.append([
-        f"Rang : {rank if rank else 'N/A'}"
-        f"{f' / {total_ranked}' if rank else ''}"
-        f" — Moyenne de la classe : {class_avg if class_avg is not None else 'N/A'}"
-    ])
-    ws.append(["Signature du Chef d'établissement :", "", "", "Signature du Parent :"])
+    # --- Synthèse : rang / moyenne classe / mention ---
+    ws.append([])
+    summary_row = current_row
+    rank_txt = f"{rank}/{total_ranked}" if rank else "—"
+    blocks = [
+        (1, 2, 'RANG', rank_txt),
+        (3, 3, 'MOYENNE DE LA CLASSE', class_avg if class_avg is not None else '—'),
+        (4, 5, 'MENTION', mention_for(general_avg)),
+    ]
+    for col_start, col_end, label, value in blocks:
+        if col_end > col_start:
+            ws.merge_cells(start_row=summary_row, start_column=col_start,
+                           end_row=summary_row, end_column=col_end)
+            ws.merge_cells(start_row=summary_row + 1, start_column=col_start,
+                           end_row=summary_row + 1, end_column=col_end)
+        lc = ws.cell(row=summary_row, column=col_start)
+        lc.value = label
+        lc.font = font_lbl
+        lc.alignment = centered
+        vc = ws.cell(row=summary_row + 1, column=col_start)
+        vc.value = value
+        vc.font = font_big
+        vc.alignment = centered
+        for r in (summary_row, summary_row + 1):
+            for cc in range(col_start, col_end + 1):
+                ws.cell(row=r, column=cc).border = thin_border
+                ws.cell(row=r, column=cc).fill = fill_soft
+    ws.row_dimensions[summary_row + 1].height = 22
+    current_row = summary_row + 3
 
-    ws.column_dimensions['A'].width = 32
-    ws.column_dimensions['B'].width = 12
-    ws.column_dimensions['C'].width = 14
-    ws.column_dimensions['D'].width = 20
-    ws.column_dimensions['E'].width = 28
+    # --- Signatures ---
+    ws.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=2)
+    ws.cell(row=current_row, column=1).value = "Signature du Chef d'établissement :"
+    ws.merge_cells(start_row=current_row, start_column=4, end_row=current_row, end_column=5)
+    ws.cell(row=current_row, column=4).value = "Signature du Parent / Tuteur :"
+    ws.cell(row=current_row, column=1).font = Font(name='Arial', size=9)
+    ws.cell(row=current_row, column=4).font = Font(name='Arial', size=9)
+    for r in (current_row + 3,):
+        ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=2)
+        ws.merge_cells(start_row=r, start_column=4, end_row=r, end_column=5)
+        for col in (1, 4):
+            cell = ws.cell(row=r, column=col)
+            cell.border = Border(top=Side(style='thin', color='64748B'))
+    current_row = r + 2
+
+    # --- Pied de page infos école ---
+    ws.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=5)
+    foot_parts = [p for p in (ctx['school_address'],
+                              f"Email : {ctx['school_email']}" if ctx['school_email'] else None,
+                              f"Tél : {ctx['school_phone']}" if ctx['school_phone'] else None) if p]
+    cell = ws.cell(row=current_row, column=1)
+    cell.value = ' · '.join(foot_parts)
+    cell.font = Font(name='Arial', size=8, color='64748B')
+    cell.alignment = centered
+
+    # --- Largeurs + MISE EN PAGE A5 (impression directe) ---
+    widths = {'A': 26, 'B': 8, 'C': 13, 'D': 12, 'E': 26}
+    for col, w in widths.items():
+        ws.column_dimensions[col].width = w
+    from openpyxl.worksheet.page import PageMargins
+    from openpyxl.worksheet.properties import PageSetupProperties
+    ws.page_setup.paperSize = 11  # A5
+    ws.page_setup.orientation = 'portrait'
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 1
+    ws.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
+    ws.page_margins = PageMargins(left=0.35, right=0.35, top=0.45, bottom=0.45)
+    ws.print_area = f'A1:E{current_row}'
 
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -635,8 +775,9 @@ def export_bulletin_pdf(request, student_id, period_id):
         rank = ranks.get(student.id)
         total_ranked = sum(1 for r in results if r['rank'] is not None)
 
+    school_setting = _school()
     context = {
-        'school': _school(),
+        'school': school_setting,
         'student': student,
         'period': period,
         'rows': rows,
@@ -648,6 +789,7 @@ def export_bulletin_pdf(request, student_id, period_id):
         'total_coef': sum(r['coefficient'] for r in rows),
         'total_points': round(sum(r['points'] for r in rows if r['points']), 2),
     }
+    context.update(_bulletin_header_context(school_setting))
     filename = f"Bulletin_{student.student_id}_{period.name}.pdf"
     return _render_pdf('grades/report_card_pdf.html', context, filename)
 
@@ -676,12 +818,14 @@ def export_class_bulletins_pdf(request, classroom_id, period_id):
             'total_points': round(sum(r['points'] for r in rows if r['points']), 2),
         })
 
+    school_setting = _school()
     context = {
-        'school': _school(),
+        'school': school_setting,
         'classroom': classroom,
         'period': period,
         'class_average': class_avg,
         'bulletins': bulletins,
     }
+    context.update(_bulletin_header_context(school_setting))
     filename = f"Bulletins_{classroom.name}_{period.name}.pdf"
     return _render_pdf('grades/class_bulletins_pdf.html', context, filename)

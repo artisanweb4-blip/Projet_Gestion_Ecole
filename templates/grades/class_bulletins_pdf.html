@@ -1,124 +1,163 @@
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <title>Bulletins — {{ classroom.name }} — {{ period.name }}</title>
     <style>
-        body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; color: #1e293b; margin: 28px; }
-        .header-table { width: 100%; margin-bottom: 6px; }
-        .school-name { font-size: 16pt; font-weight: bold; color: #1d3557; }
-        .school-meta { font-size: 8pt; color: #64748b; }
-        .bulletin-title { text-align: right; font-size: 13pt; font-weight: bold; color: #e63946; text-transform: uppercase; }
-        .bulletin-sub { text-align: right; font-size: 9pt; font-weight: bold; color: #457b9d; }
-        .rule { border-bottom: 2px solid #1d3557; margin: 6px 0 14px 0; }
-        .info-box { background-color: #f8f9fa; border-left: 4px solid #1d3557; padding: 8px 12px; margin-bottom: 14px; font-size: 9pt; }
-        table.notes { width: 100%; border-collapse: collapse; font-size: 9pt; }
-        table.notes th { background-color: #1d3557; color: #ffffff; padding: 6px 8px; font-size: 8pt; text-transform: uppercase; text-align: left; }
-        table.notes td { border: 0.5pt solid #cbd5e1; padding: 5px 8px; }
+        /* A5 PORTRAIT — un bulletin par page */
+        @page {
+            size: A5 portrait;
+            margin: 0.9cm 0.9cm 1.6cm 0.9cm;
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                left: 25pt; width: 390pt; top: 545pt; height: 32pt;
+            }
+        }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 8.5pt; color: #1e293b; }
+
+        .header-table { width: 100%; margin-bottom: 5px; }
+        .tutelle { font-size: 7pt; color: #0f172a; line-height: 1.45; }
+        .school-name { font-size: 12.5pt; font-weight: bold; color: #065f46; }
+        .repub { font-size: 8.5pt; color: #0f172a; line-height: 1.45; }
+        .bulletin-band {
+            width: 100%; background: #1d3557; color: #ffffff;
+            padding: 4px 6px; text-align: center; margin: 5px 0;
+        }
+        .bulletin-band .t { font-size: 11.5pt; font-weight: bold; }
+        .bulletin-band .s { font-size: 8pt; }
+        .info-box {
+            background-color: #f1f5f9; border-left: 3pt solid #1d3557;
+            padding: 5px 8px; margin-bottom: 9px; font-size: 8pt;
+        }
+
+        table.notes { width: 100%; border-collapse: collapse; font-size: 8pt; }
+        table.notes th {
+            background-color: #1d3557; color: #ffffff; padding: 4px 4px;
+            font-size: 7.5pt; text-transform: uppercase; text-align: center;
+        }
+        table.notes td { border: 0.5pt solid #cbd5e1; padding: 4px 5px; }
         .center { text-align: center; }
-        .total-row { background-color: #e9ecef; font-weight: bold; }
-        .grand-row { background-color: #1d3557; color: #ffffff; font-weight: bold; font-size: 11pt; }
-        table.totals { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10pt; }
-        table.totals td { border: 0.5pt solid #cbd5e1; padding: 6px 8px; }
-        .summary-table { width: 100%; margin-top: 14px; font-size: 9pt; }
-        .summary-table td { border: 0.5pt solid #cbd5e1; padding: 8px; text-align: center; background-color: #f8f9fa; }
-        .summary-label { font-size: 7pt; text-transform: uppercase; color: #64748b; font-weight: bold; }
-        .summary-value { font-size: 13pt; font-weight: bold; color: #1d3557; }
-        .signatures { width: 100%; margin-top: 34px; font-size: 9pt; }
-        .sign-line { border-top: 0.5pt solid #64748b; margin-top: 48px; width: 220px; }
-        .footer-note { margin-top: 20px; text-align: center; font-size: 7pt; color: #94a3b8; }
-        .rank-badge { font-size: 9pt; color: #457b9d; font-weight: bold; }
+        .subj { width: 31%; } .coef { width: 10%; } .moy { width: 14%; }
+        .pts { width: 14%; } .appr { width: 31%; }
+        .total-row { background-color: #e2e8f0; font-weight: bold; }
+        .grand-row { background-color: #1d3557; color: #ffffff; font-weight: bold; font-size: 9.5pt; }
+
+        table.summary-table { width: 100%; margin-top: 9px; font-size: 8pt; }
+        table.summary-table td {
+            border: 0.5pt solid #cbd5e1; padding: 6px;
+            text-align: center; background-color: #f8f9fa;
+        }
+        .summary-label { font-size: 6.5pt; text-transform: uppercase; color: #64748b; font-weight: bold; }
+        .summary-value { font-size: 11pt; font-weight: bold; color: #1d3557; }
+        table.signatures { width: 100%; margin-top: 26px; font-size: 8pt; color: #334155; }
+        .sign-line { border-top: 0.5pt solid #64748b; margin-top: 34px; width: 150px; }
     </style>
 </head>
 <body>
     {% for bulletin in bulletins %}
-        <table class="header-table">
-            <tr>
-                <td>
-                    <div class="school-name">{{ school.school_name|default:"Gestion d'École" }}</div>
-                    <div class="school-meta">
-                        {{ school.address|default:"—" }}{% if school.phone %} · Tél : {{ school.phone }}{% endif %}
-                    </div>
-                </td>
-                <td>
-                    <div class="bulletin-title">Bulletin de notes</div>
-                    <div class="bulletin-sub">{{ period.name }} — Année {{ period.academic_year.name }}</div>
-                </td>
-            </tr>
-        </table>
-        <div class="rule"></div>
+    <table class="header-table">
+        <tr>
+            <td class="tutelle" style="width: 32%; vertical-align: top;">
+                {% if general.ministry %}<b>{{ general.ministry|upper }}</b><br>{% endif %}
+                {% if general.directorate %}{{ general.directorate|upper }}{% endif %}
+            </td>
+            <td style="width: 36%; text-align: center; vertical-align: top;">
+                {% if logo_path %}<img src="{{ logo_path }}" width="52" height="52" style="vertical-align: middle;" /><br>{% endif %}
+                <span class="school-name">{{ school_name|default:"Gestion d'École" }}</span>
+            </td>
+            <td class="repub" style="width: 32%; text-align: center; vertical-align: top;">
+                {% if general.country_name %}<b style="font-size: 10pt;">{{ general.country_name }}</b>{% endif %}
+                {% if general.motto %}<br>{{ general.motto }}{% endif %}
+            </td>
+        </tr>
+    </table>
 
-        <div class="info-box">
-            <strong>Élève :</strong> {{ bulletin.student.last_name }} {{ bulletin.student.first_name }} &nbsp;&nbsp;
-            <strong>Matricule :</strong> {{ bulletin.student.student_id }} &nbsp;&nbsp;
-            <strong>Classe :</strong> {{ classroom.name }}
-            {% if bulletin.rank %} &nbsp;&nbsp;<span class="rank-badge">Rang : {{ bulletin.rank }}/{{ bulletins|length }}</span>{% endif %}
-        </div>
+    <div class="bulletin-band">
+        <span class="t">BULLETIN DE NOTES</span><br>
+        <span class="s">{{ period.name }} — Année scolaire {{ period.academic_year.name }} — Classe : {{ classroom.name }}</span>
+    </div>
 
-        <table class="notes">
-            <tr>
-                <th>Matière</th>
-                <th class="center">Coef.</th>
-                <th class="center">Moy. / 20</th>
-                <th class="center">Points</th>
-                <th>Appréciation</th>
-            </tr>
-            {% for row in bulletin.rows %}
-                <tr>
-                    <td><strong>{{ row.subject.name }}</strong></td>
-                    <td class="center">{{ row.coefficient }}</td>
-                    <td class="center">{% if row.average is not None %}{{ row.average }}{% else %}—{% endif %}</td>
-                    <td class="center">{% if row.points is not None %}{{ row.points }}{% else %}—{% endif %}</td>
-                    <td>{{ row.appreciation|default:"—" }}</td>
-                </tr>
-            {% endfor %}
-            <tr class="total-row">
-                <td>TOTAL</td>
-                <td class="center">{{ bulletin.total_coef }}</td>
-                <td class="center">—</td>
-                <td class="center">{{ bulletin.total_points }}</td>
-                <td></td>
-            </tr>
-            <tr class="grand-row">
-                <td colspan="2">MOYENNE GÉNÉRALE</td>
-                <td class="center">{% if bulletin.general_average is not None %}{{ bulletin.general_average }} / 20{% else %}N/A{% endif %}</td>
-                <td colspan="2">{{ bulletin.mention|default:"—" }}</td>
-            </tr>
-        </table>
+    <div class="info-box">
+        <b>Élève :</b> {{ bulletin.student.last_name }} {{ bulletin.student.first_name }} &nbsp;
+        <b>Matricule :</b> {{ bulletin.student.student_id }} &nbsp;
+        {% if bulletin.rank %}<b>Rang :</b> {{ bulletin.rank }}/{{ bulletins|length }}{% endif %}
+    </div>
 
-        <table class="summary-table">
-            <tr>
-                <td>
-                    <div class="summary-label">Rang</div>
-                    <div class="summary-value">{% if bulletin.rank %}{{ bulletin.rank }}{% else %}—{% endif %}</div>
-                </td>
-                <td>
-                    <div class="summary-label">Moyenne de la classe</div>
-                    <div class="summary-value">{% if class_average is not None %}{{ class_average }}{% else %}—{% endif %}</div>
-                </td>
-                <td>
-                    <div class="summary-label">Mention</div>
-                    <div class="summary-value">{{ bulletin.mention|default:"—" }}</div>
-                </td>
-            </tr>
-        </table>
+    <table class="notes">
+        <tr>
+            <th class="subj">Matière</th>
+            <th class="coef">Coef.</th>
+            <th class="moy">Moy. / 20</th>
+            <th class="pts">Points</th>
+            <th class="appr">Appréciation</th>
+        </tr>
+        {% for row in bulletin.rows %}
+        <tr>
+            <td><b>{{ row.subject.name }}</b></td>
+            <td class="center">{{ row.coefficient }}</td>
+            <td class="center">{% if row.average is not None %}{{ row.average }}{% else %}—{% endif %}</td>
+            <td class="center">{% if row.points is not None %}{{ row.points }}{% else %}—{% endif %}</td>
+            <td>{{ row.appreciation|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="total-row">
+            <td>TOTAL</td>
+            <td class="center">{{ bulletin.total_coef }}</td>
+            <td class="center">—</td>
+            <td class="center">{{ bulletin.total_points }}</td>
+            <td></td>
+        </tr>
+        <tr class="grand-row">
+            <td colspan="2">MOYENNE GÉNÉRALE</td>
+            <td class="center">{% if bulletin.general_average is not None %}{{ bulletin.general_average }} / 20{% else %}N/A{% endif %}</td>
+            <td colspan="2" class="center">{{ bulletin.mention|default:"—" }}</td>
+        </tr>
+    </table>
 
-        <table class="signatures">
-            <tr>
-                <td>
-                    Signature du Chef d'établissement
-                    <div class="sign-line"></div>
-                </td>
-                <td>
-                    Signature du Parent / Tuteur
-                    <div class="sign-line"></div>
-                </td>
-            </tr>
-        </table>
+    <table class="summary-table">
+        <tr>
+            <td>
+                <div class="summary-label">Rang</div>
+                <div class="summary-value">{% if bulletin.rank %}{{ bulletin.rank }}{% else %}—{% endif %}</div>
+            </td>
+            <td>
+                <div class="summary-label">Moyenne de la classe</div>
+                <div class="summary-value">{% if class_average is not None %}{{ class_average }}{% else %}—{% endif %}</div>
+            </td>
+            <td>
+                <div class="summary-label">Mention</div>
+                <div class="summary-value">{{ bulletin.mention|default:"—" }}</div>
+            </td>
+        </tr>
+    </table>
 
-        {% if not forloop.last %}
-            <pdf:nextpage />
-        {% endif %}
+    <table class="signatures">
+        <tr>
+            <td>
+                Signature du Chef d'établissement
+                <div class="sign-line"></div>
+            </td>
+            <td>
+                Signature du Parent / Tuteur
+                <div class="sign-line"></div>
+            </td>
+        </tr>
+    </table>
+
+    {% if not forloop.last %}<pdf:nextpage />{% endif %}
     {% endfor %}
+
+    <div id="footer_content">
+        <table style="width: 100%; border-top: 0.8pt solid #94a3b8;">
+            <tr>
+                <td style="text-align: center; font-size: 7.5pt; color: #475569; padding-top: 3px;">
+                    {% if school_address %}{{ school_address }}{% endif %}
+                    {% if school_email %} · <b>Email :</b> {{ school_email }}{% endif %}
+                    {% if school_phone %} · <b>Tél :</b> {{ school_phone }}{% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
 </body>
 </html>
