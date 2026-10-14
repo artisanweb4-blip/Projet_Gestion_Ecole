@@ -117,7 +117,14 @@
                 </select>
             </div>
             <div style="flex: 1; min-width: 180px;">
-                <label class="form-label">Période</label>
+                <label class="form-label">Période
+                    <a href="{% url 'grades:period_create' %}?next={{ request.get_full_path|urlencode }}"
+                       hx-get="{% url 'grades:period_create' %}?next={{ request.get_full_path|urlencode }}"
+                       hx-target="#modal-body" hx-swap="innerHTML"
+                       title="Ajouter une période" style="color:#10B981; margin-left:6px; font-size:12px; text-decoration:none;">
+                        <i class="fa-solid fa-calendar-plus"></i> ajouter
+                    </a>
+                </label>
                 <select name="period" class="form-control" required>
                     <option value="">-- Période --</option>
                     {% for period in periods %}
@@ -134,7 +141,9 @@
             <div class="card-header">
                 <h2 class="card-title">2. Choisir une évaluation existante</h2>
                 <a href="{% url 'grades:evaluation_create' %}?classroom={{ f_classroom }}&subject={{ f_subject }}&period={{ f_period }}"
-                   class="btn btn-primary btn-sm">
+                   class="btn btn-primary btn-sm"
+                   hx-get="{% url 'grades:evaluation_create' %}?classroom={{ f_classroom }}&subject={{ f_subject }}&period={{ f_period }}"
+                   hx-target="#modal-body" hx-swap="innerHTML">
                     <i class="fa-solid fa-plus"></i> Nouvelle évaluation
                 </a>
             </div>

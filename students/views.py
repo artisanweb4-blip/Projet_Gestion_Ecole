@@ -1,5 +1,6 @@
 from django.apps import apps
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -12,6 +13,7 @@ from django.views.generic import (
 
 from core.mixins import HtmxCrudMixin, RoleRequiredMixin
 from core.scoping import assign_school
+from classes.models import Class
 from parents.models import Parent
 
 from .forms import StudentForm
@@ -170,3 +172,70 @@ class StudentDetailView(LoginRequiredMixin, RoleRequiredMixin, DetailView):
     template_name = 'students/detail.html'
     context_object_name = 'student'
     allowed_roles = ['admin', 'director', 'secretary', 'teacher', 'parent']
+
+@login_required
+def export_students_excel(request):
+    """Export Excel de la liste des élèves — par classe ou toutes classes.
+
+    Colonnes identiques au modèle d'import : le fichier exporté peut être
+    complété puis ré-importé dans Paramètres → Sauvegarde → Importer.
+    """
+    from django.http import HttpResponse
+    from school_settings.excel_backup import build_xlsx
+
+    school = getattr(request.user, 'school', None)
+    qs = Student._base_manager.filter(school=school).select_related('class_group')
+
+    class_id = request.GET.get('class')
+    class_obj = None
+    if class_id and class_id.isdigit():
+        class_obj = Class.objects.filter(school=school, pk=int(class_id)).first()
+        if class_obj:
+            qs = qs.filter(class_group=class_obj)
+
+    headers = ['Matricule', 'Prénom', 'Nom', 'Sexe', 'Date de naissance',
+               'Lieu de naissance', 'Classe', 'Téléphone', 'Email',
+               'Date inscription', 'Actif']
+
+    def _row(s):
+        return [
+            s.student_id, s.first_name, s.last_name,
+            s.get_gender_display() or '',
+            s.date_of_birth.strftime('%d/%m/%Y') if s.date_of_birth else '',
+            s.place_of_birth or '',
+            s.class_group.name if s.class_group else '',
+            s.phone or '', s.email or '',
+            s.enrollment_date.strftime('%d/%m/%Y') if s.enrollment_date else '',
+            'Oui' if s.is_active else 'Non',
+        ]
+
+    if class_obj:
+        sheets = [(class_obj.name[:31], headers,
+                   [_row(s) for s in qs.order_by('last_name', 'first_name')])]
+        filename = f"eleves_{class_obj.name.replace(' ', '_')}.xlsx"
+    else:
+        sheets = []
+        by_class = {}
+        no_class = []
+        for s in qs.order_by('class_group__name', 'last_name', 'first_name'):
+            if s.class_group_id:
+                by_class.setdefault(s.class_group.name, []).append(s)
+            else:
+                no_class.append(s)
+        for name, students in sorted(by_class.items()):
+            sheets.append((name[:31], headers, [_row(s) for s in students]))
+        if no_class:
+            sheets.append(('Sans classe', headers, [_row(s) for s in no_class]))
+        if not sheets:
+            sheets = [('Élèves', headers, [])]
+        filename = 'eleves_toutes_classes.xlsx'
+
+    content = build_xlsx(sheets)
+    response = HttpResponse(
+        content,
+        content_type=(
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ),
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response

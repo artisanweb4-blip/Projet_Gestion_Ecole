@@ -43,8 +43,8 @@
             </div>
         </div>
         <div>
-            <button class="btn btn-success" onclick="exportData()">
-                <i class="fa-solid fa-file-excel" style="margin-right: 8px;"></i> Exporter
+            <button type="button" class="btn btn-success" onclick="exportStudents()">
+                <i class="fa-solid fa-file-excel" style="margin-right: 8px;"></i> Exporter Excel
             </button>
         </div>
     </div>
@@ -282,8 +282,12 @@
         window.location.href = url + params.toString();
     }
 
-    function exportData() {
-        alert("Export en cours (Excel)...");
+    // Export Excel de la liste des élèves (respecte la classe choisie)
+    function exportStudents() {
+        var sel = document.querySelector('select[name="class"]');
+        var url = "{% url 'students:export_excel' %}";
+        if (sel && sel.value) { url += "?class=" + encodeURIComponent(sel.value); }
+        window.location.href = url;
     }
 </script>
 {% endblock %}

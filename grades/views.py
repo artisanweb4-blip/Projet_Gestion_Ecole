@@ -24,7 +24,7 @@ from courses.models import Subject
 from school_settings.models import SchoolSetting
 from students.models import Student
 
-from .forms import EvaluationForm, ExcelImportForm
+from .forms import PeriodForm, EvaluationForm, ExcelImportForm
 from .models import AcademicYear, Evaluation, Grade, Period
 from .services import (
     appreciation_for,
@@ -93,6 +93,68 @@ def grade_list(request):
         'f_period': period_id or '',
     }
     return render(request, 'grades/grade_list.html', context)
+
+
+def _current_academic_year(school):
+    """Année académique active de l'école, créée au besoin depuis les
+    Paramètres → Général (année scolaire en cours)."""
+    from datetime import date as _date
+    from school_settings.models import GeneralSetting
+
+    year = AcademicYear.objects.filter(school=school, is_active=True).first()
+    if year:
+        return year
+
+    today = _date.today()
+    default_name = GeneralSetting.load().current_academic_year
+    if not default_name:
+        default_name = f"{today.year}-{today.year + 1}" if today.month >= 9 \
+            else f"{today.year - 1}-{today.year}"
+    year, _created = AcademicYear.objects.get_or_create(
+        school=school, name=default_name,
+        defaults=dict(start_date=_date(today.year, 9, 1),
+                      end_date=_date(today.year + 1, 6, 30), is_active=True),
+    )
+    # une seule année active à la fois
+    AcademicYear.objects.filter(school=school).exclude(pk=year.pk) \
+        .update(is_active=False)
+    year.is_active = True
+    year.save()
+    return year
+
+
+@login_required
+def period_create(request):
+    """Ajout d'une période (trimestre, semestre…) en modale."""
+    school = getattr(request.user, 'school', None)
+    year = _current_academic_year(school)
+    initial = {}
+    if year:
+        initial['academic_year'] = year
+
+    form = PeriodForm(request.POST or None, initial=initial)
+    if request.method == 'POST' and form.is_valid():
+        period = form.save(commit=False)
+        period.school = school
+        period.save()
+        messages.success(request, f"Période « {period.name} » créée.")
+        target = (request.POST.get('next') or request.GET.get('next')
+                  or reverse('grades:grade_entry'))
+        if request.htmx:
+            return HttpResponseClientRedirect(target)
+        return redirect(target)
+
+    if request.htmx:
+        return render(request, 'includes/form_modal.html', {
+            'form': form,
+            'modal_title': 'Nouvelle période',
+            'modal_action': request.get_full_path(),
+        })
+    return render(request, 'grades/evaluation_form.html', {
+        'form': form,
+        'title': 'Nouvelle période',
+        'next_url': '',
+    })
 
 
 @login_required

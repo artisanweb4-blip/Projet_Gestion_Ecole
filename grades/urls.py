@@ -14,6 +14,7 @@ urlpatterns = [
     path('entry/', views.grade_entry, name='grade_entry'),
     path('entry/<int:evaluation>/', views.grade_entry, name='grade_entry_eval'),
     path('evaluations/add/', views.evaluation_create, name='evaluation_create'),
+    path('periods/add/', views.period_create, name='period_create'),
     path('evaluations/<int:pk>/edit/', views.evaluation_edit, name='evaluation_edit'),
     path('evaluations/<int:pk>/delete/', views.evaluation_delete, name='evaluation_delete'),
 
