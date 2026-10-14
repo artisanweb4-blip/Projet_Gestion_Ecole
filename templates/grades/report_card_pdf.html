@@ -5,108 +5,112 @@
     <meta charset="UTF-8">
     <title>Bulletin - {{ student.first_name }} {{ student.last_name }}</title>
     <style>
-        /* A5 PORTRAIT — xhtml2pdf : tables uniquement, largeurs fixes */
+        /* A5 PORTRAIT — design « aperçu web » : tables uniquement */
         @page {
             size: A5 portrait;
-            margin: 0.9cm 0.9cm 1.6cm 0.9cm;
-            @frame footer_frame {
-                -pdf-frame-content: footer_content;
-                left: 25pt; width: 390pt; top: 545pt; height: 32pt;
-            }
+            margin: 0.8cm 0.8cm 0.8cm 0.8cm;
         }
         body { font-family: Helvetica, Arial, sans-serif; font-size: 8.5pt; color: #1e293b; }
 
-        .header-table { width: 100%; margin-bottom: 5px; }
-        .tutelle { font-size: 7pt; color: #0f172a; line-height: 1.45; }
-        .school-name { font-size: 12.5pt; font-weight: bold; color: #065f46; }
-        .repub { font-size: 8.5pt; color: #0f172a; line-height: 1.45; }
-        .bulletin-band {
-            width: 100%; background: #1d3557; color: #ffffff;
-            padding: 4px 6px; text-align: center; margin: 5px 0;
+        .header-table { width: 100%; margin-bottom: 3px; }
+        .school-name { font-size: 12.5pt; font-weight: bold; color: #1d3557; }
+        .school-meta { font-size: 7pt; color: #64748b; }
+        .bulletin-title {
+            text-align: right; font-size: 12pt; font-weight: bold;
+            color: #e63946;
         }
-        .bulletin-band .t { font-size: 11.5pt; font-weight: bold; }
-        .bulletin-band .s { font-size: 8pt; }
+        .bulletin-sub { text-align: right; font-size: 8.5pt; font-weight: bold; color: #457b9d; }
+
+        .rule { border-bottom: 2px solid #1d3557; margin: 5px 0 11px 0; }
 
         .info-box {
-            background-color: #f1f5f9;
+            background-color: #f8f9fa;
             border-left: 3pt solid #1d3557;
-            padding: 5px 8px;
-            margin-bottom: 9px;
+            padding: 6px 10px;
+            margin-bottom: 12px;
             font-size: 8pt;
         }
 
         table.notes { width: 100%; border-collapse: collapse; font-size: 8pt; }
         table.notes th {
             background-color: #1d3557; color: #ffffff;
-            padding: 4px 4px; font-size: 7.5pt;
+            padding: 5px 4px; font-size: 7pt;
             text-transform: uppercase; text-align: center;
         }
-        table.notes td { border: 0.5pt solid #cbd5e1; padding: 4px 5px; }
+        table.notes th.left { text-align: left; }
+        table.notes td { border: 0.5pt solid #cbd5e1; padding: 5px 6px; }
         .center { text-align: center; }
-        .subj { width: 31%; }
-        .coef { width: 10%; }
-        .moy  { width: 14%; }
-        .pts  { width: 14%; }
-        .appr { width: 31%; }
+        .subj { width: 26%; }
+        .coef { width: 13%; }
+        .moy  { width: 16%; }
+        .pts  { width: 17%; }
+        .appr { width: 28%; }
 
-        .total-row { background-color: #e2e8f0; font-weight: bold; }
+        .pill-ok   { background-color: #d1fae5; color: #065f46; padding: 1px 6px; font-weight: bold; }
+        .pill-mid  { background-color: #fef3c7; color: #92400e; padding: 1px 6px; font-weight: bold; }
+        .pill-low  { background-color: #fee2e2; color: #b91c1c; padding: 1px 6px; font-weight: bold; }
+
+        .total-row { background-color: #e9ecef; font-weight: bold; }
         .grand-row { background-color: #1d3557; color: #ffffff; font-weight: bold; font-size: 9.5pt; }
 
-        table.summary-table { width: 100%; margin-top: 9px; font-size: 8pt; }
-        table.summary-table td {
-            border: 0.5pt solid #cbd5e1; padding: 6px;
-            text-align: center; background-color: #f8f9fa;
+        table.summary { width: 100%; margin-top: 14px; border-collapse: collapse; }
+        table.summary td {
+            border: 0.5pt solid #cbd5e1; background-color: #f8f9fa;
+            padding: 8px 4px; text-align: center;
         }
-        .summary-label { font-size: 6.5pt; text-transform: uppercase; color: #64748b; font-weight: bold; }
-        .summary-value { font-size: 11pt; font-weight: bold; color: #1d3557; }
+        .sum-label { font-size: 6pt; font-weight: bold; text-transform: uppercase; color: #64748b; }
+        .sum-value { font-size: 11pt; font-weight: bold; color: #1d3557; }
+        .sum-value.green { color: #059669; }
 
-        table.signatures { width: 100%; margin-top: 26px; font-size: 8pt; color: #334155; }
-        .sign-line { border-top: 0.5pt solid #64748b; margin-top: 34px; width: 150px; }
+        .signatures { width: 100%; margin-top: 30px; font-size: 8pt; color: #334155; }
+        .sign-line { border-top: 0.5pt solid #64748b; margin-top: 36px; width: 150px; }
+
+        .footer-note { margin-top: 16px; text-align: center; font-size: 6.5pt; color: #94a3b8; }
     </style>
 </head>
 <body>
     <table class="header-table">
         <tr>
-            <td class="tutelle" style="width: 32%; vertical-align: top;">
-                {% if general.ministry %}<b>{{ general.ministry|upper }}</b><br>{% endif %}
-                {% if general.directorate %}{{ general.directorate|upper }}{% endif %}
+            <td style="vertical-align: top;">
+                <div class="school-name">{{ school_name|default:"Gestion d'École" }}</div>
+                <div class="school-meta">
+                    {{ school_address|default:"—" }}{% if school_phone %} · Tél : {{ school_phone }}{% endif %}
+                </div>
             </td>
-            <td style="width: 36%; text-align: center; vertical-align: top;">
-                {% if logo_path %}<img src="{{ logo_path }}" width="52" height="52" style="vertical-align: middle;" /><br>{% endif %}
-                <span class="school-name">{{ school_name|default:"Gestion d'École" }}</span>
-            </td>
-            <td class="repub" style="width: 32%; text-align: center; vertical-align: top;">
-                {% if general.country_name %}<b style="font-size: 10pt;">{{ general.country_name }}</b>{% endif %}
-                {% if general.motto %}<br>{{ general.motto }}{% endif %}
+            <td style="vertical-align: top;">
+                <div class="bulletin-title">Bulletin de notes</div>
+                <div class="bulletin-sub">{{ period.name }} — Année {{ period.academic_year.name }}</div>
             </td>
         </tr>
     </table>
-
-    <div class="bulletin-band">
-        <span class="t">BULLETIN DE NOTES</span><br>
-        <span class="s">{{ period.name }} — Année scolaire {{ period.academic_year.name }}</span>
-    </div>
+    <div class="rule"></div>
 
     <div class="info-box">
-        <b>Élève :</b> {{ student.last_name }} {{ student.first_name }} &nbsp;
-        <b>Matricule :</b> {{ student.student_id }} &nbsp;
-        <b>Classe :</b> {{ student.class_group.name|default:"—" }} &nbsp;
+        <b>Élève :</b> {{ student.last_name }} {{ student.first_name }} &nbsp;&nbsp;
+        <b>Matricule :</b> {{ student.student_id }} &nbsp;&nbsp;
+        <b>Classe :</b> {{ student.class_group.name|default:"—" }} &nbsp;&nbsp;
         <b>Effectif classé :</b> {{ total_ranked|default:"—" }}
     </div>
 
     <table class="notes">
         <tr>
-            <th class="subj">Matière</th>
-            <th class="coef">Coef.</th>
-            <th class="moy">Moy. / 20</th>
-            <th class="pts">Points</th>
+            <th class="left subj">Matière</th>
+            <th class="coef">Coefficient</th>
+            <th class="moy">Moyenne / 20</th>
+            <th class="pts">Points (Moy × Coef)</th>
             <th class="appr">Appréciation</th>
         </tr>
         {% for row in rows %}
         <tr>
             <td><b>{{ row.subject.name }}</b></td>
             <td class="center">{{ row.coefficient }}</td>
-            <td class="center">{% if row.average is not None %}{{ row.average }}{% else %}—{% endif %}</td>
+            <td class="center">
+                {% if row.average is not None %}
+                    {% if row.average >= 14 %}<span class="pill-ok">{{ row.average }}</span>
+                    {% elif row.average >= 10 %}<span class="pill-mid">{{ row.average }}</span>
+                    {% else %}<span class="pill-low">{{ row.average }}</span>{% endif %}
+                {% else %}—{% endif %}
+            </td>
             <td class="center">{% if row.points is not None %}{{ row.points }}{% else %}—{% endif %}</td>
             <td>{{ row.appreciation|default:"—" }}</td>
         </tr>
@@ -125,19 +129,23 @@
         </tr>
     </table>
 
-    <table class="summary-table">
+    <table class="summary">
         <tr>
-            <td>
-                <div class="summary-label">Rang</div>
-                <div class="summary-value">{% if rank %}{{ rank }}{% if total_ranked %}/{{ total_ranked }}{% endif %}{% else %}—{% endif %}</div>
+            <td style="width: 25%;">
+                <div class="sum-label">Moyenne générale</div>
+                <div class="sum-value green">{% if general_average is not None %}{{ general_average }}{% else %}—{% endif %}</div>
             </td>
-            <td>
-                <div class="summary-label">Moyenne de la classe</div>
-                <div class="summary-value">{% if class_average is not None %}{{ class_average }}{% else %}—{% endif %}</div>
+            <td style="width: 25%;">
+                <div class="sum-label">Rang</div>
+                <div class="sum-value">{% if rank %}{{ rank }}{% if total_ranked %}/{{ total_ranked }}{% endif %}{% else %}—{% endif %}</div>
             </td>
-            <td>
-                <div class="summary-label">Mention</div>
-                <div class="summary-value">{{ mention|default:"—" }}</div>
+            <td style="width: 25%;">
+                <div class="sum-label">Moyenne de la classe</div>
+                <div class="sum-value">{% if class_average is not None %}{{ class_average }}{% else %}—{% endif %}</div>
+            </td>
+            <td style="width: 25%;">
+                <div class="sum-label">Mention</div>
+                <div class="sum-value">{{ mention|default:"—" }}</div>
             </td>
         </tr>
     </table>
@@ -155,16 +163,8 @@
         </tr>
     </table>
 
-    <div id="footer_content">
-        <table style="width: 100%; border-top: 0.8pt solid #94a3b8;">
-            <tr>
-                <td style="text-align: center; font-size: 7.5pt; color: #475569; padding-top: 3px;">
-                    {% if school_address %}{{ school_address }}{% endif %}
-                    {% if school_email %} · <b>Email :</b> {{ school_email }}{% endif %}
-                    {% if school_phone %} · <b>Tél :</b> {{ school_phone }}{% endif %}
-                </td>
-            </tr>
-        </table>
+    <div class="footer-note">
+        Bulletin généré le {% now "d/m/Y H:i" %} — {{ school_name|default:"Gestion d'École" }}
     </div>
 </body>
 </html>

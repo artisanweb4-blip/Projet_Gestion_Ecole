@@ -16,6 +16,7 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.urls import reverse
 from django_htmx.http import HttpResponseClientRedirect
 from xhtml2pdf import pisa
@@ -563,198 +564,192 @@ def export_bulletin_excel(request, student_id, period_id):
     ws.title = "Bulletin"
 
     school_setting = _school()
-    school = school_setting
     ctx = _bulletin_header_context(school_setting)
 
-    font_name = Font(name='Arial', size=16, bold=True, color='065F46')
-    font_rep = Font(name='Arial', size=10, bold=True, color='0F172A')
-    font_band = Font(name='Arial', size=12, bold=True, color='FFFFFF')
-    font_sub = Font(name='Arial', size=9, color='FFFFFF')
-    font_th = Font(name='Arial', size=9, bold=True, color='FFFFFF')
-    font_lbl = Font(name='Arial', size=8, bold=True, color='64748B')
-    font_big = Font(name='Arial', size=13, bold=True, color='1D3557')
-    fill_band = PatternFill(start_color='1D3557', end_color='1D3557', fill_type='solid')
-    fill_th = PatternFill(start_color='1D3557', end_color='1D3557', fill_type='solid')
-    fill_total = PatternFill(start_color='E2E8F0', end_color='E2E8F0', fill_type='solid')
-    fill_soft = PatternFill(start_color='F8F9FA', end_color='F8F9FA', fill_type='solid')
-    thin_border = Border(
-        left=Side(style='thin', color='CBD5E1'), right=Side(style='thin', color='CBD5E1'),
-        top=Side(style='thin', color='CBD5E1'), bottom=Side(style='thin', color='CBD5E1'),
-    )
-    centered = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    # --- Palette du design « aperçu » ---
+    BLUE = '1D3557'; RED = 'E63946'; SUBBLUE = '457B9D'
+    GRAY = '64748B'; LIGHT = 'F8F9FA'; TOTAL = 'E9ECEF'
+    GREEN_BG, GREEN_FG = 'D1FAE5', '065F46'
+    MID_BG, MID_FG = 'FEF3C7', '92400E'
+    LOW_BG, LOW_FG = 'FEE2E2', 'B91C1C'
+    thin = Side(style='thin', color='CBD5E1')
+    border_all = Border(left=thin, right=thin, top=thin, bottom=thin)
+    center = Alignment(horizontal='center', vertical='center', wrap_text=True)
     left_al = Alignment(horizontal='left', vertical='center', wrap_text=True)
+    right_al = Alignment(horizontal='right', vertical='center')
 
-    # --- En-tête officiel : tutelles | école | république + devise ---
-    general = ctx['general']
-    ws.merge_cells('A1:B1')
-    c = ws['A1']
-    c.value = (general.ministry or '')
-    c.font = Font(name='Arial', size=8, bold=True, color='0F172A')
-    c.alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
-    if general.directorate:
-        ws.merge_cells('A2:B2')
-        ws['A2'] = general.directorate
-        ws['A2'].font = Font(name='Arial', size=8, color='0F172A')
-        ws['A2'].alignment = Alignment(horizontal='left', vertical='top')
+    def F(size=9, bold=False, color='1E293B'):
+        return Font(name='Arial', size=size, bold=bold, color=color)
 
-    ws.merge_cells('C1:C2')
-    c = ws['C1']
-    c.value = ctx['school_name']
-    c.font = font_name
-    c.alignment = centered
+    def fill(hex_color):
+        return PatternFill(start_color=hex_color, end_color=hex_color, fill_type='solid')
+
+    # --- En-tête : école (gauche) | titre rouge (droite) ---
+    ws.merge_cells('A1:C1')
+    ws['A1'] = ctx['school_name']
+    ws['A1'].font = F(13, True, BLUE)
+    ws['A2'] = ' · '.join(p for p in (
+        ctx['school_address'],
+        f"Tél : {ctx['school_phone']}" if ctx['school_phone'] else None) if p)
+    ws.merge_cells('A2:C2')
+    ws['A2'].font = F(8, False, GRAY)
 
     ws.merge_cells('D1:E1')
-    c = ws['D1']
-    c.value = (general.country_name or '')
-    c.font = font_rep
-    c.alignment = centered
+    ws['D1'] = 'Bulletin de notes'
+    ws['D1'].font = F(12, True, RED)
+    ws['D1'].alignment = right_al
     ws.merge_cells('D2:E2')
-    c = ws['D2']
-    c.value = (general.motto or '')
-    c.font = Font(name='Arial', size=9, color='0F172A')
-    c.alignment = centered
+    ws['D2'] = f"{period.name} — Année {period.academic_year.name}"
+    ws['D2'].font = F(9, True, SUBBLUE)
+    ws['D2'].alignment = right_al
 
-    # --- Bandeau titre ---
-    ws.merge_cells('A4:E4')
-    c = ws['A4']
-    c.value = f"BULLETIN DE NOTES — {period.name} — Année scolaire {period.academic_year.name}"
-    c.font = font_band
-    c.fill = fill_band
-    c.alignment = centered
-    ws.row_dimensions[4].height = 24
+    # Trait de séparation bleu sous l'en-tête
+    for col in 'ABCDE':
+        ws[f'{col}2'].border = Border(bottom=Side(style='medium', color=BLUE))
+    ws.row_dimensions[1].height = 20
 
-    # --- Identité élève ---
+    # --- Encadré élève ---
+    ws.merge_cells('A4:B4')
+    ws['A4'] = f"Élève : {student.last_name} {student.first_name}"
+    ws['A4'].font = F(9, True)
+    ws.merge_cells('C4:D4')
+    ws['C4'] = f"Matricule : {student.student_id}"
+    ws['C4'].font = F(9)
+    ws['E4'] = f"Classe : {student.class_group.name if student.class_group else 'N/A'}"
+    ws['E4'].font = F(9)
     ws.merge_cells('A5:B5')
-    ws['A5'] = f"Élève : {student.last_name} {student.first_name}"
-    ws['A5'].font = Font(name='Arial', size=9, bold=True)
-    ws.merge_cells('C5:D5')
-    ws['C5'] = f"Matricule : {student.student_id}"
-    ws['C5'].font = Font(name='Arial', size=9)
-    ws['E5'] = f"Classe : {student.class_group.name if student.class_group else 'N/A'}"
-    ws['E5'].font = Font(name='Arial', size=9)
+    ws['A5'] = f"Effectif classé : {total_ranked if total_ranked else '—'}"
+    ws['A5'].font = F(9)
+    for r in (4, 5):
+        for col in 'ABCDE':
+            c = ws[f'{col}{r}']
+            c.fill = fill(LIGHT)
+        ws[f'A{r}'].border = Border(left=Side(style='medium', color=BLUE))
+    ws.row_dimensions[4].height = 16
+    ws.row_dimensions[5].height = 16
 
     # --- Tableau des notes ---
-    headers = ["Matière", "Coef.", "Moyenne / 20", "Points", "Appréciation"]
-    ws.append([])
-    ws.append(headers)
-    for col_num in range(1, 6):
-        cell = ws.cell(row=7, column=col_num)
-        cell.font = font_th
-        cell.fill = fill_th
-        cell.alignment = centered
-        cell.border = thin_border
-    ws.row_dimensions[7].height = 18
+    header_row = 7
+    headers = ["MATIÈRE", "COEFFICIENT", "MOYENNE / 20", "POINTS (MOY × COEF)", "APPRÉCIATION"]
+    for col_num, h in enumerate(headers, start=1):
+        c = ws.cell(row=header_row, column=col_num)
+        c.value = h
+        c.font = F(8, True, 'FFFFFF')
+        c.fill = fill(BLUE)
+        c.alignment = center if col_num > 1 else left_al
+        c.border = border_all
+    ws.row_dimensions[header_row].height = 17
 
-    current_row = 8
+    current_row = header_row + 1
+
+    def pill_cell(cell, average):
+        """Pastille de couleur selon la moyenne (comme l'aperçu web)."""
+        if average is None:
+            cell.value = '—'
+        else:
+            cell.value = average
+            if average >= 14:
+                cell.fill, cell.font = fill(GREEN_BG), F(9, True, GREEN_FG)
+            elif average >= 10:
+                cell.fill, cell.font = fill(MID_BG), F(9, True, MID_FG)
+            else:
+                cell.fill, cell.font = fill(LOW_BG), F(9, True, LOW_FG)
+        cell.alignment = center
+        cell.border = border_all
+
     for row in rows:
-        ws.append([
-            row['subject'].name,
-            row['coefficient'],
-            row['average'] if row['average'] is not None else "—",
-            row['points'] if row['points'] is not None else "—",
-            row['appreciation'] or "—",
-        ])
-        for col_num in range(1, 6):
-            cell = ws.cell(row=current_row, column=col_num)
-            cell.border = thin_border
-            cell.alignment = centered if col_num > 1 else left_al
+        ws.cell(row=current_row, column=1, value=row['subject'].name).font = F(9, True)
+        ws.cell(row=current_row, column=1).alignment = left_al
+        ws.cell(row=current_row, column=1).border = border_all
+        ws.cell(row=current_row, column=2, value=row['coefficient'])
+        ws.cell(row=current_row, column=3, value=row['average'])
+        pill_cell(ws.cell(row=current_row, column=3), row['average'])
+        for col_num, val in ((4, row['points'] if row['points'] is not None else '—'),
+                             (5, row['appreciation'] or '—')):
+            c = ws.cell(row=current_row, column=col_num, value=val)
+            c.font = F(9)
+            c.alignment = center if col_num == 4 else left_al
+            c.border = border_all
+        ws.cell(row=current_row, column=2).alignment = center
+        ws.cell(row=current_row, column=2).border = border_all
         current_row += 1
 
     total_points = round(sum(r['points'] for r in rows if r['points']), 2)
-    ws.append(["TOTAL", total_coef, "—", total_points, "—"])
-    for col_num in range(1, 6):
-        cell = ws.cell(row=current_row, column=col_num)
-        cell.font = Font(name='Arial', size=9, bold=True)
-        cell.fill = fill_total
-        cell.border = thin_border
-        cell.alignment = centered if col_num > 1 else left_al
+    for col_num, val in enumerate(["TOTAL", total_coef, '—', total_points, '—'], start=1):
+        c = ws.cell(row=current_row, column=col_num, value=val)
+        c.font = F(9, True)
+        c.fill = fill(TOTAL)
+        c.alignment = center if col_num > 1 else left_al
+        c.border = border_all
     current_row += 1
 
-    ws.append([
-        "MOYENNE GÉNÉRALE", "",
-        (general_avg if general_avg is not None else "N/A"),
-        mention_for(general_avg), "",
-    ])
+    # MOYENNE GÉNÉRALE (bandeau bleu)
+    ws.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=2)
+    ws.cell(row=current_row, column=1, value="MOYENNE GÉNÉRALE").font = F(10, True, 'FFFFFF')
+    ws.cell(row=current_row, column=1).alignment = left_al
+    ws.cell(row=current_row, column=3,
+            value=f"{general_avg} / 20" if general_avg is not None else 'N/A')
+    ws.cell(row=current_row, column=3).font = F(10, True, 'FFFFFF')
+    ws.cell(row=current_row, column=3).alignment = center
     ws.merge_cells(start_row=current_row, start_column=4, end_row=current_row, end_column=5)
-    for col_num in range(1, 6):
-        cell = ws.cell(row=current_row, column=col_num)
-        cell.font = Font(name='Arial', size=10, bold=True, color='FFFFFF')
-        cell.fill = fill_band
-        cell.border = thin_border
-        cell.alignment = centered
+    ws.cell(row=current_row, column=4, value=mention_for(general_avg)).font = F(10, True, 'FFFFFF')
+    ws.cell(row=current_row, column=4).alignment = center
+    for col in range(1, 6):
+        ws.cell(row=current_row, column=col).fill = fill(BLUE)
     ws.row_dimensions[current_row].height = 20
     current_row += 2
 
-    # --- Synthèse : rang / moyenne classe / mention ---
-    ws.append([])
-    summary_row = current_row
-    rank_txt = f"{rank}/{total_ranked}" if rank else "—"
-    blocks = [
-        (1, 2, 'RANG', rank_txt),
-        (3, 3, 'MOYENNE DE LA CLASSE', class_avg if class_avg is not None else '—'),
-        (4, 5, 'MENTION', mention_for(general_avg)),
+    # --- 4 cartes : Moyenne générale / Rang / Moyenne classe / Mention ---
+    cards = [
+        (1, 1, 'MOYENNE GÉNÉRALE', general_avg if general_avg is not None else '—', True),
+        (2, 2, 'RANG', f"{rank}/{total_ranked}" if rank else '—', False),
+        (3, 3, 'MOYENNE DE LA CLASSE', class_avg if class_avg is not None else '—', False),
+        (4, 5, 'MENTION', mention_for(general_avg), False),
     ]
-    for col_start, col_end, label, value in blocks:
+    label_row, value_row = current_row, current_row + 1
+    for col_start, col_end, label, value, is_green in cards:
         if col_end > col_start:
-            ws.merge_cells(start_row=summary_row, start_column=col_start,
-                           end_row=summary_row, end_column=col_end)
-            ws.merge_cells(start_row=summary_row + 1, start_column=col_start,
-                           end_row=summary_row + 1, end_column=col_end)
-        lc = ws.cell(row=summary_row, column=col_start)
-        lc.value = label
-        lc.font = font_lbl
-        lc.alignment = centered
-        vc = ws.cell(row=summary_row + 1, column=col_start)
-        vc.value = value
-        vc.font = font_big
-        vc.alignment = centered
-        for r in (summary_row, summary_row + 1):
+            ws.merge_cells(start_row=label_row, start_column=col_start,
+                           end_row=label_row, end_column=col_end)
+            ws.merge_cells(start_row=value_row, start_column=col_start,
+                           end_row=value_row, end_column=col_end)
+        lc = ws.cell(row=label_row, column=col_start, value=label)
+        lc.font = F(7, True, GRAY)
+        lc.alignment = center
+        vc = ws.cell(row=value_row, column=col_start, value=value)
+        vc.font = F(12, True, '059669' if is_green else BLUE)
+        vc.alignment = center
+        for r in (label_row, value_row):
             for cc in range(col_start, col_end + 1):
-                ws.cell(row=r, column=cc).border = thin_border
-                ws.cell(row=r, column=cc).fill = fill_soft
-    ws.row_dimensions[summary_row + 1].height = 22
-    current_row = summary_row + 3
+                ws.cell(row=r, column=cc).border = border_all
+                ws.cell(row=r, column=cc).fill = fill(LIGHT)
+    ws.row_dimensions[value_row].height = 22
+    current_row = value_row + 2
 
     # --- Signatures ---
-    ws.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=2)
-    ws.cell(row=current_row, column=1).value = "Signature du Chef d'établissement :"
-    ws.merge_cells(start_row=current_row, start_column=4, end_row=current_row, end_column=5)
-    ws.cell(row=current_row, column=4).value = "Signature du Parent / Tuteur :"
-    ws.cell(row=current_row, column=1).font = Font(name='Arial', size=9)
-    ws.cell(row=current_row, column=4).font = Font(name='Arial', size=9)
-    for r in (current_row + 3,):
-        ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=2)
-        ws.merge_cells(start_row=r, start_column=4, end_row=r, end_column=5)
-        for col in (1, 4):
-            cell = ws.cell(row=r, column=col)
-            cell.border = Border(top=Side(style='thin', color='64748B'))
-    current_row = r + 2
+    sig_row = current_row
+    ws.merge_cells(start_row=sig_row, start_column=1, end_row=sig_row, end_column=2)
+    ws.cell(row=sig_row, column=1, value="Signature du Chef d'établissement :").font = F(8, False, '334155')
+    ws.merge_cells(start_row=sig_row, start_column=4, end_row=sig_row, end_column=5)
+    ws.cell(row=sig_row, column=4, value="Signature du Parent / Tuteur :").font = F(8, False, '334155')
+    line_row = sig_row + 3
+    for col_start, col_end in ((1, 2), (4, 5)):
+        ws.merge_cells(start_row=line_row, start_column=col_start,
+                       end_row=line_row, end_column=col_end)
+        for cc in range(col_start, col_end + 1):
+            ws.cell(row=line_row, column=cc).border = Border(top=Side(style='thin', color=GRAY))
+    current_row = line_row + 2
 
-    # --- Pied de page infos école ---
+    # --- Pied de page ---
     ws.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=5)
-    foot_parts = [p for p in (ctx['school_address'],
-                              f"Email : {ctx['school_email']}" if ctx['school_email'] else None,
-                              f"Tél : {ctx['school_phone']}" if ctx['school_phone'] else None) if p]
-    cell = ws.cell(row=current_row, column=1)
-    cell.value = ' · '.join(foot_parts)
-    cell.font = Font(name='Arial', size=8, color='64748B')
-    cell.alignment = centered
+    foot = ws.cell(row=current_row, column=1)
+    foot.value = (f"Bulletin généré le {timezone.localtime().strftime('%d/%m/%Y %H:%M')}"
+                  f" — {ctx['school_name']}")
+    foot.font = F(7, False, '94A3B8')
+    foot.alignment = center
 
-    # --- Logo de l'école (même visuel que le PDF) ---
-    if ctx.get('logo_path') and os.path.exists(ctx['logo_path']):
-        try:
-            from openpyxl.drawing.image import Image as XLImage
-            img = XLImage(ctx['logo_path'])
-            img.width, img.height = 40, 40
-            ws.add_image(img, 'C1')
-            ws.row_dimensions[1].height = 20
-            ws.row_dimensions[2].height = 20
-        except Exception:
-            pass  # image optionnelle (Pillow absent, format illisible…)
-
-    # --- Largeurs + MISE EN PAGE A5 (impression directe) ---
-    widths = {'A': 26, 'B': 8, 'C': 13, 'D': 12, 'E': 26}
-    for col, w in widths.items():
+    # --- Largeurs + impression A5 ---
+    for col, w in {'A': 24, 'B': 12, 'C': 13, 'D': 15, 'E': 24}.items():
         ws.column_dimensions[col].width = w
     from openpyxl.worksheet.page import PageMargins
     from openpyxl.worksheet.properties import PageSetupProperties

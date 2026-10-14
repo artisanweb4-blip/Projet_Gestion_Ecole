@@ -4,107 +4,129 @@
 
 {% block content %}
 <style>
-    /* Aperçu = copie conforme du PDF A5 */
-    .report-actions {
-        max-width: 760px; margin: 0 auto 16px;
-        display: flex; gap: 10px; flex-wrap: wrap;
-    }
-    .report-actions .spacer { flex: 1; }
-
-    .report-sheet {
-        background: #ffffff;
-        max-width: 760px;
-        margin: 0 auto 24px;
-        padding: 26px 30px 20px;
-        border-radius: 10px;
-        border: 1px solid var(--border-color);
+    .report-card-container {
+        background-color: #ffffff;
+        padding: 36px 40px;
+        border-radius: 12px;
         box-shadow: var(--shadow-card);
-        color: #1e293b;
-        font-size: 14px;
+        border: 1px solid var(--border-color);
+        max-width: 980px;
+        margin: 0 auto 24px;
+        color: var(--text-main);
     }
 
-    .rp-header {
-        display: flex; justify-content: space-between; align-items: flex-start;
-        gap: 12px; margin-bottom: 10px; flex-wrap: wrap;
-    }
-    .rp-tutelle { width: 31%; font-size: 11.5px; line-height: 1.5; color: #0f172a; }
-    .rp-center { width: 36%; text-align: center; }
-    .rp-center img { width: 62px; height: 62px; object-fit: contain; display: block; margin: 0 auto 4px; }
-    .rp-school-name { font-size: 19px; font-weight: 800; color: #065f46; line-height: 1.25; }
-    .rp-repub { width: 31%; text-align: center; font-size: 13px; line-height: 1.5; color: #0f172a; }
-    .rp-repub .country { font-size: 16px; font-weight: 800; }
-
-    .rp-band {
-        background: #1d3557; color: #fff; text-align: center;
-        padding: 9px 12px; border-radius: 4px; margin: 8px 0 14px;
-    }
-    .rp-band .t { font-size: 17px; font-weight: 800; letter-spacing: .5px; }
-    .rp-band .s { font-size: 12px; opacity: .92; }
-
-    .rp-info {
-        background: #f1f5f9; border-left: 4px solid #1d3557;
-        padding: 9px 12px; margin-bottom: 14px; font-size: 13px;
-        display: flex; flex-wrap: wrap; gap: 4px 18px;
-    }
-    .rp-info b { color: #1d3557; }
-
-    table.rp-notes { width: 100%; border-collapse: collapse; font-size: 13px; }
-    table.rp-notes th {
-        background: #1d3557; color: #fff; padding: 7px 6px;
-        font-size: 11px; text-transform: uppercase; text-align: center;
-    }
-    table.rp-notes th.subj { width: 31%; }
-    table.rp-notes th.coef { width: 10%; }
-    table.rp-notes th.moy { width: 14%; }
-    table.rp-notes th.pts { width: 14%; }
-    table.rp-notes th.appr { width: 31%; }
-    table.rp-notes td { border: 1px solid #cbd5e1; padding: 7px 8px; }
-    table.rp-notes td.center, table.rp-notes th.center { text-align: center; }
-    table.rp-notes tr.total td {
-        background: #e2e8f0; font-weight: 700;
-    }
-    table.rp-notes tr.grand td {
-        background: #1d3557; color: #fff; font-weight: 800; font-size: 15px;
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 2px solid #1d3557;
+        padding-bottom: 18px;
+        margin-bottom: 22px;
+        flex-wrap: wrap;
     }
 
-    .rp-summary {
-        display: grid; grid-template-columns: repeat(3, 1fr);
-        gap: 0; margin-top: 14px; border: 1px solid #cbd5e1;
-    }
-    .rp-summary .cell {
-        padding: 10px 8px; text-align: center; background: #f8f9fa;
-        border-right: 1px solid #cbd5e1;
-    }
-    .rp-summary .cell:last-child { border-right: none; }
-    .rp-summary .label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748b; }
-    .rp-summary .value { font-size: 20px; font-weight: 800; color: #1d3557; margin-top: 2px; }
+    .school-info h2 { margin: 0; font-weight: 800; color: #1d3557; font-size: 1.4rem; }
+    .school-info p { margin: 3px 0 0 0; font-size: 0.82rem; color: var(--text-muted); }
 
-    .rp-signatures {
-        display: flex; justify-content: space-between; gap: 24px;
-        margin-top: 34px; font-size: 12.5px; color: #334155; flex-wrap: wrap;
-    }
-    .rp-signatures .box { text-align: center; min-width: 200px; }
-    .rp-signatures .line { border-top: 1px solid #64748b; margin-top: 46px; }
+    .report-title { text-align: right; }
+    .report-title h1 { margin: 0; font-size: 1.35rem; text-transform: uppercase; color: #e63946; letter-spacing: 1px; }
+    .report-title span { font-size: 0.88rem; font-weight: 600; color: #457b9d; }
 
-    .rp-footer {
-        max-width: 760px; margin: -14px auto 24px;
-        border-top: 1px solid #94a3b8; padding-top: 6px;
-        text-align: center; font-size: 12px; color: #475569;
+    .student-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px 20px;
+        background-color: #f8f9fa;
+        padding: 14px 20px;
+        border-radius: 8px;
+        border-left: 4px solid #1d3557;
+        margin-bottom: 22px;
+        font-size: 0.9rem;
     }
+
+    .student-info-grid strong { color: #1d3557; }
+
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+        margin-bottom: 22px;
+    }
+
+    .report-table th {
+        background: #1d3557;
+        color: #fff;
+        padding: 10px 12px;
+        text-align: left;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .report-table th.center, .report-table td.center { text-align: center; }
+
+    .report-table td {
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .report-table tbody tr:hover { background: #f8f9fa; }
+
+    .report-table tfoot td {
+        background: #e9ecef;
+        font-weight: 700;
+        border-top: 2px solid #1d3557;
+    }
+
+    .report-table tfoot tr.grand-total td {
+        background: #1d3557;
+        color: #fff;
+        font-size: 0.98rem;
+    }
+
+    .report-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 14px;
+        margin-bottom: 26px;
+    }
+
+    .summary-card {
+        background: #f8f9fa;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 14px 16px;
+        text-align: center;
+    }
+
+    .summary-card .value { font-size: 1.45rem; font-weight: 800; color: #1d3557; }
+    .summary-card .value.highlight { color: var(--primary); }
+    .summary-card .label { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
+
+    .signature-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 30px;
+        margin-top: 30px;
+        font-size: 0.85rem;
+        flex-wrap: wrap;
+    }
+
+    .signature-box { text-align: center; min-width: 220px; }
+    .signature-line { margin-top: 56px; border-top: 1px solid #94a3b8; }
 
     @media (max-width: 640px) {
-        .report-sheet { padding: 18px 14px; }
-        .rp-tutelle, .rp-center, .rp-repub { width: 100%; text-align: center; }
-        .rp-summary { grid-template-columns: 1fr; }
-        .rp-summary .cell { border-right: none; border-bottom: 1px solid #cbd5e1; }
+        .report-card-container { padding: 22px 18px; }
+        .report-title { text-align: left; }
     }
 </style>
 
-<div class="report-actions">
+<div style="max-width: 980px; margin: 0 auto 18px; display: flex; gap: 10px; flex-wrap: wrap;">
     <a href="{% url 'grades:bulletin_select' %}" class="btn btn-secondary">
         <i class="fa-solid fa-arrow-left"></i> Retour
     </a>
-    <div class="spacer"></div>
+    <div style="flex: 1;"></div>
     <a href="{% url 'grades:export_bulletin_excel' student.id period.id %}" hx-boost="false" class="btn btn-success">
         <i class="fa-solid fa-file-excel"></i> Export Excel
     </a>
@@ -113,43 +135,34 @@
     </a>
 </div>
 
-<div class="report-sheet">
-    <div class="rp-header">
-        <div class="rp-tutelle">
-            {% if general.ministry %}<b>{{ general.ministry|upper }}</b>{% endif %}
-            {% if general.directorate %}<br>{{ general.directorate|upper }}{% endif %}
+<div class="report-card-container">
+    <div class="report-header">
+        <div class="school-info">
+            <h2>{{ school.school_name|default:"Gestion d'École" }}</h2>
+            <p>{{ school.address|default:"—" }}{% if school.phone %} · Tél : {{ school.phone }}{% endif %}</p>
         </div>
-        <div class="rp-center">
-            {% if logo_url %}<img src="{{ logo_url }}" alt="Logo">{% endif %}
-            <div class="rp-school-name">{{ school_name|default:"Gestion d'École" }}</div>
-        </div>
-        <div class="rp-repub">
-            {% if general.country_name %}<span class="country">{{ general.country_name }}</span>{% endif %}
-            {% if general.motto %}<br>{{ general.motto }}{% endif %}
+        <div class="report-title">
+            <h1><span class="page-icon"><i class="fa-solid fa-file-invoice"></i></span>Bulletin de notes</h1>
+            <span>{{ period.name }} — Année {{ period.academic_year.name }}</span>
         </div>
     </div>
 
-    <div class="rp-band">
-        <div class="t">BULLETIN DE NOTES</div>
-        <div class="s">{{ period.name }} — Année scolaire {{ period.academic_year.name }}</div>
-    </div>
-
-    <div class="rp-info">
-        <span><b>Élève :</b> {{ student.last_name }} {{ student.first_name }}</span>
-        <span><b>Matricule :</b> {{ student.student_id }}</span>
-        <span><b>Classe :</b> {{ student.class_group.name|default:"—" }}</span>
-        <span><b>Effectif classé :</b> {{ total_ranked|default:"—" }}</span>
+    <div class="student-info-grid">
+        <div><strong>Élève :</strong> {{ student.last_name }} {{ student.first_name }}</div>
+        <div><strong>Matricule :</strong> {{ student.student_id }}</div>
+        <div><strong>Classe :</strong> {{ student.class_group.name|default:"—" }}</div>
+        <div><strong>Effectif classé :</strong> {{ total_ranked|default:"—" }}</div>
     </div>
 
     {% if rows %}
-        <table class="rp-notes">
+        <table class="report-table">
             <thead>
                 <tr>
-                    <th class="subj">Matière</th>
-                    <th class="coef">Coef.</th>
-                    <th class="moy">Moy. / 20</th>
-                    <th class="pts">Points</th>
-                    <th class="appr">Appréciation</th>
+                    <th>Matière</th>
+                    <th class="center">Coefficient</th>
+                    <th class="center">Moyenne / 20</th>
+                    <th class="center">Points (Moy × Coef)</th>
+                    <th>Appréciation</th>
                 </tr>
             </thead>
             <tbody>
@@ -157,38 +170,52 @@
                     <tr>
                         <td><strong>{{ row.subject.name }}</strong></td>
                         <td class="center">{{ row.coefficient }}</td>
-                        <td class="center">{% if row.average is not None %}{{ row.average }}{% else %}—{% endif %}</td>
-                        <td class="center">{% if row.points is not None %}{{ row.points }}{% else %}—{% endif %}</td>
+                        <td class="center">
+                            {% if row.average is not None %}
+                                <span class="badge {% if row.average >= 14 %}badge-success{% elif row.average >= 10 %}badge-warning{% else %}badge-danger{% endif %}">
+                                    {{ row.average }}
+                                </span>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="center">{{ row.points|default:"—" }}</td>
                         <td>{{ row.appreciation|default:"—" }}</td>
                     </tr>
                 {% endfor %}
-                <tr class="total">
+            </tbody>
+            <tfoot>
+                <tr>
                     <td>TOTAL</td>
                     <td class="center">{{ total_coef }}</td>
                     <td class="center">—</td>
                     <td class="center">{{ total_points }}</td>
                     <td></td>
                 </tr>
-                <tr class="grand">
+                <tr class="grand-total">
                     <td colspan="2">MOYENNE GÉNÉRALE</td>
-                    <td class="center">{% if general_average is not None %}{{ general_average }} / 20{% else %}N/A{% endif %}</td>
+                    <td class="center">
+                        {% if general_average is not None %}{{ general_average }} / 20{% else %}N/A{% endif %}
+                    </td>
                     <td class="center" colspan="2">{{ mention|default:"—" }}</td>
                 </tr>
-            </tbody>
+            </tfoot>
         </table>
 
-        <div class="rp-summary">
-            <div class="cell">
+        <div class="report-summary">
+            <div class="summary-card">
+                <div class="value highlight">{% if general_average is not None %}{{ general_average }}{% else %}—{% endif %}</div>
+                <div class="label">Moyenne générale</div>
+            </div>
+            <div class="summary-card">
+                <div class="value">{% if rank %}{{ rank }}{% if total_ranked %} <small style="font-size: 0.9rem; color: var(--text-muted);">/ {{ total_ranked }}</small>{% endif %}{% else %}—{% endif %}</div>
                 <div class="label">Rang</div>
-                <div class="value">{% if rank %}{{ rank }}{% if total_ranked %}/{{ total_ranked }}{% endif %}{% else %}—{% endif %}</div>
             </div>
-            <div class="cell">
-                <div class="label">Moyenne de la classe</div>
+            <div class="summary-card">
                 <div class="value">{% if class_average is not None %}{{ class_average }}{% else %}—{% endif %}</div>
+                <div class="label">Moyenne de la classe</div>
             </div>
-            <div class="cell">
-                <div class="label">Mention</div>
+            <div class="summary-card">
                 <div class="value">{{ mention|default:"—" }}</div>
+                <div class="label">Mention</div>
             </div>
         </div>
     {% else %}
@@ -199,21 +226,19 @@
         </div>
     {% endif %}
 
-    <div class="rp-signatures">
-        <div class="box">
+    <div class="signature-row">
+        <div class="signature-box">
             Signature du Chef d'établissement
-            <div class="line"></div>
+            <div class="signature-line"></div>
         </div>
-        <div class="box">
+        <div class="signature-box">
             Signature du Parent / Tuteur
-            <div class="line"></div>
+            <div class="signature-line"></div>
         </div>
     </div>
-</div>
 
-<div class="rp-footer">
-    {% if school_address %}{{ school_address }}{% endif %}
-    {% if school_email %} · <b>Email :</b> {{ school_email }}{% endif %}
-    {% if school_phone %} · <b>Tél :</b> {{ school_phone }}{% endif %}
+    <p class="text-muted text-center" style="font-size: 0.75rem; margin-top: 24px;">
+        Bulletin généré le {% now "d/m/Y H:i" %} — {{ school.school_name|default:"Gestion d'École" }}
+    </p>
 </div>
 {% endblock %}
