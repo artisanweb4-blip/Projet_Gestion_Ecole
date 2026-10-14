@@ -6,7 +6,14 @@
     <title>Emploi du temps — {{ classroom.name }}</title>
     <style>
         /* A4 paysage — compatible xhtml2pdf : tables uniquement */
-        @page { size: A4 landscape; margin: 1cm; }
+        @page {
+            size: A4 landscape;
+            margin: 1cm 1cm 1.9cm 1cm;
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                left: 28pt; width: 786pt; top: 520pt; height: 45pt;
+            }
+        }
         body { font-family: Helvetica, Arial, sans-serif; font-size: 9pt; color: #1e293b; }
         .header { width: 100%; margin-bottom: 4px; }
         .school-name { font-size: 18pt; font-weight: bold; color: #065f46; }
@@ -45,11 +52,8 @@
                 <span class="school-name">{{ school_name|default:"École" }}</span>
             </td>
             <td class="infos" style="width: 32%; text-align: right; vertical-align: top;">
-                {% if school_address %}{{ school_address }}<br>{% endif %}
-                {% if school_email %}{{ school_email }}<br>{% endif %}
-                {% if school_phone %}<b>N° :</b> {{ school_phone }}<br>{% endif %}
-                {% if general.country_name %}<b>Pays :</b> {{ general.country_name }}<br>{% endif %}
-                {% if general.motto %}<b>Devise :</b> « {{ general.motto }} »{% endif %}
+                {% if general.country_name %}<b style="font-size: 11pt; color: #0f172a;">{{ general.country_name }}</b>{% endif %}
+                {% if general.motto %}<br>« {{ general.motto }} »{% endif %}
             </td>
         </tr>
     </table>
@@ -96,21 +100,22 @@
         </tr>
     </table>
 
-    <table class="foot" style="width: 100%; margin-top: 12px; border-top: 0.8pt solid #94a3b8; padding-top: 5px;">
-        <tr>
-            <td style="text-align: center; font-size: 8.5pt; color: #475569;">
-                {% if school_email %}<b>Email :</b> {{ school_email }}{% endif %}
-                {% if school_phone %} · <b>N° :</b> {{ school_phone }}{% endif %}
-                {% if general.country_name %} · <b>Pays :</b> {{ general.country_name }}{% endif %}
-                {% if general.motto %} · <b>Devise :</b> « {{ general.motto }} »{% endif %}
-            </td>
-        </tr>
-        <tr>
-            <td style="text-align: center; font-size: 7.5pt; color: #94a3b8; padding-top: 3px;">
-                Document généré par {{ school_name|default:"l'école" }} le {{ now|date:"d/m/Y à H:i" }}
-            </td>
-        </tr>
-    </table>
+    <div id="footer_content">
+        <table style="width: 100%; border-top: 0.8pt solid #94a3b8;">
+            <tr>
+                <td style="text-align: center; font-size: 9pt; color: #475569; padding-top: 4px;">
+                    {% if school_address %}{{ school_address }}{% endif %}
+                    {% if school_email %} · <b>Email :</b> {{ school_email }}{% endif %}
+                    {% if school_phone %} · <b>Tél :</b> {{ school_phone }}{% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: center; font-size: 7.5pt; color: #94a3b8; padding-top: 2px;">
+                    Document généré par {{ school_name|default:"l'école" }} le {{ now|date:"d/m/Y à H:i" }}
+                </td>
+            </tr>
+        </table>
+    </div>
 
 </body>
 </html>

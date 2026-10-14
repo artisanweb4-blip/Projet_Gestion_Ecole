@@ -265,6 +265,9 @@ def _upsert_teacher(school, row):
     if obj is None and row.get('Email'):
         obj = Teacher._base_manager.filter(school=school, email=row['Email'].strip()).first()
     obj = obj or Teacher(school=school)
+    if obj.pk is None and matricule:
+        # respecte le matricule fourni à la création (round-trip sauvegarde)
+        obj.employee_id = matricule[:20]
 
     obj.last_name = (row.get('Nom') or '').strip()
     obj.first_name = (row.get('Prénom') or '').strip()
@@ -363,6 +366,9 @@ def _upsert_classroom(school, row):
 
 
 IMPORT_SPECS = {
+    'tout': {
+        'label': 'Toutes les données (fichier de sauvegarde complet)',
+    },
     'eleves': {
         'label': 'Élèves',
         'sheet': 'Élèves',
@@ -415,28 +421,45 @@ IMPORT_SPECS = {
 }
 
 
-def run_import(school, category, data):
-    """Importe un .xlsx pour une catégorie. Retourne un dict de rapport."""
-    spec = IMPORT_SPECS[category]
-    sheets = read_xlsx(data)
-    headers, rows = pick_sheet(sheets, spec['sheet'])
+def _norm_header(h):
+    return re.sub(r'\s+', ' ', h or '').strip().lower()
 
-    if not headers:
-        return {'created': 0, 'updated': 0, 'errors': ['Feuille vide ou illisible.'],
-                'total': 0}
 
-    # positions des colonnes d'après la ligne d'en-tête
+def _match_headers(spec, headers):
+    """Positions des colonnes attendues d'après la ligne d'en-tête."""
     idx = {}
     for pos, h in enumerate(headers):
-        h_clean = re.sub(r'\s+', ' ', h).strip()
-        for expected in list(spec['headers']) + [h for h in spec['headers']]:
-            if h_clean.lower() == expected.lower():
+        h_clean = _norm_header(h)
+        for expected in spec['headers']:
+            if h_clean == _norm_header(expected):
                 idx[expected] = pos
-    missing = [h for h in spec['headers'] if h not in idx and h not in ('Matricule', 'Embauché le')]
-    if len(missing) >= len(spec['headers']) - 1:
-        return {'created': 0, 'updated': 0,
-                'errors': [f"Colonnes non reconnues. Utilisez le modèle : {', '.join(spec['headers'])}."],
-                'total': 0}
+                break
+    return idx
+
+
+def _find_sheet_exact(sheets, wanted):
+    """Retrouve la feuille par nom exact ou sans accents — SANS repli sur
+    la 1re feuille (sécurité pour l'import complet)."""
+    if wanted in sheets:
+        return sheets[wanted]
+    def norm(s):
+        return re.sub(r'[^a-z]', '', s.lower())
+    t = norm(wanted)
+    for name, content in sheets.items():
+        if norm(name) == t:
+            return content
+    return ([], [])
+
+
+def _import_sheet(school, spec, headers, rows):
+    """Importe les lignes d'une feuille reconnue.
+
+    Retourne (created, updated, errors) ou None si colonnes non reconnues.
+    """
+    idx = _match_headers(spec, headers)
+    required_min = len(spec['headers']) - 2
+    if len(idx) < required_min:
+        return None
 
     created = updated = 0
     errors = []
@@ -462,6 +485,53 @@ def run_import(school, category, data):
         if len(errors) >= 15:
             errors.append('… import interrompu (trop d’erreurs).')
             break
+    return created, updated, errors
 
+
+def run_import(school, category, data):
+    """Importe un .xlsx. Retourne un dict de rapport.
+
+    - catégorie simple : une seule feuille (repli intelligent sur le nom) ;
+    - « tout » : parcourt TOUTES les catégories du fichier de sauvegarde
+      complet en une seule opération et cumule les rapports par catégorie.
+    """
+    spec = IMPORT_SPECS[category]
+    sheets = read_xlsx(data)
+
+    if category == 'tout':
+        total_created = total_updated = 0
+        per_category = []
+        all_errors = []
+        for key, sp in IMPORT_SPECS.items():
+            if key == 'tout' or 'headers' not in sp:
+                continue
+            headers, rows = _find_sheet_exact(sheets, sp['sheet'])
+            if not headers:
+                continue
+            res = _import_sheet(school, sp, headers, rows)
+            if res is None:
+                continue
+            created, updated, errors = res
+            per_category.append((sp['label'], created, updated))
+            all_errors.extend(f"{sp['label']} — {e}" for e in errors)
+            total_created += created
+            total_updated += updated
+        return {
+            'created': total_created, 'updated': total_updated,
+            'errors': all_errors, 'total': total_created + total_updated,
+            'per_category': per_category,
+        }
+
+    headers, rows = pick_sheet(sheets, spec['sheet'])
+    if not headers:
+        return {'created': 0, 'updated': 0, 'errors': ['Feuille vide ou illisible.'],
+                'total': 0}
+
+    res = _import_sheet(school, spec, headers, rows)
+    if res is None:
+        return {'created': 0, 'updated': 0,
+                'errors': [f"Colonnes non reconnues. Utilisez le modèle : {', '.join(spec['headers'])}."],
+                'total': 0}
+    created, updated, errors = res
     return {'created': created, 'updated': updated, 'errors': errors,
             'total': created + updated}

@@ -183,10 +183,32 @@ def download_backup(request):
 
 @login_required
 def import_template(request, category):
-    """Modèle Excel vide (avec en-têtes + ligne d'exemple) à remplir."""
+    """Modèle Excel à remplir (en-têtes + ligne d'exemple).
+
+    Pour « tout » : télécharge la sauvegarde complète actuelle — c'est le
+    fichier à utiliser pour l'import de toutes les données en une fois.
+    """
     spec = IMPORT_SPECS.get(category)
     if spec is None:
         return redirect('school_settings:backup')
+
+    if category == 'tout':
+        school = getattr(request.user, 'school', None)
+        if school is None:
+            messages.error(request, "Aucune école rattachée à votre compte.")
+            return redirect('school_settings:backup')
+        content = build_xlsx(collect_school_data(school))
+        response = HttpResponse(
+            content,
+            content_type=(
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            ),
+        )
+        response['Content-Disposition'] = (
+            'attachment; filename="import_complet_ecole.xlsx"'
+        )
+        return response
+
     content = build_xlsx([(spec['label'], spec['headers'], [spec['example']])])
     response = HttpResponse(
         content,
@@ -231,7 +253,13 @@ def import_data(request):
 
     result = run_import(school, category, upload.read())
     label = IMPORT_SPECS[category]['label']
-    if result['total']:
+    if result['total'] and result.get('per_category'):
+        detail = ' ; '.join(
+            f"{cat} : {c} créé(s), {u} mis à jour"
+            for cat, c, u in result['per_category']
+        )
+        messages.success(request, f"Import complet — {detail}.")
+    elif result['total']:
         messages.success(
             request,
             f"Import {label} : {result['created']} créé(s), {result['updated']} mis à jour."
