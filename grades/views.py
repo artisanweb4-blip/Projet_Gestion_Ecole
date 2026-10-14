@@ -59,7 +59,7 @@ def _bulletin_header_context(school_setting):
                 logo_path = school_setting.logo.path
         except Exception:
             logo_path = None
-    return {
+    ctx = {
         'school_name': (getattr(school_setting, 'school_name', None)
                         or getattr(school, 'name', None) or "Gestion d'École"),
         'school_address': (getattr(school_setting, 'address', None)
@@ -71,6 +71,12 @@ def _bulletin_header_context(school_setting):
         'logo_path': logo_path,
         'general': GeneralSetting.load(),
     }
+    if school_setting is not None and getattr(school_setting, 'logo', None):
+        try:
+            ctx['logo_url'] = school_setting.logo.url
+        except Exception:
+            ctx['logo_url'] = None
+    return ctx
 
 
 def _render_pdf(template_src, context, filename):
@@ -514,10 +520,11 @@ def student_report_card(request, student_id, period_id):
     total_coef = sum(r['coefficient'] for r in rows)
     total_points = sum(r['points'] for r in rows if r['points'] is not None)
 
+    school_setting = _school()
     context = {
         'student': student,
         'period': period,
-        'school': _school(),
+        'school': school_setting,
         'rows': rows,
         'general_average': general_avg,
         'mention': mention_for(general_avg),
@@ -527,6 +534,7 @@ def student_report_card(request, student_id, period_id):
         'total_coef': total_coef,
         'total_points': round(total_points, 2),
     }
+    context.update(_bulletin_header_context(school_setting))
     return render(request, 'grades/student_report_card.html', context)
 
 
@@ -731,6 +739,18 @@ def export_bulletin_excel(request, student_id, period_id):
     cell.value = ' · '.join(foot_parts)
     cell.font = Font(name='Arial', size=8, color='64748B')
     cell.alignment = centered
+
+    # --- Logo de l'école (même visuel que le PDF) ---
+    if ctx.get('logo_path') and os.path.exists(ctx['logo_path']):
+        try:
+            from openpyxl.drawing.image import Image as XLImage
+            img = XLImage(ctx['logo_path'])
+            img.width, img.height = 40, 40
+            ws.add_image(img, 'C1')
+            ws.row_dimensions[1].height = 20
+            ws.row_dimensions[2].height = 20
+        except Exception:
+            pass  # image optionnelle (Pillow absent, format illisible…)
 
     # --- Largeurs + MISE EN PAGE A5 (impression directe) ---
     widths = {'A': 26, 'B': 8, 'C': 13, 'D': 12, 'E': 26}
