@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.decorators.http import require_POST
+import os
 from io import BytesIO
 from xhtml2pdf import pisa
 from django.template.loader import render_to_string
@@ -15,7 +16,7 @@ from .models import TimeSlot, Classroom
 # Modèles externes
 from classes.models import Class
 from courses.models import Program, ProgramSubject, Subject
-from school_settings.models import GeneralSetting
+from school_settings.models import GeneralSetting, SchoolSetting
 from teachers.models import Teacher
 
 # Formulaires
@@ -189,8 +190,17 @@ def timetable_export_pdf(request):
             row['cells'].append(cell_items)
         grid.append(row)
 
+    # Priorité aux informations saisies dans Paramètres → École
+    setting = SchoolSetting.load(school)
+    logo_path = None
+    if setting.logo:
+        try:
+            if setting.logo.storage.exists(setting.logo.name):
+                logo_path = setting.logo.path
+        except Exception:
+            logo_path = None
+
     context = {
-        'school': school,
         'classroom': classroom,
         'program': classroom.program,
         'days': DAYS,
@@ -198,10 +208,23 @@ def timetable_export_pdf(request):
         'now': timezone.localtime(),
         # En-tête officiel : ministère / direction de tutelle, pays, devise
         'general': GeneralSetting.load(),
+        # Informations de l'onglet École (repli sur la fiche école)
+        'school_name': setting.school_name or school.name,
+        'school_address': setting.address or school.address,
+        'school_phone': setting.phone or school.phone,
+        'school_email': setting.email or school.email,
+        'logo_path': logo_path,
     }
     html = render_to_string('timetable/timetable_pdf.html', context)
     result = BytesIO()
-    pdf = pisa.pisaDocument(BytesIO(html.encode('UTF-8')), result, encoding='UTF-8')
+
+    def _pdf_link(uri, rel):
+        # Les ressources locales (logo) sont résolues comme fichiers disque
+        return uri if uri and os.path.exists(uri) else None
+
+    pdf = pisa.pisaDocument(
+        BytesIO(html.encode('UTF-8')), result, encoding='UTF-8',
+        link_callback=_pdf_link)
     if pdf.err:
         return HttpResponse("Erreur lors de la génération du PDF.", status=500)
     response = HttpResponse(result.getvalue(), content_type='application/pdf')

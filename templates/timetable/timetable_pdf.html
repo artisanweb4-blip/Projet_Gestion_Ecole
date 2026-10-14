@@ -41,13 +41,14 @@
                 {% if general.directorate %}{{ general.directorate|upper }}{% endif %}
             </td>
             <td style="width: 36%; text-align: center; vertical-align: top;">
+                {% if logo_path %}<img src="{{ logo_path }}" width="54" height="54" style="vertical-align: middle;" /><br>{% endif %}
                 <span style="font-size: 13pt; color: #059669;"><b>GCE</b></span><br>
-                <span class="school-name">{{ school.name|default:"École" }}</span>
+                <span class="school-name">{{ school_name|default:"École" }}</span>
             </td>
             <td class="infos" style="width: 32%; text-align: right; vertical-align: top;">
-                {% if school.address %}{{ school.address }}<br>{% endif %}
-                {% if school.email %}{{ school.email }}<br>{% endif %}
-                {% if school.phone %}<b>N° :</b> {{ school.phone }}<br>{% endif %}
+                {% if school_address %}{{ school_address }}<br>{% endif %}
+                {% if school_email %}{{ school_email }}<br>{% endif %}
+                {% if school_phone %}<b>N° :</b> {{ school_phone }}<br>{% endif %}
                 {% if general.country_name %}<b>Pays :</b> {{ general.country_name }}<br>{% endif %}
                 {% if general.motto %}<b>Devise :</b> « {{ general.motto }} »{% endif %}
             </td>
@@ -97,7 +98,7 @@
     </table>
 
     <div class="footer">
-        Document généré par {{ school.name|default:"l'école" }} le {{ now|date:"d/m/Y à H:i" }} — Gestion d'École
+        Document généré par {{ school_name|default:"l'école" }} le {{ now|date:"d/m/Y à H:i" }} — Gestion d'École
     </div>
 
 </body>

@@ -12,6 +12,7 @@ from xml.sax.saxutils import escape
 
 CT_NS = 'http://schemas.openxmlformats.org/package/2006/content-types'
 R_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+REL_NS = 'http://schemas.openxmlformats.org/package/2006/relationships'
 MAIN_NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
 
 
@@ -99,7 +100,7 @@ def build_xlsx(sheets):
     )
     wb_rels = (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        f'<Relationships xmlns="{CT_NS}">{wb_rels}'
+        f'<Relationships xmlns="{REL_NS}">{wb_rels}'
         f'<Relationship Id="rId{len(clean) + 1}" Type="{R_NS}/styles" Target="styles.xml"/>'
         '</Relationships>'
     )
@@ -138,20 +139,30 @@ def build_xlsx(sheets):
     )
     root_rels = (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        f'<Relationships xmlns="{CT_NS}">'
+        f'<Relationships xmlns="{REL_NS}">'
         f'<Relationship Id="rId1" Type="{R_NS}/officeDocument" Target="xl/workbook.xml"/>'
         '</Relationships>'
     )
 
+    parts = {
+        '[Content_Types].xml': content_types,
+        '_rels/.rels': root_rels,
+        'xl/workbook.xml': workbook,
+        'xl/_rels/workbook.xml.rels': wb_rels,
+        'xl/styles.xml': styles,
+    }
+    for i, (_, headers, rows) in enumerate(clean):
+        parts[f'xl/worksheets/sheet{i + 1}.xml'] = _sheet_xml(headers, rows)
+
+    # Filet de sécurité : tout fragment doit être du XML bien formé
+    from xml.etree import ElementTree
+    for name, xml_text in parts.items():
+        ElementTree.fromstring(xml_text.encode('UTF-8'))
+
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as z:
-        z.writestr('[Content_Types].xml', content_types)
-        z.writestr('_rels/.rels', root_rels)
-        z.writestr('xl/workbook.xml', workbook)
-        z.writestr('xl/_rels/workbook.xml.rels', wb_rels)
-        z.writestr('xl/styles.xml', styles)
-        for i, (_, headers, rows) in enumerate(clean):
-            z.writestr(f'xl/worksheets/sheet{i + 1}.xml', _sheet_xml(headers, rows))
+        for name, xml_text in parts.items():
+            z.writestr(name, xml_text)
     return buf.getvalue()
 
 
@@ -168,18 +179,47 @@ def _day_label(obj):
 
 
 def collect_school_data(school):
-    """Construit toutes les feuilles pour une école donnée."""
+    """Construit toutes les feuilles pour une école donnée.
+
+    La première feuille « École » reprend les informations saisies dans
+    Paramètres → École (nom, adresse, téléphone, email) et → Général
+    (ministère / direction de tutelle, pays, devise, année scolaire).
+    """
     from accounts.models import User
     from classes.models import Class
     from courses.models import Program, ProgramSubject, Subject
     from finance.models import Expense, StudentPayment, TuitionFee
     from grades.models import Grade
     from parents.models import Parent
+    from school_settings.models import GeneralSetting, SchoolSetting
     from students.models import Student
     from teachers.models import Teacher
     from timetable.models import Classroom, TimeSlot
+    from django.utils import timezone as dj_tz
+
+    general = GeneralSetting.load()
+    setting = SchoolSetting.load(school)
+    _pick = lambda a, b: a if a else b  # valeur onglet École d'abord
 
     sheets = []
+
+    sheets.append(('École',
+                   ['Information', 'Valeur'],
+                   [
+                       ["Nom de l'école", _pick(setting.school_name, school.name)],
+                       ['Adresse', _pick(setting.address, school.address) or ''],
+                       ['Téléphone', _pick(setting.phone, school.phone) or ''],
+                       ['Email', _pick(setting.email, school.email) or ''],
+                       ["Code école", school.code or ''],
+                       ['Ministère de tutelle', general.ministry or ''],
+                       ['Direction de tutelle', general.directorate or ''],
+                       ['Nom du directeur', general.director_name or ''],
+                       ['Pays', general.country_name or ''],
+                       ['Devise', general.motto or ''],
+                       ['Année scolaire', general.current_academic_year or ''],
+                       ['Sauvegarde générée le',
+                        dj_tz.localtime().strftime('%d/%m/%Y %H:%M')],
+                   ]))
 
     users = User.objects.filter(school=school).order_by('role', 'last_name')
     sheets.append(('Utilisateurs',
