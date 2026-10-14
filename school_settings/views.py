@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 
 from .excel_backup import build_xlsx, collect_school_data
+from .importer import IMPORT_SPECS, run_import
 from .forms import (
     BackupSettingForm,
     GeneralSettingForm,
@@ -144,7 +145,8 @@ def settings_backup(request):
     return render(
         request,
         'school_settings/settings_backup.html',
-        {'form': form, 'last_backup_date': setting.last_backup_date},
+        {'form': form, 'last_backup_date': setting.last_backup_date,
+         'import_specs': IMPORT_SPECS},
     )
 
 
@@ -180,5 +182,73 @@ def download_backup(request):
 
 
 @login_required
+def import_template(request, category):
+    """Modèle Excel vide (avec en-têtes + ligne d'exemple) à remplir."""
+    spec = IMPORT_SPECS.get(category)
+    if spec is None:
+        return redirect('school_settings:backup')
+    content = build_xlsx([(spec['label'], spec['headers'], [spec['example']])])
+    response = HttpResponse(
+        content,
+        content_type=(
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ),
+    )
+    response['Content-Disposition'] = (
+        f'attachment; filename="modele_import_{category}.xlsx"'
+    )
+    return response
+
+
+@login_required
+def import_data(request):
+    """Importe des données Excel dans le système (Élèves, Enseignants…)."""
+    school = getattr(request.user, 'school', None)
+    if school is None:
+        messages.error(request, "Aucune école rattachée à votre compte.")
+        return redirect('school_settings:backup')
+    if not (request.user.is_superuser or getattr(request.user, 'role', '') == 'ADMIN'):
+        messages.error(request, "Seule la direction peut importer des données.")
+        return redirect('school_settings:backup')
+
+    if request.method != 'POST':
+        return redirect('school_settings:backup')
+
+    category = request.POST.get('category', '')
+    if category not in IMPORT_SPECS:
+        messages.error(request, "Type de données inconnu.")
+        return redirect('school_settings:backup')
+
+    upload = request.FILES.get('file')
+    if upload is None:
+        messages.error(request, "Choisissez un fichier Excel (.xlsx) à importer.")
+        return redirect('school_settings:backup')
+    if not upload.name.lower().endswith('.xlsx'):
+        messages.error(
+            request, "Format non supporté : enregistrez le fichier au format .xlsx."
+        )
+        return redirect('school_settings:backup')
+
+    result = run_import(school, category, upload.read())
+    label = IMPORT_SPECS[category]['label']
+    if result['total']:
+        messages.success(
+            request,
+            f"Import {label} : {result['created']} créé(s), {result['updated']} mis à jour."
+        )
+    if result['errors']:
+        for err in result['errors'][:8]:
+            messages.warning(request, err)
+        if len(result['errors']) > 8:
+            messages.warning(request, f"… et {len(result['errors']) - 8} autre(s) erreur(s).")
+    if not result['total'] and not result['errors']:
+        messages.warning(request, "Aucune donnée à importer (feuille vide).")
+    return redirect('school_settings:backup')
+
+
+@login_required
 def settings_security(request):
+
+
+
     return render(request, 'school_settings/settings_security.html')

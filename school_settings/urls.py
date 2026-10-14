@@ -14,4 +14,6 @@ urlpatterns = [
     path('security/', views.settings_security, name='security'),
 
     path('backup/download/', views.download_backup, name='download_backup'),
+    path('import/', views.import_data, name='import_data'),
+    path('import/template/<str:category>/', views.import_template, name='import_template'),
 ]

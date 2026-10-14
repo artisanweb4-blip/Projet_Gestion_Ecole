@@ -9,14 +9,14 @@
         @page { size: A4 landscape; margin: 1cm; }
         body { font-family: Helvetica, Arial, sans-serif; font-size: 9pt; color: #1e293b; }
         .header { width: 100%; margin-bottom: 4px; }
-        .school-name { font-size: 15pt; font-weight: bold; color: #065f46; }
-        .tutelle { font-size: 8.5pt; color: #0f172a; }
-        .infos { font-size: 8pt; color: #475569; }
+        .school-name { font-size: 18pt; font-weight: bold; color: #065f46; }
+        .tutelle { font-size: 10.5pt; color: #0f172a; line-height: 1.5; }
+        .infos { font-size: 9.5pt; color: #475569; line-height: 1.5; }
         .title-box {
             width: 100%; background: #059669; color: #ffffff;
             padding: 5px 8px; text-align: center; margin: 6px 0;
         }
-        .title-box .t { font-size: 12.5pt; font-weight: bold; }
+        .title-box .t { font-size: 14pt; font-weight: bold; }
         .subtitle { font-size: 9pt; }
         table.grid { width: 100%; border-collapse: collapse; margin-top: 8px; }
         table.grid th, table.grid td {
@@ -41,8 +41,7 @@
                 {% if general.directorate %}{{ general.directorate|upper }}{% endif %}
             </td>
             <td style="width: 36%; text-align: center; vertical-align: top;">
-                {% if logo_path %}<img src="{{ logo_path }}" width="54" height="54" style="vertical-align: middle;" /><br>{% endif %}
-                <span style="font-size: 13pt; color: #059669;"><b>GCE</b></span><br>
+                {% if logo_path %}<img src="{{ logo_path }}" width="62" height="62" style="vertical-align: middle;" /><br>{% endif %}
                 <span class="school-name">{{ school_name|default:"École" }}</span>
             </td>
             <td class="infos" style="width: 32%; text-align: right; vertical-align: top;">
@@ -59,7 +58,7 @@
         <span class="t">EMPLOI DU TEMPS — {{ classroom.name }}</span><br>
         <span class="subtitle">
             {% if program %}Programme : {{ program.name }} · {% endif %}
-            Niveau : {{ classroom.get_level_display }} · Année académique 2026-2027
+            Niveau : {{ classroom.get_level_display }} · Année scolaire : {{ general.current_academic_year|default:"—" }}
         </span>
     </div>
 
@@ -97,9 +96,21 @@
         </tr>
     </table>
 
-    <div class="footer">
-        Document généré par {{ school_name|default:"l'école" }} le {{ now|date:"d/m/Y à H:i" }} — Gestion d'École
-    </div>
+    <table class="foot" style="width: 100%; margin-top: 12px; border-top: 0.8pt solid #94a3b8; padding-top: 5px;">
+        <tr>
+            <td style="text-align: center; font-size: 8.5pt; color: #475569;">
+                {% if school_email %}<b>Email :</b> {{ school_email }}{% endif %}
+                {% if school_phone %} · <b>N° :</b> {{ school_phone }}{% endif %}
+                {% if general.country_name %} · <b>Pays :</b> {{ general.country_name }}{% endif %}
+                {% if general.motto %} · <b>Devise :</b> « {{ general.motto }} »{% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align: center; font-size: 7.5pt; color: #94a3b8; padding-top: 3px;">
+                Document généré par {{ school_name|default:"l'école" }} le {{ now|date:"d/m/Y à H:i" }}
+            </td>
+        </tr>
+    </table>
 
 </body>
 </html>

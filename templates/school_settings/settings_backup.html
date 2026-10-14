@@ -64,6 +64,38 @@
     </form>
 </div>
 
+<!-- IMPORT DE DONNÉES -->
+<div class="settings-card" style="margin-top: 16px;">
+    <h2 class="card-section-title"><i class="fa-solid fa-file-import" style="color:#10B981; margin-right:6px;"></i>Importer des données</h2>
+    <p style="font-size: 13px; color: #64748B; margin: 0 0 14px 0;">
+        Téléchargez un modèle, remplissez-le dans Excel (ou complétez votre sauvegarde), puis importez-le.
+        Les lignes existantes sont <b>mises à jour</b>, les nouvelles <b>créées</b> — aucun doublon.
+    </p>
+    <form method="post" action="{% url 'school_settings:import_data' %}" enctype="multipart/form-data" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        {% csrf_token %}
+        <select name="category" required style="padding: 9px 12px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 13px; min-width: 190px;">
+            <option value="">— Type de données —</option>
+            {% for key, spec in import_specs.items %}
+            <option value="{{ key }}">{{ spec.label }}</option>
+            {% endfor %}
+        </select>
+        <input type="file" name="file" accept=".xlsx" required style="font-size: 13px;">
+        <button type="submit" class="btn btn-success" style="background: #10B981; border: none; border-radius: 6px; padding: 9px 18px; font-weight: 600; color: white; cursor: pointer;">
+            <i class="fa-solid fa-upload" style="margin-right: 6px;"></i>Importer
+        </button>
+    </form>
+    <div style="margin-top: 14px; font-size: 12.5px; color: #64748B;">
+        <b style="color:#334155;">Modèles à télécharger :</b>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+            {% for key, spec in import_specs.items %}
+            <a href="{% url 'school_settings:import_template' key %}" hx-boost="false" style="border: 1px solid #E2E8F0; border-radius: 6px; padding: 5px 10px; text-decoration: none; color: #065F46; background: #F8FAFC;">
+                <i class="fa-solid fa-file-excel" style="color:#10B981;"></i> {{ spec.label }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
 <style>
     /* Structure onglets et cartes */
     .settings-tabs-container {
