@@ -115,33 +115,43 @@ def timetable_view(request):
 
 def ajax_get_subjects_by_class(request):
     """Matières de la classe choisie (= programme de la classe), avec
-    l'enseignant conseillé. Utilisé par la modale « Ajouter un cours »."""
+    l'enseignant conseillé et le NOM du programme (affiché dans la modale).
+    Les matières sont résolues via ProgramSubject (scopé par l'école du
+    programme) : robuste même si une vieille ligne a school=NULL.
+    Utilisé par la modale « Ajouter un cours »."""
     class_id = request.GET.get('class_id')
     subjects_data = []
+    program_name = None
+    program_id = None
 
     if class_id and class_id.isdigit():
+        # Class.objects est scopé par école : impossible de voir une autre école
         classroom = Class.objects.filter(pk=int(class_id)).first()
-        if classroom and request.user.school_id and classroom.school_id != request.user.school_id:
-            classroom = None
         if classroom:
-            subjects = Subject.objects.none()
             if classroom.program_id:
-                subjects = Subject.objects.filter(
-                    subject_programs__program=classroom.program
-                ).distinct()
-            for sub in subjects:
-                link = ProgramSubject.objects.filter(
-                    program_id=classroom.program_id, subject=sub
-                ).select_related('teacher').first()
-                teacher = link.teacher if link else None
-                subjects_data.append({
-                    'id': sub.id,
-                    'name': sub.name,
-                    'code': getattr(sub, 'code', ''),
-                    'teacher_id': teacher.id if teacher else None,
-                })
+                program_name = classroom.program.name
+                program_id = classroom.program_id
+                links = (
+                    ProgramSubject.objects.filter(program_id=classroom.program_id)
+                    .select_related('subject', 'teacher')
+                    .order_by('subject__name')
+                )
+                for link in links:
+                    teacher = link.teacher
+                    subjects_data.append({
+                        'id': link.subject_id,
+                        'name': link.subject.name,
+                        'code': getattr(link.subject, 'code', '') or '',
+                        'teacher_id': teacher.id if teacher else None,
+                    })
+            else:
+                program_name = ''
 
-    return JsonResponse({'subjects': subjects_data})
+    return JsonResponse({
+        'subjects': subjects_data,
+        'program': program_name,
+        'program_id': program_id,
+    })
 
 
 @require_POST

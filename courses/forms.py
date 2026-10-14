@@ -53,9 +53,16 @@ class ProgramSubjectForm(forms.ModelForm):
         cleaned_data = super().clean()
         subject_name = cleaned_data.get('subject_name')
         
-        # Crée ou récupère l'objet Subject à la validation
+        # Crée ou récupère l'objet Subject à la validation.
+        # IMPORTANT : rattache la matière à l'école courante — sans cela la
+        # matière était créée sans école (school=NULL) et devenait invisible
+        # du filtre automatique par école (emploi du temps, notes, etc.).
         if subject_name:
-            subject_obj, _ = Subject.objects.get_or_create(name=subject_name.strip())
+            from core.scoping import get_current_school
+            subject_obj, _ = Subject.objects.get_or_create(
+                name=subject_name.strip(),
+                defaults={'school': get_current_school()},
+            )
             cleaned_data['subject'] = subject_obj
             self.cleaned_data['subject'] = subject_obj
             self.instance.subject = subject_obj

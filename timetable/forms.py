@@ -1,6 +1,6 @@
 from django import forms
 from classes.models import Class
-from courses.models import Subject
+from courses.models import ProgramSubject, Subject
 from teachers.models import Teacher
 from .models import TimeSlot, Classroom
 
@@ -43,11 +43,18 @@ class TimeSlotForm(forms.ModelForm):
             if posted and str(posted).isdigit():
                 selected_class = classes_qs.filter(pk=int(posted)).first()
 
-        # 2. Matières = programme de la classe choisie UNIQUEMENT
+        # 2. Matières = programme de la classe choisie UNIQUEMENT.
+        # Résolution via ProgramSubject (scopé par l'école du programme),
+        # robuste même si une vieille ligne Subject a school=NULL.
         if selected_class and selected_class.program_id:
-            self.fields['subject'].queryset = Subject.objects.filter(
-                subject_programs__program=selected_class.program
-            ).distinct()
+            subject_ids = list(
+                ProgramSubject.objects.filter(
+                    program_id=selected_class.program_id
+                ).values_list('subject_id', flat=True)
+            )
+            self.fields['subject'].queryset = Subject._base_manager.filter(
+                pk__in=subject_ids
+            ).order_by('name')
             self.fields['subject'].empty_label = '— Choisir une matière —'
         elif selected_class is not None:
             self.fields['subject'].queryset = Subject.objects.none()

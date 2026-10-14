@@ -16,6 +16,7 @@ from django.views.generic import (
 
 from classes.models import Class as SchoolClass
 from core.mixins import HtmxCrudMixin
+from core.scoping import assign_school
 from .forms import ProgramForm, ProgramSubjectFormSet, SubjectForm
 from .models import Program, ProgramSubject, Subject
 
@@ -162,6 +163,8 @@ class ProgramCreateView(HtmxCrudMixin, CreateView):
         context = self.get_context_data()
         formset = context['formset']
         if formset.is_valid():
+            # Isolation multi-écoles : rattache le programme AVANT la sauvegarde
+            assign_school(form.instance, self.request.user)
             self.object = form.save()
             formset.instance = self.object
             formset.save()
@@ -202,6 +205,8 @@ class ProgramUpdateView(HtmxCrudMixin, UpdateView):
         context = self.get_context_data()
         formset = context['formset']
         if formset.is_valid():
+            # Isolation multi-écoles (no-op si l'école est déjà renseignée)
+            assign_school(form.instance, self.request.user)
             self.object = form.save()
             formset.instance = self.object
             formset.save()
