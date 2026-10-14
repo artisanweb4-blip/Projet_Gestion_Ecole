@@ -10,7 +10,8 @@
         body { font-family: Helvetica, Arial, sans-serif; font-size: 9pt; color: #1e293b; }
         .header { width: 100%; margin-bottom: 4px; }
         .school-name { font-size: 15pt; font-weight: bold; color: #065f46; }
-        .school-info { font-size: 8pt; color: #475569; }
+        .tutelle { font-size: 8.5pt; color: #0f172a; }
+        .infos { font-size: 8pt; color: #475569; }
         .title-box {
             width: 100%; background: #059669; color: #ffffff;
             padding: 5px 8px; text-align: center; margin: 6px 0;
@@ -35,14 +36,20 @@
 
     <table class="header">
         <tr>
-            <td style="width: 10%; text-align: center; font-size: 15pt; color: #059669;"><b>GCE</b></td>
-            <td style="vertical-align: middle;">
-                <span class="school-name">{{ school.name|default:"École" }}</span><br>
-                <span class="school-info">
-                    {% if school.address %}{{ school.address }}{% endif %}
-                    {% if school.phone %} · Tél : {{ school.phone }}{% endif %}
-                    {% if school.email %} · {{ school.email }}{% endif %}
-                </span>
+            <td class="tutelle" style="width: 32%; vertical-align: top;">
+                {% if general.ministry %}<b>{{ general.ministry|upper }}</b><br>{% endif %}
+                {% if general.directorate %}{{ general.directorate|upper }}{% endif %}
+            </td>
+            <td style="width: 36%; text-align: center; vertical-align: top;">
+                <span style="font-size: 13pt; color: #059669;"><b>GCE</b></span><br>
+                <span class="school-name">{{ school.name|default:"École" }}</span>
+            </td>
+            <td class="infos" style="width: 32%; text-align: right; vertical-align: top;">
+                {% if school.address %}{{ school.address }}<br>{% endif %}
+                {% if school.email %}{{ school.email }}<br>{% endif %}
+                {% if school.phone %}<b>N° :</b> {{ school.phone }}<br>{% endif %}
+                {% if general.country_name %}<b>Pays :</b> {{ general.country_name }}<br>{% endif %}
+                {% if general.motto %}<b>Devise :</b> « {{ general.motto }} »{% endif %}
             </td>
         </tr>
     </table>

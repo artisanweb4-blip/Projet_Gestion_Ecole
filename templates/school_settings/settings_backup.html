@@ -49,18 +49,18 @@
         <!-- Dernière Sauvegarde -->
         <div class="download-group">
             <div class="download-info">
-                <span class="download-label">Dernière sauvegarde</span>
-                <span class="download-description">{{ last_backup_date|default:"Aujourd'hui à 03:00" }}</span>
+                <span class="download-label">Dernière sauvegarde Excel</span>
+                <span class="download-description">{{ last_backup_date|date:"d/m/Y à H:i"|default:"Jamais" }}</span>
             </div>
             <a href="{% url 'school_settings:download_backup' %}" hx-boost="false" class="btn-download">
-                Télécharger
+                <i class="fa-solid fa-file-excel"></i> Télécharger Excel (.xlsx)
             </a>
         </div>
 
         <!-- Bouton Créer une Sauvegarde -->
-        <button type="submit" name="action" value="create_backup" class="btn-create-backup">
-            <i class="fa-solid fa-database"></i> Créer une sauvegarde maintenant
-        </button>
+        <a href="{% url 'school_settings:download_backup' %}" hx-boost="false" class="btn-create-backup" style="text-decoration: none; text-align: center;">
+            <i class="fa-solid fa-database"></i> Sauvegarder toutes les données maintenant (Excel)
+        </a>
     </form>
 </div>
 

@@ -15,6 +15,7 @@ from .models import TimeSlot, Classroom
 # Modèles externes
 from classes.models import Class
 from courses.models import Program, ProgramSubject, Subject
+from school_settings.models import GeneralSetting
 from teachers.models import Teacher
 
 # Formulaires
@@ -195,6 +196,8 @@ def timetable_export_pdf(request):
         'days': DAYS,
         'grid': grid,
         'now': timezone.localtime(),
+        # En-tête officiel : ministère / direction de tutelle, pays, devise
+        'general': GeneralSetting.load(),
     }
     html = render_to_string('timetable/timetable_pdf.html', context)
     result = BytesIO()

@@ -4,12 +4,15 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.utils.html import format_html
 
+from .excel_backup import build_xlsx, collect_school_data
 from .forms import (
     BackupSettingForm,
     GeneralSettingForm,
     NotificationSettingForm,
     SchoolSettingForm,
+    UserCreateForm,
 )
 from .models import (
     BackupSetting,
@@ -77,23 +80,47 @@ def settings_notifications(request):
     )
 
 
+def _can_manage_users(user):
+    """Seuls la direction et le superadmin gèrent les utilisateurs."""
+    return user.is_superuser or getattr(user, 'role', '') == 'ADMIN'
+
+
 @login_required
 def settings_users(request):
-    admin_count = User.objects.filter(is_superuser=True).count() or 2
-    teacher_count = (
-        User.objects.filter(groups__name='Enseignants').count() or 15
-    )
-    parent_count = User.objects.filter(groups__name='Parents').count() or 120
-    accountant_count = (
-        User.objects.filter(groups__name='Comptables').count() or 1
-    )
+    """Onglet Utilisateurs : liste réelle de l'école + création."""
+    school = getattr(request.user, 'school', None)
+    users = User.objects.filter(school=school).order_by('role', 'last_name') if school else User.objects.none()
 
-    context = {
-        'admin_count': admin_count,
-        'teacher_count': teacher_count,
-        'parent_count': parent_count,
-        'accountant_count': accountant_count,
+    counts = {
+        'admin_count': users.filter(role='ADMIN').count(),
+        'teacher_count': users.filter(role='TEACHER').count(),
+        'parent_count': users.filter(role='PARENT').count(),
+        'accountant_count': users.filter(role='COMPTABLE').count(),
     }
+
+    can_manage = _can_manage_users(request.user)
+    form = UserCreateForm()
+    if request.method == 'POST' and request.POST.get('add_user'):
+        if not can_manage:
+            messages.error(request, "Seule la direction peut créer des utilisateurs.")
+            return redirect('school_settings:users')
+        form = UserCreateForm(request.POST)
+        if form.is_valid():
+            user = form.save(school=school)
+            messages.success(
+                request,
+                "Utilisateur {} créé. Identifiant de connexion : {}".format(
+                    user.get_full_name() or user.email, user.email
+                ),
+            )
+            return redirect('school_settings:users')
+
+    context = dict(counts)
+    context.update({
+        'users_list': users,
+        'form': form,
+        'can_manage': can_manage,
+    })
     return render(request, 'school_settings/settings_users.html', context)
 
 
@@ -123,11 +150,31 @@ def settings_backup(request):
 
 @login_required
 def download_backup(request):
+    """Télécharge TOUTES les données de l'école dans un classeur Excel."""
+    school = getattr(request.user, 'school', None)
+    if school is None:
+        messages.error(
+            request, "Aucune école rattachée à votre compte : sauvegarde impossible."
+        )
+        return redirect('school_settings:backup')
+
+    sheets = collect_school_data(school)
+    content = build_xlsx(sheets)
+
+    setting = BackupSetting.load()
+    setting.last_backup_date = timezone.now()
+    setting.save()
+
+    stamp = timezone.localtime().strftime('%Y-%m-%d_%Hh%M')
+    code = (school.code or 'ecole').replace('/', '-')
     response = HttpResponse(
-        "Fichier SQL/JSON de sauvegarde", content_type="text/plain"
+        content,
+        content_type=(
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ),
     )
     response['Content-Disposition'] = (
-        'attachment; filename="sauvegarde_ecole.sql"'
+        f'attachment; filename="sauvegarde_{code}_{stamp}.xlsx"'
     )
     return response
 
