@@ -212,3 +212,35 @@ class PlatformSettingsForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['default_plan'].queryset = SubscriptionPlan.objects.order_by('price')
         self.fields['default_plan'].empty_label = "— Aucun —"
+
+
+from .models import ContactMessage  # noqa: E402
+
+
+class ContactMessageForm(forms.ModelForm):
+    """Formulaire « Envoyez-nous un message » de la page d'accueil."""
+
+    class Meta:
+        model = ContactMessage
+        fields = ['name', 'email', 'phone', 'subject', 'message']
+
+    name = forms.CharField(
+        label="Nom complet",
+        widget=forms.TextInput(attrs={'placeholder': 'Ex : Mamadou TRAORE'}),
+    )
+    email = forms.EmailField(
+        label="Adresse Email",
+        widget=forms.EmailInput(attrs={'placeholder': 'nom@exemple.com'}),
+    )
+    phone = forms.CharField(
+        label="Téléphone", required=False,
+        widget=forms.TextInput(attrs={'placeholder': '+223 ...'}),
+    )
+    subject = forms.ChoiceField(
+        label="Sujet",
+        choices=ContactMessage.SUBJECTS,
+    )
+    message = forms.CharField(
+        label="Message",
+        widget=forms.Textarea(attrs={'placeholder': 'Comment pouvons-nous vous aider ?', 'rows': 5}),
+    )

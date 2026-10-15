@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'assignments',     # Devoirs (API)
     'exams',           # Examens (API)
     'analytics',       # Analytique (visites de la plateforme)
+    'website',         # Site public (landing, inscription école, contact)
 ]
 
 MIDDLEWARE = [

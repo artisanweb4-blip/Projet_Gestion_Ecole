@@ -17,7 +17,17 @@ from .forms import SchoolRegistrationForm
 
 
 def landing(request):
-    """Page d'accueil publique de la plateforme."""
+    """Page d'accueil publique de la plateforme (avec formulaire de contact)."""
+    if request.method == 'POST':
+        from .forms import ContactMessageForm
+        form = ContactMessageForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/?sent=1#contact')
+    else:
+        from .forms import ContactMessageForm
+        form = ContactMessageForm()
+
     if request.user.is_authenticated:
         return redirect('dashboard')
 
@@ -41,6 +51,8 @@ def landing(request):
         'nb_teachers': Teacher.objects.filter(is_active=True).count(),
         'nb_classes': Class.objects.count(),
         'footer_school': footer_school,
+        'form': form,
+        'contact_sent': request.GET.get('sent') == '1',
     }
     return render(request, 'website/landing.html', context)
 
