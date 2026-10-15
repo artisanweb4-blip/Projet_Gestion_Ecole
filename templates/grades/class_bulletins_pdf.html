@@ -5,99 +5,119 @@
     <meta charset="UTF-8">
     <title>Bulletins — {{ classroom.name }} — {{ period.name }}</title>
     <style>
-        /* A5 PORTRAIT — un bulletin par page, design « aperçu web » */
+        /* A5 PORTRAIT — mise en page professionnelle, colonnes calibrées */
         @page {
             size: A5 portrait;
             margin: 0.8cm 0.8cm 0.8cm 0.8cm;
         }
         body { font-family: Helvetica, Arial, sans-serif; font-size: 8.5pt; color: #1e293b; }
 
-        .header-table { width: 100%; margin-bottom: 3px; }
-        .school-name { font-size: 12.5pt; font-weight: bold; color: #1d3557; }
-        .school-meta { font-size: 7pt; color: #64748b; }
-        .bulletin-title { text-align: right; font-size: 12pt; font-weight: bold; color: #e63946; }
-        .bulletin-sub { text-align: right; font-size: 8.5pt; font-weight: bold; color: #457b9d; }
-        .rule { border-bottom: 2px solid #1d3557; margin: 5px 0 11px 0; }
+        .header-table { width: 100%; margin-bottom: 2px; }
+        .school-name { font-size: 13pt; font-weight: bold; color: #1d3557; line-height: 1.25; }
+        .school-meta { font-size: 6.8pt; color: #64748b; margin-top: 2px; }
+        .doc-title {
+            text-align: right; font-size: 11.5pt; font-weight: bold;
+            color: #e63946; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .doc-sub { text-align: right; font-size: 8pt; font-weight: bold; color: #457b9d; margin-top: 3px; }
+
+        .rule { border-bottom: 2pt solid #1d3557; margin: 4px 0 10px 0; }
+
         .info-box {
-            background-color: #f8f9fa; border-left: 3pt solid #1d3557;
-            padding: 6px 10px; margin-bottom: 12px; font-size: 8pt;
+            background-color: #f8f9fa;
+            border-left: 3pt solid #1d3557;
+            padding: 6px 9px;
+            margin-bottom: 11px;
+            font-size: 8pt;
         }
 
         table.notes { width: 100%; border-collapse: collapse; font-size: 8pt; }
         table.notes th {
-            background-color: #1d3557; color: #ffffff; padding: 5px 4px;
-            font-size: 7pt; text-transform: uppercase; text-align: center;
+            background-color: #1d3557; color: #ffffff;
+            padding: 5px 3px; font-size: 7.5pt; font-weight: bold;
+            text-align: center;
         }
-        table.notes th.left { text-align: left; }
-        table.notes td { border: 0.5pt solid #cbd5e1; padding: 5px 6px; }
+        table.notes th.left { text-align: left; padding-left: 6px; }
+        table.notes td { border: 0.5pt solid #cbd5e1; padding: 5px 5px; }
         .center { text-align: center; }
-        .subj { width: 26%; } .coef { width: 13%; } .moy { width: 16%; }
-        .pts { width: 17%; } .appr { width: 28%; }
-        .pill-ok  { background-color: #d1fae5; color: #065f46; padding: 1px 6px; font-weight: bold; }
-        .pill-mid { background-color: #fef3c7; color: #92400e; padding: 1px 6px; font-weight: bold; }
-        .pill-low { background-color: #fee2e2; color: #b91c1c; padding: 1px 6px; font-weight: bold; }
-        .total-row { background-color: #e9ecef; font-weight: bold; }
-        .grand-row { background-color: #1d3557; color: #ffffff; font-weight: bold; font-size: 9.5pt; }
+        .subj { width: 30%; }
+        .coef { width: 12%; }
+        .moy  { width: 14%; }
+        .pts  { width: 14%; }
+        .appr { width: 30%; font-size: 7.8pt; }
 
-        table.summary { width: 100%; margin-top: 14px; border-collapse: collapse; }
+        .grade-hi { color: #059669; font-weight: bold; }
+        .grade-md { color: #b45309; font-weight: bold; }
+        .grade-lo { color: #b91c1c; font-weight: bold; }
+
+        .total-row { background-color: #e9ecef; font-weight: bold; }
+        .grand-row { background-color: #1d3557; color: #ffffff; font-weight: bold; font-size: 9pt; }
+
+        .table-note { font-size: 6.3pt; color: #94a3b8; margin-top: 3px; }
+
+        table.summary { width: 100%; margin-top: 12px; border-collapse: collapse; }
         table.summary td {
             border: 0.5pt solid #cbd5e1; background-color: #f8f9fa;
-            padding: 8px 4px; text-align: center;
+            padding: 7px 3px; text-align: center;
         }
-        .sum-label { font-size: 6pt; font-weight: bold; text-transform: uppercase; color: #64748b; }
-        .sum-value { font-size: 11pt; font-weight: bold; color: #1d3557; }
+        .sum-label { font-size: 6.2pt; font-weight: bold; text-transform: uppercase; color: #64748b; }
+        .sum-value { font-size: 11pt; font-weight: bold; color: #1d3557; margin-top: 2px; }
         .sum-value.green { color: #059669; }
 
-        .signatures { width: 100%; margin-top: 30px; font-size: 8pt; color: #334155; }
-        .sign-line { border-top: 0.5pt solid #64748b; margin-top: 36px; width: 150px; }
-        .footer-note { margin-top: 16px; text-align: center; font-size: 6.5pt; color: #94a3b8; }
+        .signatures { width: 100%; margin-top: 34px; font-size: 7.8pt; color: #334155; }
+        .sign-cell { text-align: center; }
+        .sign-line { border-top: 0.5pt solid #475569; margin-top: 40px; width: 160px; }
+        .sign-label { font-size: 6.5pt; color: #64748b; margin-top: 2px; }
+
+        .footer-note { margin-top: 14px; text-align: center; font-size: 6.3pt; color: #94a3b8; }
     </style>
 </head>
 <body>
     {% for bulletin in bulletins %}
     <table class="header-table">
         <tr>
-            <td style="vertical-align: top;">
+            <td style="width: 55%; vertical-align: top;">
                 <div class="school-name">{{ school_name|default:"Gestion d'École" }}</div>
                 <div class="school-meta">
                     {{ school_address|default:"—" }}{% if school_phone %} · Tél : {{ school_phone }}{% endif %}
                 </div>
             </td>
-            <td style="vertical-align: top;">
-                <div class="bulletin-title">Bulletin de notes</div>
-                <div class="bulletin-sub">{{ period.name }} — Année {{ period.academic_year.name }}</div>
+            <td style="width: 45%; vertical-align: top;">
+                <div class="doc-title">Bulletin de notes</div>
+                <div class="doc-sub">{{ period.name }} — Année scolaire {{ period.academic_year.name }}</div>
             </td>
         </tr>
     </table>
     <div class="rule"></div>
 
     <div class="info-box">
-        <b>Élève :</b> {{ bulletin.student.last_name }} {{ bulletin.student.first_name }} &nbsp;&nbsp;
-        <b>Matricule :</b> {{ bulletin.student.student_id }} &nbsp;&nbsp;
-        <b>Classe :</b> {{ classroom.name }}
+        <b>Élève :</b> {{ bulletin.student.last_name }} {{ bulletin.student.first_name }} &nbsp;&nbsp;·&nbsp;&nbsp;
+        <b>Matricule :</b> {{ bulletin.student.student_id }} &nbsp;&nbsp;·&nbsp;&nbsp;
+        <b>Classe :</b> {{ classroom.name }} &nbsp;&nbsp;·&nbsp;&nbsp;
+        <b>Rang :</b> {% if bulletin.rank %}{{ bulletin.rank }}/{{ bulletins|length }}{% else %}—{% endif %}
     </div>
 
     <table class="notes">
         <tr>
             <th class="left subj">Matière</th>
-            <th class="coef">Coefficient</th>
-            <th class="moy">Moyenne / 20</th>
-            <th class="pts">Points (Moy × Coef)</th>
+            <th class="coef">Coef.</th>
+            <th class="moy">Moy. / 20</th>
+            <th class="pts">Points</th>
             <th class="appr">Appréciation</th>
         </tr>
-        {% for row in bulletin.rows %}
+        {% for bulletin_row in bulletin.rows %}
         <tr>
-            <td><b>{{ row.subject.name }}</b></td>
-            <td class="center">{{ row.coefficient }}</td>
+            <td><b>{{ bulletin_row.subject.name }}</b></td>
+            <td class="center">{{ bulletin_row.coefficient }}</td>
             <td class="center">
                 {% if row.average is not None %}
-                    {% if row.average >= 14 %}<span class="pill-ok">{{ row.average }}</span>
-                    {% elif row.average >= 10 %}<span class="pill-mid">{{ row.average }}</span>
-                    {% else %}<span class="pill-low">{{ row.average }}</span>{% endif %}
+                    {% if row.average >= 14 %}<span class="grade-hi">{{ bulletin_row.average }}</span>
+                    {% elif row.average >= 10 %}<span class="grade-md">{{ bulletin_row.average }}</span>
+                    {% else %}<span class="grade-lo">{{ bulletin_row.average }}</span>{% endif %}
                 {% else %}—{% endif %}
             </td>
-            <td class="center">{% if row.points is not None %}{{ row.points }}{% else %}—{% endif %}</td>
-            <td>{{ row.appreciation|default:"—" }}</td>
+            <td class="center">{% if row.points is not None %}{{ bulletin_row.points }}{% else %}—{% endif %}</td>
+            <td class="appr">{{ row.appreciation|default:"—" }}</td>
         </tr>
         {% endfor %}
         <tr class="total-row">
@@ -109,16 +129,17 @@
         </tr>
         <tr class="grand-row">
             <td colspan="2">MOYENNE GÉNÉRALE</td>
-            <td class="center">{% if bulletin.general_average is not None %}{{ bulletin.general_average }} / 20{% else %}N/A{% endif %}</td>
+            <td class="center">{% if general_average is not None %}{{ bulletin.general_average }} / 20{% else %}N/A{% endif %}</td>
             <td colspan="2" class="center">{{ bulletin.mention|default:"—" }}</td>
         </tr>
     </table>
+    <div class="table-note">Notes sur 20 · Points = Moyenne × Coefficient</div>
 
     <table class="summary">
         <tr>
             <td style="width: 25%;">
                 <div class="sum-label">Moyenne générale</div>
-                <div class="sum-value green">{% if bulletin.general_average is not None %}{{ bulletin.general_average }}{% else %}—{% endif %}</div>
+                <div class="sum-value green">{% if general_average is not None %}{{ bulletin.general_average }}{% else %}—{% endif %}</div>
             </td>
             <td style="width: 25%;">
                 <div class="sum-label">Rang</div>
@@ -137,13 +158,15 @@
 
     <table class="signatures">
         <tr>
-            <td>
+            <td class="sign-cell">
                 Signature du Chef d'établissement
                 <div class="sign-line"></div>
+                <div class="sign-label">Nom et signature</div>
             </td>
-            <td>
+            <td class="sign-cell">
                 Signature du Parent / Tuteur
                 <div class="sign-line"></div>
+                <div class="sign-label">Nom et signature</div>
             </td>
         </tr>
     </table>
