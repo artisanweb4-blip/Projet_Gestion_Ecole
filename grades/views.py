@@ -2,7 +2,7 @@
 Vues du module Notes & Bulletins :
 - Liste des évaluations + import Excel
 - Saisie des notes par classe / matière (grille)
-- Bulletins (moyennes, coefficients, rangs) + exports PDF & Excel
+- Bulletins (moyennes, coefficients, rangs) + export Excel (élève et classe)
 """
 import os
 from io import BytesIO
@@ -488,7 +488,7 @@ def bulletin_select(request):
 
     class_id = request.GET.get('classroom')
     if class_id and period_id:
-        return redirect('grades:export_class_bulletins_pdf',
+        return redirect('grades:export_class_bulletins_excel',
                         classroom_id=class_id, period_id=period_id)
 
     return render(request, 'grades/bulletin_select.html', {
@@ -539,32 +539,9 @@ def student_report_card(request, student_id, period_id):
     return render(request, 'grades/student_report_card.html', context)
 
 
-@login_required
-def export_bulletin_excel(request, student_id, period_id):
-    """Export Excel du bulletin d'un élève."""
-    student = get_object_or_404(
-        Student.objects.select_related('class_group', 'class_group__program'),
-        pk=student_id,
-    )
-    period = get_object_or_404(Period.objects.select_related('academic_year'), pk=period_id)
-
-    rows = subject_breakdown(student, period)
-    general_avg = general_average(rows)
-    total_coef = sum(r['coefficient'] for r in rows)
-
-    rank = class_avg = None
-    total_ranked = 0
-    if student.class_group:
-        results, ranks, class_avg = class_ranking(student.class_group, period)
-        rank = ranks.get(student.id)
-        total_ranked = sum(1 for r in results if r['rank'] is not None)
-
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Bulletin"
-
-    school_setting = _school()
-    ctx = _bulletin_header_context(school_setting)
+def _fill_bulletin_sheet(ws, student, period, rows, general_avg, total_coef,
+                         rank, total_ranked, class_avg, ctx):
+    """Remplit UNE feuille bulletin (design aperçu) — partagé élève / classe."""
 
     # --- Palette du design « aperçu » ---
     BLUE = '1D3557'; RED = 'E63946'; SUBBLUE = '457B9D'
@@ -761,6 +738,37 @@ def export_bulletin_excel(request, student_id, period_id):
     ws.page_margins = PageMargins(left=0.35, right=0.35, top=0.45, bottom=0.45)
     ws.print_area = f'A1:E{current_row}'
 
+
+@login_required
+def export_bulletin_excel(request, student_id, period_id):
+    """Export Excel du bulletin d'un élève."""
+    student = get_object_or_404(
+        Student.objects.select_related('class_group', 'class_group__program'),
+        pk=student_id,
+    )
+    period = get_object_or_404(Period.objects.select_related('academic_year'), pk=period_id)
+
+    rows = subject_breakdown(student, period)
+    general_avg = general_average(rows)
+    total_coef = sum(r['coefficient'] for r in rows)
+
+    rank = class_avg = None
+    total_ranked = 0
+    if student.class_group:
+        results, ranks, class_avg = class_ranking(student.class_group, period)
+        rank = ranks.get(student.id)
+        total_ranked = sum(1 for r in results if r['rank'] is not None)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Bulletin"
+
+    school_setting = _school()
+    ctx = _bulletin_header_context(school_setting)
+
+    _fill_bulletin_sheet(ws, student, period, rows, general_avg, total_coef,
+                         rank, total_ranked, class_avg, ctx)
+
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
@@ -773,74 +781,43 @@ def export_bulletin_excel(request, student_id, period_id):
 
 
 @login_required
-def export_bulletin_pdf(request, student_id, period_id):
-    """Export PDF du bulletin d'un élève (xhtml2pdf)."""
-    student = get_object_or_404(
-        Student.objects.select_related('class_group', 'class_group__program'),
-        pk=student_id,
-    )
-    period = get_object_or_404(Period.objects.select_related('academic_year'), pk=period_id)
-
-    rows = subject_breakdown(student, period)
-    general_avg = general_average(rows)
-
-    rank = total_ranked = class_avg = None
-    if student.class_group:
-        results, ranks, class_avg = class_ranking(student.class_group, period)
-        rank = ranks.get(student.id)
-        total_ranked = sum(1 for r in results if r['rank'] is not None)
-
-    school_setting = _school()
-    context = {
-        'school': school_setting,
-        'student': student,
-        'period': period,
-        'rows': rows,
-        'general_average': general_avg,
-        'mention': mention_for(general_avg),
-        'rank': rank,
-        'total_ranked': total_ranked,
-        'class_average': class_avg,
-        'total_coef': sum(r['coefficient'] for r in rows),
-        'total_points': round(sum(r['points'] for r in rows if r['points']), 2),
-    }
-    context.update(_bulletin_header_context(school_setting))
-    filename = f"Bulletin_{student.student_id}_{period.name}.pdf"
-    return _render_pdf('grades/report_card_pdf.html', context, filename)
-
-
-@login_required
-def export_class_bulletins_pdf(request, classroom_id, period_id):
-    """Export PDF de tous les bulletins d'une classe (un par page)."""
+def export_class_bulletins_excel(request, classroom_id, period_id):
+    """Export Excel de tous les bulletins d'une classe (un onglet par élève)."""
     classroom = get_object_or_404(
         Class.objects.select_related('program'), pk=classroom_id
     )
     period = get_object_or_404(Period.objects.select_related('academic_year'), pk=period_id)
 
     results, ranks, class_avg = class_ranking(classroom, period)
+    school_setting = _school()
+    ctx = _bulletin_header_context(school_setting)
 
-    bulletins = []
+    def _sheet_title(rank, student):
+        base = f"{rank}. {student.last_name} {student.first_name}".strip()
+        for ch in '[]:*?/\\':
+            base = base.replace(ch, ' ')
+        return base[:31]
+
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)
+    total_ranked = sum(1 for r in results if r['rank'] is not None)
     for item in results:
         student = item['student']
         rows = subject_breakdown(student, period)
-        bulletins.append({
-            'student': student,
-            'rows': rows,
-            'general_average': item['average'],
-            'rank': item['rank'],
-            'mention': mention_for(item['average']),
-            'total_coef': sum(r['coefficient'] for r in rows),
-            'total_points': round(sum(r['points'] for r in rows if r['points']), 2),
-        })
+        total_coef = sum(r['coefficient'] for r in rows)
+        ws = wb.create_sheet(title=_sheet_title(item['rank'], student))
+        _fill_bulletin_sheet(ws, student, period, rows, item['average'], total_coef,
+                             item['rank'], total_ranked, class_avg, ctx)
+    if not results:
+        ws = wb.create_sheet(title='Bulletin')
+        ws['A1'] = "Aucun bulletin disponible pour cette classe et cette période."
+        ws['A1'].font = Font(name='Arial', size=10, italic=True, color='64748B')
 
-    school_setting = _school()
-    context = {
-        'school': school_setting,
-        'classroom': classroom,
-        'period': period,
-        'class_average': class_avg,
-        'bulletins': bulletins,
-    }
-    context.update(_bulletin_header_context(school_setting))
-    filename = f"Bulletins_{classroom.name}_{period.name}.pdf"
-    return _render_pdf('grades/class_bulletins_pdf.html', context, filename)
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = (
+        f'attachment; filename="Bulletins_{classroom.name}_{period.name}.xlsx"'
+    )
+    wb.save(response)
+    return response

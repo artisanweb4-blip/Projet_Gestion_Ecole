@@ -21,14 +21,12 @@ urlpatterns = [
     # Bulletins
     path('bulletins/', views.bulletin_select, name='bulletin_select'),
     path(
-        'bulletins/class/<int:classroom_id>/period/<int:period_id>/export-pdf/',
-        views.export_class_bulletins_pdf,
-        name='export_class_bulletins_pdf',
+        'bulletins/class/<int:classroom_id>/period/<int:period_id>/export-excel/',
+        views.export_class_bulletins_excel,
+        name='export_class_bulletins_excel',
     ),
     path('student/<int:student_id>/report/<int:period_id>/',
          views.student_report_card, name='student_report_card'),
     path('student/<int:student_id>/report/<int:period_id>/export-excel/',
          views.export_bulletin_excel, name='export_bulletin_excel'),
-    path('student/<int:student_id>/report/<int:period_id>/export-pdf/',
-         views.export_bulletin_pdf, name='export_bulletin_pdf'),
 ]

@@ -95,7 +95,7 @@
 <div class="header-top">
     <div class="page-title">
         <h1><span class="page-icon"><i class="fa-solid fa-file-lines"></i></span>Consultation des bulletins</h1>
-        <p>Générez le bulletin d'un élève ou ceux d'une classe entière (PDF).</p>
+        <p>Générez le bulletin d'un élève ou ceux d'une classe entière (Excel).</p>
     </div>
 </div>
 
@@ -138,13 +138,13 @@
         </div>
     </div>
 
-    <!-- Bulletins de classe (PDF) -->
+    <!-- Bulletins de classe (Excel) -->
     <div>
         <div class="bulletin-header">
-            <h2><i class="fa-solid fa-file-pdf" style="color: var(--danger);"></i> Bulletins d'une classe (PDF)</h2>
+            <h2><i class="fa-solid fa-file-excel" style="color: #059669;"></i> Bulletins d'une classe (Excel)</h2>
         </div>
         <div class="bulletin-card">
-            <form method="get" action="" id="classPdfForm">
+            <form method="get" action="" id="classExcelForm">
                 <div class="form-group-custom">
                     <label for="classroom">Classe</label>
                     <select name="classroom" id="classroom" class="form-select-custom" required>
@@ -166,22 +166,22 @@
                     </select>
                 </div>
                 <button type="submit" class="btn-submit-custom"
-                        style="background: linear-gradient(135deg, #dc2626, #ef4444);"
+                        style="background: linear-gradient(135deg, #059669, #10b981);"
                         {% if not classrooms or not periods %}disabled{% endif %}>
-                    <i class="fa-solid fa-download"></i> Télécharger tous les bulletins (PDF)
+                    <i class="fa-solid fa-download"></i> Télécharger tous les bulletins (Excel)
                 </button>
             </form>
             <p class="text-muted" style="font-size: 0.8rem; margin-top: 12px; text-align: center;">
-                Un bulletin par élève, classé par rang, prêt à imprimer.
+                Un onglet Excel par élève, classé par rang.
             </p>
         </div>
     </div>
 </div>
 
 <script>
-    // Le formulaire « classe PDF » doit envoyer classroom + period en GET vers bulletin_select,
-    // la vue redirige alors vers l'export PDF.
-    document.getElementById('classPdfForm').addEventListener('submit', function (e) {
+    // Le formulaire « classe Excel » doit envoyer classroom + period en GET vers bulletin_select,
+    // la vue redirige alors vers l'export Excel.
+    document.getElementById('classExcelForm').addEventListener('submit', function (e) {
         e.preventDefault();
         var classroom = document.getElementById('classroom').value;
         var period = document.getElementById('period_class').value;
