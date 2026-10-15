@@ -51,7 +51,7 @@ class ExpenseForm(forms.ModelForm):
 class PaymentModeForm(forms.Form):
     """Encaissement : on choisit D'ABORD la classe, puis l'élève de cette
     classe (ou toute la classe). Montant suggéré par la grille des frais
-    (niveau × périodicité) ; reçu A5 généré pour chaque élève.
+    (niveau × périodicité) ; reçu A4 généré pour chaque élève.
     """
     MODE_CHOICES = [
         ('ELEVE', 'Un élève de la classe'),

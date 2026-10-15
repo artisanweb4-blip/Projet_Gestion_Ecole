@@ -1,7 +1,7 @@
 """
 Module Comptabilité : tableau de bord, frais par niveau, paiements
 (individuel ou par classe, périodicité mois/trimestre/semestre/année),
-reçus A5 et dépenses par catégorie. Réservé aux rôles ADMIN et COMPTABLE.
+reçus A4 et dépenses par catégorie. Réservé aux rôles ADMIN et COMPTABLE.
 """
 import calendar
 from datetime import date
@@ -214,25 +214,45 @@ class TuitionDeleteView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, De
 
 
 # ---------------------------------------------------------------------------
-# Paiements : par élève OU par classe, périodicité, reçu A5
+# Paiements : par élève OU par classe, périodicité, reçu A4
 # ---------------------------------------------------------------------------
 class PaymentListView(LoginRequiredMixin, RoleRequiredMixin, ListView):
+    """Historique des paiements : pagination 20/page, filtre par classe,
+    total encaissé (global ou de la classe sélectionnée)."""
     template_name = 'accounting/payment_list.html'
     context_object_name = 'payments'
+    paginate_by = 20
     allowed_roles = ALLOWED_ROLES
 
     def get_queryset(self):
-        return (
+        qs = (
             StudentPayment.objects
             .select_related('student', 'student__class_group')
             .order_by('-payment_date')
         )
+        classe = self.request.GET.get('classe')
+        if classe and classe.isdigit():
+            qs = qs.filter(student__class_group_id=int(classe))
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        classe = self.request.GET.get('classe', '')
+        classrooms = Class.objects.filter(is_active=True).order_by('name')
+        filtered = self.get_queryset()
+        context.update({
+            'classrooms': classrooms,
+            'selected_class': int(classe) if classe and classe.isdigit() else None,
+            'total_paye': filtered.aggregate(t=Sum('amount_paid'))['t'] or 0,
+            'count_paiements': filtered.count(),
+        })
+        return context
 
 
 class PaymentCreateView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, FormView):
     """Enregistrement d'un paiement : un élève ou toute la classe.
 
-    - Mode « Un élève » : un reçu A5 est généré pour cet élève.
+    - Mode « Un élève » : un reçu A4 est généré pour cet élève.
     - Mode « Toute la classe » : un paiement individuel (et son reçu) est
       créé pour chaque élève actif de la classe.
     Le montant suggéré provient de la grille des frais (niveau × périodicité).
@@ -330,7 +350,7 @@ class PaymentDeleteView(LoginRequiredMixin, RoleRequiredMixin, HtmxCrudMixin, De
 
 
 class PaymentReceiptPDFView(LoginRequiredMixin, RoleRequiredMixin, DetailView):
-    """Reçu de paiement au format A5 (PDF) : infos école, période, reliquat."""
+    """Reçu de paiement au format A4 (PDF) : infos école, période, reliquat."""
     allowed_roles = ALLOWED_ROLES
     model = StudentPayment
     template_name = 'accounting/payment_receipt_pdf.html'
@@ -350,11 +370,28 @@ class PaymentReceiptPDFView(LoginRequiredMixin, RoleRequiredMixin, DetailView):
             t=Sum('amount_paid'))['t'] or 0
         reliquat = (expected - paid_periodicity) if expected is not None else None
 
+        # Informations de l'école (Paramètres → École, avec repli sur l'école du paiement)
+        from school_settings.models import SchoolSetting
+        try:
+            setting = SchoolSetting.load()
+        except Exception:
+            setting = None
+        school_name = (
+            getattr(setting, 'school_name', None)
+            or (payment.school.name if payment.school else None)
+            or (school.name if school else None)
+            or "Gestion d'École"
+        )
+
         context = {
             'payment': payment,
             'student': student,
             'classroom': classroom,
             'school': school,
+            'school_name': school_name,
+            'school_address': getattr(setting, 'address', '') or (school.address if school else ''),
+            'school_phone': getattr(setting, 'phone', '') or (school.phone if school else ''),
+            'school_email': getattr(setting, 'email', '') or (school.email if school else ''),
             'expected': expected,
             'paid_periodicity': paid_periodicity,
             'paid_total': paid_total,

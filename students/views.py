@@ -1,5 +1,6 @@
 from django.apps import apps
 from django.contrib import messages
+from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
@@ -172,6 +173,20 @@ class StudentDetailView(LoginRequiredMixin, RoleRequiredMixin, DetailView):
     template_name = 'students/detail.html'
     context_object_name = 'student'
     allowed_roles = ['admin', 'director', 'secretary', 'teacher', 'parent']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        student = self.object
+        payments = student.payments.order_by('-payment_date')
+        context['payments'] = payments
+        context['total_paid'] = payments.aggregate(
+            t=Sum('amount_paid'))['t'] or 0
+        try:
+            from accounting.views import student_finance_summary
+            context['finance'] = student_finance_summary(student)
+        except Exception:
+            context['finance'] = None
+        return context
 
 @login_required
 def export_students_excel(request):
