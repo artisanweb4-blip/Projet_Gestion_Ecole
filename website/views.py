@@ -28,11 +28,19 @@ def landing(request):
         from school_settings.models import SchoolSetting
         nb_schools = 1 if SchoolSetting.objects.exists() else 0
 
+    # Informations de l'établissement (Paramètres → École) pour le pied de page
+    from school_settings.models import SchoolSetting
+    footer_school = (
+        SchoolSetting.objects.exclude(school_name__isnull=True)
+        .exclude(school_name='').first()
+    )
+
     context = {
         'nb_schools': nb_schools,
         'nb_students': Student.objects.filter(is_active=True).count(),
         'nb_teachers': Teacher.objects.filter(is_active=True).count(),
         'nb_classes': Class.objects.count(),
+        'footer_school': footer_school,
     }
     return render(request, 'website/landing.html', context)
 

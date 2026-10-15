@@ -404,38 +404,41 @@
 <div class="dashboard-card">
     <div class="card-header">
         <h2 class="card-title"><i class="fa-solid fa-money-bill-wave me-1 text-success"></i> Paiements</h2>
-        {% if finance and finance.status == 'solde' %}
-            <span class="badge badge-success">Soldé</span>
-        {% elif finance and finance.status == 'partiel' %}
-            <span class="badge badge-warning">Paiement partiel</span>
-        {% elif finance and finance.status == 'impaye' %}
-            <span class="badge badge-danger">Impayé</span>
-        {% endif %}
+        {% with fin=student|finance_summary %}
+            {% if fin.status == 'solde' %}
+                <span class="badge badge-success">Soldé</span>
+            {% elif fin.status == 'partiel' %}
+                <span class="badge badge-warning">Paiement partiel</span>
+            {% elif fin.status == 'impaye' %}
+                <span class="badge badge-danger">Impayé</span>
+            {% endif %}
+        {% endwith %}
     </div>
 
+    {% with fin=student|finance_summary plist=payments|default:student.payments.all %}
     <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px;">
         <div style="flex: 1; min-width: 150px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 10px 14px; text-align: center;">
             <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Attendu (année)</div>
-            <div style="font-size: 1.05rem; font-weight: 800; color: #1d3557; margin-top: 2px;">{% if finance.expected is not None %}{{ finance.expected|fcfa }} FCFA{% else %}—{% endif %}</div>
+            <div style="font-size: 1.05rem; font-weight: 800; color: #1d3557; margin-top: 2px;">{% if fin.expected is not None %}{{ fin.expected|fcfa }} FCFA{% else %}—{% endif %}</div>
         </div>
         <div style="flex: 1; min-width: 150px; background: #f0fdf4; border: 1px solid #d1fae5; border-radius: 10px; padding: 10px 14px; text-align: center;">
             <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Total payé</div>
-            <div style="font-size: 1.05rem; font-weight: 800; color: #059669; margin-top: 2px;">{{ total_paid|fcfa }} FCFA</div>
+            <div style="font-size: 1.05rem; font-weight: 800; color: #059669; margin-top: 2px;">{{ plist|sum_field:"amount_paid"|fcfa }} FCFA</div>
         </div>
-        <div style="flex: 1; min-width: 150px; background: {% if finance.reliquat and finance.reliquat > 0 %}#fef2f2{% else %}#f8f9fa{% endif %}; border: 1px solid {% if finance.reliquat and finance.reliquat > 0 %}#fee2e2{% else %}#e9ecef{% endif %}; border-radius: 10px; padding: 10px 14px; text-align: center;">
+        <div style="flex: 1; min-width: 150px; background: {% if fin.reliquat and fin.reliquat > 0 %}#fef2f2{% else %}#f8f9fa{% endif %}; border: 1px solid {% if fin.reliquat and fin.reliquat > 0 %}#fee2e2{% else %}#e9ecef{% endif %}; border-radius: 10px; padding: 10px 14px; text-align: center;">
             <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Reliquat</div>
-            <div style="font-size: 1.05rem; font-weight: 800; color: {% if finance.reliquat and finance.reliquat > 0 %}#b91c1c{% else %}#1d3557{% endif %}; margin-top: 2px;">{% if finance.reliquat is not None %}{% if finance.reliquat > 0 %}{{ finance.reliquat|fcfa }}{% else %}0{% endif %} FCFA{% else %}—{% endif %}</div>
+            <div style="font-size: 1.05rem; font-weight: 800; color: {% if fin.reliquat and fin.reliquat > 0 %}#b91c1c{% else %}#1d3557{% endif %}; margin-top: 2px;">{% if fin.reliquat is not None %}{% if fin.reliquat > 0 %}{{ fin.reliquat|fcfa }}{% else %}0{% endif %} FCFA{% else %}—{% endif %}</div>
         </div>
     </div>
 
-    {% if payments %}
+    {% if plist %}
         <div class="table-container">
             <table class="custom-table">
                 <thead>
                     <tr><th>Reçu #</th><th class="text-center">Montant</th><th class="text-center">Mode</th><th>Période</th><th class="text-center">Date</th><th class="text-center">Reçu</th></tr>
                 </thead>
                 <tbody>
-                    {% for payment in payments %}
+                    {% for payment in plist %}
                         <tr>
                             <td><strong>{{ payment.receipt_number }}</strong></td>
                             <td class="text-center">{{ payment.amount_paid|fcfa }} F</td>
@@ -458,5 +461,6 @@
             <p>Aucun paiement enregistré pour cet élève.</p>
         </div>
     {% endif %}
+    {% endwith %}
 </div>
 {% endblock %}

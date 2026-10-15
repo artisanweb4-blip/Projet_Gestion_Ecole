@@ -17,6 +17,7 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text); background: #fff; line-height: 1.6; }
         a { text-decoration: none; }
         .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+        .nav-wrap { max-width: 1440px; }
 
         /* Nav */
         nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
@@ -99,12 +100,28 @@
         .cta-band p { opacity: 0.9; margin: 10px 0 26px; }
         .cta-band .btn { background: #fff; color: var(--primary-dark); }
 
-        footer { border-top: 1px solid var(--border); padding: 28px 0; text-align: center; color: var(--muted); font-size: 0.85rem; }
+        footer { border-top: 1px solid var(--border); background: #f8fafc; margin-top: 10px; }
+        .footer-grid {
+            display: grid; grid-template-columns: 1.3fr 1fr 0.7fr; gap: 30px;
+            padding: 36px 24px 22px; text-align: left;
+        }
+        .footer-grid h4 {
+            font-size: 0.8rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.6px; color: var(--text); margin-bottom: 10px;
+        }
+        .footer-grid p, .footer-grid a { font-size: 0.87rem; color: var(--muted); }
+        .footer-grid a:hover { color: var(--primary); }
+        .footer-grid .fa-solid { width: 16px; color: var(--primary); }
+        .footer-bottom {
+            border-top: 1px solid var(--border); padding: 14px 24px;
+            text-align: center; color: var(--muted); font-size: 0.8rem;
+        }
+        @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr; gap: 20px; } }
         @media (max-width: 640px) { .nav-actions .btn-ghost { display: none; } }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container nav-wrap">
         <nav>
             <div class="brand">
                 <span class="brand-logo">GCE</span>
@@ -220,8 +237,36 @@
     </section>
 
     <footer>
-        <div class="container">
-            Gestion d'École · © {% now "Y" %} Tous droits réservés
+        <div class="container footer-grid">
+            <div>
+                <div class="brand" style="margin-bottom: 10px;">
+                    <span class="brand-logo">GCE</span>
+                    <span class="brand-name">Gestion d'École</span>
+                </div>
+                <p>La plateforme complète de gestion scolaire : élèves, parents, notes et bulletins,
+                   comptabilité, emplois du temps et documents officiels — réunis dans une seule
+                   application rapide et moderne.</p>
+            </div>
+            {% if footer_school %}
+                <div>
+                    <h4><i class="fa-solid fa-school"></i> {{ footer_school.school_name|default:"Notre établissement" }}</h4>
+                    <p>
+                        {% if footer_school.address %}<i class="fa-solid fa-location-dot"></i> {{ footer_school.address }}<br>{% endif %}
+                        {% if footer_school.phone %}<i class="fa-solid fa-phone"></i> {{ footer_school.phone }}<br>{% endif %}
+                        {% if footer_school.email %}<i class="fa-solid fa-envelope"></i> {{ footer_school.email }}{% endif %}
+                    </p>
+                </div>
+            {% endif %}
+            <div>
+                <h4>Accès rapide</h4>
+                <p>
+                    <a href="{% url 'login' %}"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</a><br>
+                    <a href="{% url 'register_school' %}"><i class="fa-solid fa-school-circle-check"></i> Créer un compte école</a>
+                </p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            Gestion d'École · © {% now "Y" %} — Tous droits réservés
         </div>
     </footer>
 </body>
