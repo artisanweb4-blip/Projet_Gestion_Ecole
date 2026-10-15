@@ -73,7 +73,7 @@
     <span class="badge badge-warning">Financier</span>
     <span class="badge badge-secondary">RH</span>
     <span style="margin-left: auto; font-size: 0.78rem; color: var(--text-muted);">
-        <i class="fa-solid fa-circle-info"></i> « Exemple » ouvre un PDF fictif, « Générer » crée un document réel.
+        <i class="fa-solid fa-circle-info"></i> « Exemple » ouvre un PDF fictif · « Générer » télécharge un exemple Word au format paysage.
     </span>
 </div>
 
@@ -96,15 +96,10 @@
                    class="btn btn-outline btn-sm">
                     <i class="fa-regular fa-file-pdf" style="color: #dc2626;"></i> Exemple (PDF)
                 </a>
-                {% if doc.generate_url %}
-                    <a href="{{ doc.generate_url }}" class="btn btn-primary btn-sm">
-                        <i class="fa-solid fa-pen"></i> Générer
-                    </a>
-                {% else %}
-                    <button type="button" class="btn btn-secondary btn-sm" disabled title="Génération personnalisée à venir">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Générer
-                    </button>
-                {% endif %}
+                <a href="{% url 'documents:document_sample_word' doc.key %}" hx-boost="false"
+                   class="btn btn-primary btn-sm" title="Télécharger un exemple Word (paysage A4)">
+                    <i class="fa-solid fa-file-word"></i> Générer (Word)
+                </a>
             </div>
         </div>
     {% endfor %}

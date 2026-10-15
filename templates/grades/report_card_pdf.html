@@ -5,71 +5,71 @@
     <meta charset="UTF-8">
     <title>Bulletin - {{ student.first_name }} {{ student.last_name }}</title>
     <style>
-        /* A5 PORTRAIT — mise en page professionnelle, colonnes calibrées */
+        /* A4 PORTRAIT — mise en page professionnelle, colonnes calibrées */
         @page {
-            size: A5 portrait;
-            margin: 0.8cm 0.8cm 0.8cm 0.8cm;
+            size: A4 portrait;
+            margin: 1.2cm 1.2cm 1.2cm 1.2cm;
         }
-        body { font-family: Helvetica, Arial, sans-serif; font-size: 8.5pt; color: #1e293b; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 9.5pt; color: #1e293b; }
 
         .header-table { width: 100%; margin-bottom: 2px; }
-        .school-name { font-size: 13pt; font-weight: bold; color: #1d3557; line-height: 1.25; }
-        .school-meta { font-size: 6.8pt; color: #64748b; margin-top: 2px; }
+        .school-name { font-size: 15pt; font-weight: bold; color: #1d3557; line-height: 1.25; }
+        .school-meta { font-size: 7.8pt; color: #64748b; margin-top: 2px; }
         .doc-title {
-            text-align: right; font-size: 11.5pt; font-weight: bold;
+            text-align: right; font-size: 13.5pt; font-weight: bold;
             color: #e63946; text-transform: uppercase; letter-spacing: 0.5px;
         }
-        .doc-sub { text-align: right; font-size: 8pt; font-weight: bold; color: #457b9d; margin-top: 3px; }
+        .doc-sub { text-align: right; font-size: 9.5pt; font-weight: bold; color: #457b9d; margin-top: 3px; }
 
-        .rule { border-bottom: 2pt solid #1d3557; margin: 4px 0 10px 0; }
+        .rule { border-bottom: 2.5pt solid #1d3557; margin: 6px 0 14px 0; }
 
         .info-box {
             background-color: #f8f9fa;
             border-left: 3pt solid #1d3557;
-            padding: 6px 9px;
-            margin-bottom: 11px;
-            font-size: 8pt;
+            padding: 8px 12px;
+            margin-bottom: 14px;
+            font-size: 9pt;
         }
 
-        table.notes { width: 100%; border-collapse: collapse; font-size: 8pt; }
+        table.notes { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
         table.notes th {
             background-color: #1d3557; color: #ffffff;
-            padding: 5px 3px; font-size: 7.5pt; font-weight: bold;
+            padding: 6px 4px; font-size: 8.5pt; font-weight: bold;
             text-align: center;
         }
-        table.notes th.left { text-align: left; padding-left: 6px; }
-        table.notes td { border: 0.5pt solid #cbd5e1; padding: 5px 5px; }
+        table.notes th.left { text-align: left; padding-left: 8px; }
+        table.notes td { border: 0.5pt solid #cbd5e1; padding: 7px 6px; }
         .center { text-align: center; }
         .subj { width: 30%; }
         .coef { width: 12%; }
         .moy  { width: 14%; }
         .pts  { width: 14%; }
-        .appr { width: 30%; font-size: 7.8pt; }
+        .appr { width: 30%; font-size: 9pt; }
 
         .grade-hi { color: #059669; font-weight: bold; }
         .grade-md { color: #b45309; font-weight: bold; }
         .grade-lo { color: #b91c1c; font-weight: bold; }
 
         .total-row { background-color: #e9ecef; font-weight: bold; }
-        .grand-row { background-color: #1d3557; color: #ffffff; font-weight: bold; font-size: 9pt; }
+        .grand-row { background-color: #1d3557; color: #ffffff; font-weight: bold; font-size: 10.5pt; }
 
-        .table-note { font-size: 6.3pt; color: #94a3b8; margin-top: 3px; }
+        .table-note { font-size: 7pt; color: #94a3b8; margin-top: 3px; }
 
-        table.summary { width: 100%; margin-top: 12px; border-collapse: collapse; }
+        table.summary { width: 100%; margin-top: 16px; border-collapse: collapse; }
         table.summary td {
             border: 0.5pt solid #cbd5e1; background-color: #f8f9fa;
-            padding: 7px 3px; text-align: center;
+            padding: 10px 4px; text-align: center;
         }
-        .sum-label { font-size: 6.2pt; font-weight: bold; text-transform: uppercase; color: #64748b; }
-        .sum-value { font-size: 11pt; font-weight: bold; color: #1d3557; margin-top: 2px; }
+        .sum-label { font-size: 7pt; font-weight: bold; text-transform: uppercase; color: #64748b; }
+        .sum-value { font-size: 13.5pt; font-weight: bold; color: #1d3557; margin-top: 2px; }
         .sum-value.green { color: #059669; }
 
-        .signatures { width: 100%; margin-top: 34px; font-size: 7.8pt; color: #334155; }
+        .signatures { width: 100%; margin-top: 52px; font-size: 8.8pt; color: #334155; }
         .sign-cell { text-align: center; }
-        .sign-line { border-top: 0.5pt solid #475569; margin-top: 40px; width: 160px; }
-        .sign-label { font-size: 6.5pt; color: #64748b; margin-top: 2px; }
+        .sign-line { border-top: 0.5pt solid #475569; margin-top: 52px; width: 200px; }
+        .sign-label { font-size: 7.2pt; color: #64748b; margin-top: 2px; }
 
-        .footer-note { margin-top: 14px; text-align: center; font-size: 6.3pt; color: #94a3b8; }
+        .footer-note { margin-top: 18px; text-align: center; font-size: 7pt; color: #94a3b8; }
     </style>
 </head>
 <body>

@@ -21,10 +21,11 @@ Pillow>=10.0.0
 qrcode>=7.4.2
 python-barcode>=0.15.1
 
-# Documents : Excel (import/export) & PDF (bulletins, certificats)
+# Documents : Excel (import/export), PDF (bulletins) & Word paysage (documents)
 openpyxl>=3.1.2
 xhtml2pdf>=0.2.16
 reportlab>=4.0.0
+python-docx>=1.1.2
 
 # Production
 gunicorn>=21.2.0

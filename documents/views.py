@@ -7,6 +7,13 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.utils import timezone
 from xhtml2pdf import pisa
+from docx import Document as DocxDocument
+from docx.shared import Pt, Cm, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.section import WD_ORIENT
+from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 
 from .models import DocumentModele, DemandeConge
 from .forms import CertificatScolariteForm, DemandeCongeForm
@@ -98,35 +105,10 @@ DOCUMENTS_CATALOG = [
 ]
 
 
-def index_documents(request):
-    """Page Documents : catalogue professionnel avec exemplaire par type."""
-    modeles = DocumentModele.objects.filter(est_actif=True)
-
-    context = {
-        'catalog': DOCUMENTS_CATALOG,
-        'modeles_rh': modeles.filter(categorie='RH'),
-        'modeles_admin': modeles.filter(categorie='ADMINISTRATIF'),
-        'modeles_pedagogy': modeles.filter(categorie='PEDAGOGIQUE'),
-    }
-    return render(request, 'documents/documents_list.html', context)
-
-
-@login_required
-def document_sample_pdf(request, key):
-    """Exemplaire PDF fictif pour chaque type de document du catalogue."""
-    doc = next((d for d in DOCUMENTS_CATALOG if d['key'] == key), None)
-    if doc is None:
-        messages.error(request, "Type de document inconnu.")
-        return redirect('documents:index')
-
-    school = None
-    from school_settings.models import SchoolSetting
-    try:
-        school = SchoolSetting.load()
-    except Exception:
-        school = None
-
-    sample_data = {
+# ---------------------------------------------------------------------------
+# Données d'exemple fictives par type de document (PDF et Word).
+# ---------------------------------------------------------------------------
+DOC_SAMPLE_DATA = {
         'certificat_scolarite': {
             'intro': ("Le Directeur de l'établissement atteste que l'élève dont "
                       "l'identité suit est régulièrement inscrit pour l'année :"),
@@ -227,11 +209,48 @@ def document_sample_pdf(request, key):
             ],
             'conclusion': "Signé le demandeur, avis du supérieur hiérarchique et décision de la Direction.",
         },
-    }.get(key, {
+    }
+
+DOC_SAMPLE_DEFAULT = {
         'intro': "Exemplaire de démonstration du document.",
-        'fields': [('Document', doc['title'])],
+        'fields': [('Document', '__DOC_TITLE__')],
         'conclusion': "Ceci est un exemplaire fictif généré à titre d'illustration.",
-    })
+    }
+
+
+def index_documents(request):
+    """Page Documents : catalogue professionnel avec exemplaire par type."""
+    modeles = DocumentModele.objects.filter(est_actif=True)
+
+    context = {
+        'catalog': DOCUMENTS_CATALOG,
+        'modeles_rh': modeles.filter(categorie='RH'),
+        'modeles_admin': modeles.filter(categorie='ADMINISTRATIF'),
+        'modeles_pedagogy': modeles.filter(categorie='PEDAGOGIQUE'),
+    }
+    return render(request, 'documents/documents_list.html', context)
+
+
+@login_required
+def document_sample_pdf(request, key):
+    """Exemplaire PDF fictif pour chaque type de document du catalogue."""
+    doc = next((d for d in DOCUMENTS_CATALOG if d['key'] == key), None)
+    if doc is None:
+        messages.error(request, "Type de document inconnu.")
+        return redirect('documents:index')
+
+    school = None
+    from school_settings.models import SchoolSetting
+    try:
+        school = SchoolSetting.load()
+    except Exception:
+        school = None
+
+    if key in DOC_SAMPLE_DATA:
+        sample_data = DOC_SAMPLE_DATA[key]
+    else:
+        sample_data = dict(DOC_SAMPLE_DEFAULT)
+        sample_data['fields'] = [('Document', doc['title'])]
 
     context = {
         'doc': doc,
@@ -311,3 +330,185 @@ def demande_conge_create(request):
         form = DemandeCongeForm()
 
     return render(request, 'documents/demande_conge_form.html', {'form': form})
+
+
+# ---------------------------------------------------------------------------
+# Génération Word (.docx) : exemple professionnel au format PAYSAGE A4.
+# ---------------------------------------------------------------------------
+DOCX_NAVY = RGBColor(0x1D, 0x35, 0x57)
+DOCX_RED = RGBColor(0xE6, 0x39, 0x46)
+DOCX_BLUE = RGBColor(0x45, 0x7B, 0x9D)
+DOCX_GRAY = RGBColor(0x64, 0x74, 0x8B)
+DOCX_DARK = RGBColor(0x1E, 0x29, 0x3B)
+
+
+def _docx_cell_shade(cell, color_hex):
+    tcPr = cell._tc.get_or_add_tcPr()
+    shd = OxmlElement('w:shd')
+    shd.set(qn('w:val'), 'clear')
+    shd.set(qn('w:fill'), color_hex)
+    tcPr.append(shd)
+
+
+def _docx_table_borders(table, color_hex='CBD5E1', sz='4'):
+    tblPr = table._tbl.tblPr
+    borders = OxmlElement('w:tblBorders')
+    for edge in ('top', 'left', 'bottom', 'right', 'insideH', 'insideV'):
+        el = OxmlElement('w:%s' % edge)
+        el.set(qn('w:val'), 'single')
+        el.set(qn('w:sz'), sz)
+        el.set(qn('w:color'), color_hex)
+        borders.append(el)
+    tblPr.append(borders)
+
+
+def _docx_para_rule(paragraph, color='1D3557', sz='18'):
+    pPr = paragraph._p.get_or_add_pPr()
+    pBdr = OxmlElement('w:pBdr')
+    bottom = OxmlElement('w:bottom')
+    bottom.set(qn('w:val'), 'single')
+    bottom.set(qn('w:sz'), sz)
+    bottom.set(qn('w:space'), '1')
+    bottom.set(qn('w:color'), color)
+    pBdr.append(bottom)
+    pPr.append(pBdr)
+
+
+def _docx_run(p, text, size=10, bold=False, color=None, italic=False):
+    run = p.add_run(text)
+    run.font.name = 'Calibri'
+    run.font.size = Pt(size)
+    run.bold = bold
+    run.italic = italic
+    if color is not None:
+        run.font.color.rgb = color
+    return run
+
+
+@login_required
+def document_sample_word(request, key):
+    """Exemple du document au format Word (.docx) — paysage A4 professionnel."""
+    doc = next((d for d in DOCUMENTS_CATALOG if d['key'] == key), None)
+    if doc is None:
+        messages.error(request, "Type de document inconnu.")
+        return redirect('documents:index')
+
+    from school_settings.models import SchoolSetting
+    try:
+        school = SchoolSetting.load()
+    except Exception:
+        school = None
+    if key in DOC_SAMPLE_DATA:
+        data = DOC_SAMPLE_DATA[key]
+    else:
+        data = dict(DOC_SAMPLE_DEFAULT)
+        data['fields'] = [('Document', doc['title'])]
+
+    school_name = getattr(school, 'school_name', None) or "Gestion d'École"
+    school_address = getattr(school, 'address', '') or ''
+    school_phone = getattr(school, 'phone', '') or ''
+    reference = "EX-2026/%s-0001" % doc['key'][:8].upper()
+    date_str = timezone.localdate().strftime('%d/%m/%Y')
+    ts_str = timezone.localtime().strftime('%d/%m/%Y %H:%M')
+
+    document = DocxDocument()
+    section = document.sections[0]
+    section.orientation = WD_ORIENT.LANDSCAPE
+    section.page_width = Cm(29.7)
+    section.page_height = Cm(21)
+    section.left_margin = section.right_margin = Cm(1.8)
+    section.top_margin = section.bottom_margin = Cm(1.5)
+
+    normal = document.styles['Normal']
+    normal.font.name = 'Calibri'
+    normal.font.size = Pt(10.5)
+
+    # ---- En-tête : école à gauche, titre du document à droite
+    header = document.add_table(rows=1, cols=2)
+    header.autofit = False
+    left, right = header.rows[0].cells
+    left.width = Cm(15.5)
+    right.width = Cm(10.6)
+    p = left.paragraphs[0]
+    p.paragraph_format.space_after = Pt(2)
+    _docx_run(p, school_name, size=16, bold=True, color=DOCX_NAVY)
+    meta = school_address
+    if school_phone:
+        meta = ("%s · Tél : %s" % (meta, school_phone)) if meta else ("Tél : %s" % school_phone)
+    p = left.add_paragraph()
+    _docx_run(p, meta, size=9, color=DOCX_GRAY)
+    p = right.paragraphs[0]
+    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    p.paragraph_format.space_after = Pt(2)
+    _docx_run(p, doc['title'].upper(), size=14, bold=True, color=DOCX_RED)
+    p = right.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    _docx_run(p, "Réf : %s" % reference, size=9.5, bold=True, color=DOCX_BLUE)
+
+    rule = document.add_paragraph()
+    _docx_para_rule(rule)
+    rule.paragraph_format.space_after = Pt(10)
+
+    # ---- Introduction
+    intro = document.add_paragraph()
+    _docx_run(intro, data['intro'], size=11, color=DOCX_DARK)
+    intro.paragraph_format.space_after = Pt(10)
+
+    # ---- Tableau d'identité (libellé / valeur)
+    fields = data['fields']
+    table = document.add_table(rows=len(fields), cols=2)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.autofit = False
+    _docx_table_borders(table)
+    for i, (label, value) in enumerate(fields):
+        c1, c2 = table.rows[i].cells
+        c1.width = Cm(7.5)
+        c2.width = Cm(18.6)
+        p = c1.paragraphs[0]
+        _docx_run(p, label, size=10, bold=True, color=DOCX_GRAY)
+        _docx_cell_shade(c1, 'F8F9FA')
+        p = c2.paragraphs[0]
+        _docx_run(p, str(value), size=10, color=DOCX_DARK)
+        for cell in (c1, c2):
+            for par in cell.paragraphs:
+                par.paragraph_format.space_before = Pt(3)
+                par.paragraph_format.space_after = Pt(3)
+
+    # ---- Conclusion
+    concl = document.add_paragraph()
+    concl.paragraph_format.space_before = Pt(12)
+    _docx_run(concl, data['conclusion'], size=10.5, italic=True,
+              color=RGBColor(0x33, 0x41, 0x55))
+
+    # ---- Signatures : cachet à gauche, Directeur à droite
+    sig = document.add_table(rows=1, cols=2)
+    sig.autofit = False
+    s1, s2 = sig.rows[0].cells
+    s1.width = Cm(13)
+    s2.width = Cm(13)
+    p = s1.paragraphs[0]
+    p.paragraph_format.space_before = Pt(24)
+    _docx_run(p, "Cachet de l'établissement", size=10, color=RGBColor(0x33, 0x41, 0x55))
+    p = s2.paragraphs[0]
+    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    p.paragraph_format.space_before = Pt(24)
+    _docx_run(p, "Le Directeur,", size=10, color=RGBColor(0x33, 0x41, 0x55))
+    for _ in range(4):
+        p = s2.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    p = s2.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    _docx_run(p, "Nom et signature", size=8.5, color=DOCX_GRAY)
+
+    # ---- Pied de page
+    footer = document.add_paragraph()
+    footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    footer.paragraph_format.space_before = Pt(16)
+    _docx_run(footer, "Document généré le %s — %s" % (ts_str, school_name),
+              size=8, color=RGBColor(0x94, 0xA3, 0xB8))
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    response['Content-Disposition'] = 'attachment; filename="Exemple_%s.docx"' % key
+    document.save(response)
+    return response
