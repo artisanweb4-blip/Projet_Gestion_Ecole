@@ -169,6 +169,36 @@
         @media (max-width: 900px) { .contact-layout { grid-template-columns: 1fr; } }
         @media (max-width: 560px) { .form-row { grid-template-columns: 1fr; } }
 
+        /* ---------- Tarification ---------- */
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch; }
+        .price-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 26px 22px; display: flex; flex-direction: column; position: relative; text-align: center; }
+        .price-card.highlighted { border: 2px solid var(--primary); box-shadow: 0 20px 44px rgba(5,150,105,0.16); }
+        .best-badge {
+            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+            background: var(--primary); color: #fff; font-size: 0.72rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 16px; border-radius: 999px;
+            box-shadow: 0 6px 14px rgba(5,150,105,0.4); white-space: nowrap;
+        }
+        .price-card h3 { font-size: 1.15rem; font-weight: 800; }
+        .price-card .pd { font-size: 0.8rem; color: var(--muted); margin: 4px 0 14px; }
+        .price-line { margin-bottom: 14px; }
+        .price-line .amount { font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; }
+        .price-line .cur { font-size: 0.8rem; font-weight: 700; color: var(--muted); margin-left: 4px; }
+        .price-line .per { display: block; font-size: 0.78rem; color: var(--muted); }
+        .price-line .per b { color: var(--text); }
+        .price-feats { list-style: none; text-align: left; margin: 8px 0 20px; flex: 1; }
+        .price-feats li { font-size: 0.84rem; padding: 4.5px 0; color: var(--text); }
+        .price-feats i.fa-circle-check { color: var(--primary); margin-right: 8px; }
+        .price-feats li.off { color: var(--muted); }
+        .price-feats i.fa-circle-minus { color: #cbd5e1; margin-right: 8px; }
+        .price-card .btn { width: 100%; justify-content: center; }
+        .price-card .btn-outline { background: #fff; color: var(--primary-dark); border-color: var(--primary); }
+        .price-card .btn-outline:hover { background: var(--primary-light); }
+        .secure-note { font-size: 0.74rem; color: var(--muted); margin-top: 10px; }
+        .pricing-mentions { display: flex; gap: 26px; justify-content: center; flex-wrap: wrap; margin-top: 26px; font-size: 0.83rem; color: var(--muted); }
+        .pricing-mentions i { color: var(--primary); margin-right: 6px; }
+        @media (max-width: 900px) { .pricing-grid { grid-template-columns: 1fr; } }
+
         /* ---------- Footer sombre ---------- */
         footer { background: #0b1220; color: #94a3b8; margin-top: 10px; }
         .footer-grid {
@@ -366,6 +396,51 @@
         </div>
     </section>
 
+    <!-- ================= TARIFICATION ================= -->
+    {% if pricing_plans %}
+    <section id="tarifs">
+        <div class="container">
+            <div class="section-title">
+                <div class="kicker">Tarification</div>
+                <h2>Des abonnements adaptés à votre école</h2>
+                <p>Choisissez l'offre qui correspond à la taille de votre établissement — toutes annuelles, sans surprise.</p>
+            </div>
+            <div class="pricing-grid">
+                {% for item in pricing_plans %}
+                    <div class="price-card {% if item.highlighted %}highlighted{% endif %}">
+                        {% if item.highlighted %}<span class="best-badge"><i class="fa-solid fa-star"></i> Le plus choisi</span>{% endif %}
+                        <h3>{{ item.plan.name }}</h3>
+                        <div class="pd">{{ item.plan.description }}</div>
+                        <div class="price-line">
+                            <span class="amount">{{ item.price_display }}</span><span class="cur">FCFA</span>
+                            <span class="per">{{ item.duration_label }}</span>
+                            <span class="per">soit <b>{{ item.monthly_display }} FCFA / mois</b></span>
+                        </div>
+                        <ul class="price-feats">
+                            {% for line in item.features %}
+                                {% if line|slice:':1' == '-' %}
+                                    <li class="off"><i class="fa-solid fa-circle-minus"></i>{{ line|cut:'-' }}</li>
+                                {% else %}
+                                    <li><i class="fa-solid fa-circle-check"></i>{{ line }}</li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                        <a href="{% url 'register_school' %}" class="btn {% if item.highlighted %}btn-primary{% else %}btn-outline{% endif %}">
+                            Choisir cette offre
+                        </a>
+                        <div class="secure-note"><i class="fa-solid fa-shield-halved"></i> Paiement Mobile Money sécurisé</div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="pricing-mentions">
+                <span><i class="fa-solid fa-mobile-screen"></i> Mobile Money — Orange Money, Wave, MTN, Moov</span>
+                <span><i class="fa-solid fa-arrows-rotate"></i> Changement d'offre à tout moment</span>
+                <span><i class="fa-solid fa-headset"></i> Support WhatsApp réactif</span>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
     <!-- ================= CTA ================= -->
     <section>
         <div class="container">
@@ -491,6 +566,7 @@
                 <p>
                     <a href="#fonctions">Fonctionnalités</a><br>
                     <a href="#demarrage">Démarrage en 3 étapes</a><br>
+                    <a href="#tarifs">Tarifs</a><br>
                     <a href="#contact">Contact</a><br>
                     <a href="{% url 'register_school' %}">Créer un compte</a>
                 </p>

@@ -45,6 +45,20 @@ def landing(request):
         .exclude(school_name='').first()
     )
 
+    # Formules d'abonnement annuelles (affichage type « Tarification »)
+    from accounts.models import SubscriptionPlan
+    pricing_plans = []
+    for p in SubscriptionPlan.objects.filter(is_active=True).order_by('price'):
+        price = int(p.price) if p.price else 0
+        pricing_plans.append({
+            'plan': p,
+            'price_display': f"{price:,}".replace(',', ' '),
+            'monthly_display': f"{price // 12:,}".replace(',', ' ') if price else '0',
+            'duration_label': "pour 12 mois" if p.duration_days == 365 else f"pour {p.duration_days} jours",
+            'features': p.features.splitlines() if p.features else [],
+            'highlighted': p.code == 'pro',
+        })
+
     context = {
         'nb_schools': nb_schools,
         'nb_students': Student.objects.filter(is_active=True).count(),
@@ -53,6 +67,7 @@ def landing(request):
         'footer_school': footer_school,
         'form': form,
         'contact_sent': request.GET.get('sent') == '1',
+        'pricing_plans': pricing_plans,
     }
     return render(request, 'website/landing.html', context)
 
