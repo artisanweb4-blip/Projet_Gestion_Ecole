@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Plateforme — Analytique{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-chart-pie"></i></span>Analytique des consultations</h1>
+        <p>Qui consulte la plateforme ? Répartition des visiteurs par sexe et par région (30 derniers jours).</p>
+    </div>
+    <a href="{% url 'platform_dashboard' %}" class="btn btn-secondary">
+        <i class="fa-solid fa-gauge-high"></i> Tableau de bord
+    </a>
+</div>
+
+<style>
+    .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 160px; padding-top: 8px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
+    .bar-col-fill { width: 70%; max-width: 34px; background: var(--primary); border-radius: 6px 6px 0 0; transition: height .3s ease; }
+    .bar-col-label { font-size: 0.62rem; color: var(--text-muted); margin-top: 6px; white-space: nowrap; }
+    .bar-col-count { font-size: 0.68rem; font-weight: 700; color: var(--text-main); margin-bottom: 3px; }
+    .hbar-list { display: flex; flex-direction: column; gap: 10px; }
+    .hbar-head { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 4px; color: var(--text-main); }
+    .hbar-track { height: 10px; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
+    .hbar-fill { height: 100%; background: var(--primary); border-radius: 6px; min-width: 3px; }
+    .hbar-fill.is-grey { background: #94a3b8; }
+    .ana-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 900px) { .ana-grid, .two-col { grid-template-columns: 1fr !important; } }
+</style>
+
+<div class="metric-grid">
+    <div class="metric-card">
+        <span class="metric-icon is-green"><i class="fa-solid fa-user-clock"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Visiteurs aujourd'hui</span>
+            <span class="metric-value">{{ visits_today_users }}</span>
+            <span class="metric-hint">{{ visits_today_views }} page(s) consultée(s)</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-blue"><i class="fa-solid fa-users"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Visiteurs uniques (30 j)</span>
+            <span class="metric-value">{{ unique_users_30 }}</span>
+            <span class="metric-hint">Comptes identifiés</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-blue"><i class="fa-solid fa-eye"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Pages consultées (30 j)</span>
+            <span class="metric-value">{{ views_30 }}</span>
+            <span class="metric-hint">{{ anonymous_30 }} visite(s) anonyme(s)</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <span class="metric-icon is-green"><i class="fa-solid fa-calendar-days"></i></span>
+        <div class="metric-info">
+            <span class="metric-label">Période analysée</span>
+            <span class="metric-value" style="font-size: 1.1rem;">30 jours</span>
+            <span class="metric-hint">Sexe · Région · Pages · Écoles</span>
+        </div>
+    </div>
+</div>
+
+<div class="ana-grid" style="margin-top: 18px;">
+    <div class="dashboard-card">
+        <div class="summary-item" style="margin-bottom: 12px;"><span class="summary-label">Visiteurs par sexe</span></div>
+        {% if gender_rows %}
+            <div class="hbar-list">
+                {% for row in gender_rows %}
+                    <div class="hbar-item">
+                        <div class="hbar-head">
+                            <span><i class="fa-solid {% if row.label == 'Masculin' %}fa-mars{% elif row.label == 'Féminin' %}fa-venus{% else %}fa-user{% endif %}"></i> {{ row.label }}</span>
+                            <strong>{{ row.users }} ({{ row.pct }}%)</strong>
+                        </div>
+                        <div class="hbar-track"><div class="hbar-fill" style="width: {{ row.pct }}%;"></div></div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state"><i class="fa-solid fa-users"></i><p>Aucune donnée pour le moment.</p></div>
+        {% endif %}
+    </div>
+    <div class="dashboard-card">
+        <div class="summary-item" style="margin-bottom: 12px;"><span class="summary-label">Visiteurs par région</span></div>
+        {% if region_rows %}
+            <div class="hbar-list">
+                {% for row in region_rows %}
+                    <div class="hbar-item">
+                        <div class="hbar-head">
+                            <span><i class="fa-solid fa-location-dot"></i> {{ row.label }}</span>
+                            <strong>{{ row.users }} ({{ row.pct }}%)</strong>
+                        </div>
+                        <div class="hbar-track"><div class="hbar-fill" style="width: {{ row.pct }}%;"></div></div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state"><i class="fa-solid fa-location-dot"></i><p>Aucune donnée pour le moment.</p></div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="dashboard-card" style="margin-top: 18px;">
+    <div class="summary-item" style="margin-bottom: 10px;"><span class="summary-label">Activité — 14 derniers jours</span></div>
+    <div class="bar-chart bar-chart-columns">
+        {% for d in daily %}
+            <div class="bar-col" title="{{ d.label }} : {{ d.users }} visiteur(s), {{ d.views }} page(s)">
+                <span class="bar-col-count">{{ d.views }}</span>
+                <div class="bar-col-fill" style="height: {% if d.views %}{{ d.pct }}{% else %}1{% endif %}%;"></div>
+                <span class="bar-col-label">{{ d.label }}</span>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="ana-grid" style="margin-top: 18px;">
+    <div class="dashboard-card">
+        <div class="summary-item" style="margin-bottom: 10px;"><span class="summary-label">Pages les plus consultées (30 j)</span></div>
+        {% if top_pages %}
+            <div class="table-container">
+                <table class="custom-table">
+                    <thead><tr><th>Page</th><th class="text-center">Vues</th><th class="text-center">Visiteurs</th></tr></thead>
+                    <tbody>
+                        {% for page in top_pages %}
+                            <tr>
+                                <td><code style="font-size: 0.78rem;">{{ page.path }}</code></td>
+                                <td class="text-center">{{ page.views }}</td>
+                                <td class="text-center">{{ page.users }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state"><i class="fa-solid fa-eye"></i><p>Aucune page consultée pour le moment.</p></div>
+        {% endif %}
+    </div>
+    <div class="dashboard-card">
+        <div class="summary-item" style="margin-bottom: 10px;"><span class="summary-label">Écoles les plus actives (30 j)</span></div>
+        {% if by_school %}
+            <div class="hbar-list">
+                {% for row in by_school %}
+                    <div class="hbar-item">
+                        <div class="hbar-head">
+                            <span><i class="fa-solid fa-school"></i> {{ row.user__school__name }}</span>
+                            <strong>{{ row.views }} vues · {{ row.users }} visiteur(s)</strong>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state"><i class="fa-solid fa-school"></i><p>Aucune activité scolaire enregistrée.</p></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer la matière — Gestion d'École{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>Supprimer la matière</h1>
+        <p>Cette action est irréversible.</p>
+    </div>
+    <a href="{% url 'courses:program_list' %}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="dashboard-card" style="max-width: 640px; border-top: 4px solid var(--danger);">
+    <div class="summary-item" style="margin-bottom: 14px;">
+        <span class="summary-label">Matière concernée</span>
+        <span class="summary-value">{{ object.name }}{% if object.code %} · {{ object.code }}{% endif %}</span>
+    </div>
+
+    <div class="alert alert-warning">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span>Attention : les cours, évaluations et emplois du temps liés à cette matière seront également supprimés.</span>
+    </div>
+
+    <form method="post" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+        {% csrf_token %}
+        <a href="{% url 'courses:program_list' %}" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-danger">
+            <i class="fa-solid fa-trash"></i> Supprimer définitivement
+        </button>
+    </form>
+</div>
+{% endblock %}

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load fcfa_extras %}
 
 {% block title %}Fiche de {{ student.first_name }} {{ student.last_name }}{% endblock %}
 
@@ -225,9 +226,6 @@
             <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Matricule : <strong style="color: #0f172a;">{{ student.student_id }}</strong></p>
         </div>
         <div class="action-btns">
-            <a href="{% url 'students:edit' student.pk %}" class="btn-custom-edit">
-                <i class="fa-solid fa-pen-to-square"></i> Modifier
-            </a>
             <a href="{% url 'students:list' %}" class="btn-custom-back">
                 <i class="fa-solid fa-arrow-left"></i> Retour
             </a>
@@ -366,26 +364,103 @@
                 {% endif %}
             </div>
 
-            <!-- SECTION 3 : SANTÉ -->
-            <div class="section-title">
-                <i class="fa-solid fa-heart-pulse"></i> Informations Médicales
-            </div>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="label">Groupe sanguin</span>
-                    <span class="value" style="color: #dc2626;">{{ student.blood_group|default:"Non renseigné" }}</span>
-                </div>
-                <div class="info-item span-2">
-                    <span class="label">Allergies</span>
-                    <span class="value">{{ student.allergies|default:"Aucune" }}</span>
-                </div>
-                <div class="info-item full-width">
-                    <span class="label">Antécédents médicaux</span>
-                    <span class="value">{{ student.medical_notes|default:"Aucun antécédent particulier." }}</span>
-                </div>
-            </div>
 
         </div>
     </div>
+</div>
+
+<div class="dashboard-card">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fa-solid fa-users me-1 text-success"></i> Parents / Tuteurs</h2>
+        <span class="badge badge-success">{{ student.parents.count }} lié(s)</span>
+    </div>
+    {% if student.parents.all %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr><th>Parent</th><th>Lien</th><th>Téléphone</th><th>Email</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for parent in student.parents.all %}
+                        <tr>
+                            <td><strong>{{ parent }}</strong></td>
+                            <td>{{ parent.get_civility_display }}</td>
+                            <td>{{ parent.phone|default:"—" }}</td>
+                            <td>{{ parent.email|default:"—" }}</td>
+                            <td><a href="{% url 'parents:detail' parent.pk %}" class="btn-action btn-view" title="Voir la fiche"><i class="fa-regular fa-eye"></i></a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-users"></i>
+            <p>Aucun parent lié.<br>Cliquez sur « Modifier » pour lier ou créer un parent.</p>
+        </div>
+    {% endif %}
+</div>
+
+<div class="dashboard-card">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fa-solid fa-money-bill-wave me-1 text-success"></i> Paiements</h2>
+        {% with fin=student|finance_summary %}
+            {% if fin.status == 'solde' %}
+                <span class="badge badge-success">Soldé</span>
+            {% elif fin.status == 'partiel' %}
+                <span class="badge badge-warning">Paiement partiel</span>
+            {% elif fin.status == 'impaye' %}
+                <span class="badge badge-danger">Impayé</span>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    {% with fin=student|finance_summary plist=payments|default:student.payments.all %}
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px;">
+        <div style="flex: 1; min-width: 150px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 10px 14px; text-align: center;">
+            <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Attendu (année)</div>
+            <div style="font-size: 1.05rem; font-weight: 800; color: #1d3557; margin-top: 2px;">{% if fin.expected is not None %}{{ fin.expected|fcfa }} FCFA{% else %}—{% endif %}</div>
+        </div>
+        <div style="flex: 1; min-width: 150px; background: #f0fdf4; border: 1px solid #d1fae5; border-radius: 10px; padding: 10px 14px; text-align: center;">
+            <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Total payé</div>
+            <div style="font-size: 1.05rem; font-weight: 800; color: #059669; margin-top: 2px;">{{ plist|sum_field:"amount_paid"|fcfa }} FCFA</div>
+        </div>
+        <div style="flex: 1; min-width: 150px; background: {% if fin.reliquat and fin.reliquat > 0 %}#fef2f2{% else %}#f8f9fa{% endif %}; border: 1px solid {% if fin.reliquat and fin.reliquat > 0 %}#fee2e2{% else %}#e9ecef{% endif %}; border-radius: 10px; padding: 10px 14px; text-align: center;">
+            <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Reliquat</div>
+            <div style="font-size: 1.05rem; font-weight: 800; color: {% if fin.reliquat and fin.reliquat > 0 %}#b91c1c{% else %}#1d3557{% endif %}; margin-top: 2px;">{% if fin.reliquat is not None %}{% if fin.reliquat > 0 %}{{ fin.reliquat|fcfa }}{% else %}0{% endif %} FCFA{% else %}—{% endif %}</div>
+        </div>
+    </div>
+
+    {% if plist %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr><th>Reçu #</th><th class="text-center">Montant</th><th class="text-center">Mode</th><th>Période</th><th class="text-center">Date</th><th class="text-center">Reçu</th></tr>
+                </thead>
+                <tbody>
+                    {% for payment in plist %}
+                        <tr>
+                            <td><strong>{{ payment.receipt_number }}</strong></td>
+                            <td class="text-center">{{ payment.amount_paid|fcfa }} F</td>
+                            <td class="text-center"><span class="badge badge-success">{{ payment.get_payment_method_display }}</span></td>
+                            <td>{{ payment.get_periodicity_display }}{% if payment.period_label %} · {{ payment.period_label }}{% endif %}</td>
+                            <td class="text-center">{{ payment.payment_date|date:"d/m/Y H:i" }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'accounting:payment_receipt' payment.pk %}" target="_blank" class="btn-action btn-view" title="Voir le reçu (PDF A4)">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-receipt"></i>
+            <p>Aucun paiement enregistré pour cet élève.</p>
+        </div>
+    {% endif %}
+    {% endwith %}
 </div>
 {% endblock %}

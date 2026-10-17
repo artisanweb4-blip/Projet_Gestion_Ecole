@@ -1,0 +1,161 @@
+{# Encaissement : D'ABORD la classe, puis l'élève de cette classe (ou toute la classe) #}
+<div class="modal-head">
+    <h3>{{ modal_title|default:"Enregistrer un paiement" }}</h3>
+    <button type="button" class="modal-close" data-close-modal aria-label="Fermer">&times;</button>
+</div>
+
+<form method="post"
+      hx-post="{{ modal_action }}"
+      hx-target="#modal-body"
+      hx-swap="innerHTML"
+      class="modal-form">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-error"><i class="fa-solid fa-circle-exclamation"></i>
+            <span>{{ form.non_field_errors }}</span></div>
+    {% endif %}
+
+    <div class="form-group">
+        <label class="form-label" for="{{ form.classroom.id_for_label }}">Classe <span class="required">*</span></label>
+        {{ form.classroom }}
+        {% for error in form.classroom.errors %}<div class="error-feedback">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Qui paie ? <span class="required">*</span></label>
+        <div style="display:flex; gap:18px; padding:6px 2px;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="radio" name="mode" value="ELEVE" class="form-check-input"
+                       {% if form.mode.value != 'CLASSE' %}checked{% endif %}> Un élève de la classe
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="radio" name="mode" value="CLASSE" class="form-check-input"
+                       {% if form.mode.value == 'CLASSE' %}checked{% endif %}> Toute la classe
+            </label>
+        </div>
+        {% for error in form.mode.errors %}<div class="error-feedback">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="form-group" id="row-student">
+        <label class="form-label" for="{{ form.student.id_for_label }}">Élève <span class="required">*</span></label>
+        <select name="student" id="{{ form.student.id_for_label }}" class="form-control"
+                {% if not form.classroom.value %}disabled{% endif %}>
+            <option value="">— Choisissez d'abord la classe —</option>
+            {% for s in form.fields.student.queryset %}
+                <option value="{{ s.pk }}" data-class="{{ s.class_group_id }}"
+                        {% if form.student.value|stringformat:"s" == s.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ s.last_name }} {{ s.first_name }}
+                </option>
+            {% endfor %}
+        </select>
+        {% for error in form.student.errors %}<div class="error-feedback">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="form-grid-2">
+        <div class="form-group">
+            <label class="form-label" for="{{ form.periodicity.id_for_label }}">Périodicité <span class="required">*</span></label>
+            {{ form.periodicity }}
+            {% for error in form.periodicity.errors %}<div class="error-feedback">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="{{ form.period_label.id_for_label }}">Période concernée</label>
+            {{ form.period_label }}
+            {% for error in form.period_label.errors %}<div class="error-feedback">{{ error }}</div>{% endfor %}
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="{{ form.amount_paid.id_for_label }}">Montant réglé (FCFA) <span class="required">*</span></label>
+        {{ form.amount_paid }}
+        <span id="tuition-hint" style="display:block; margin-top:4px; font-size:0.78rem; color:#64748b;"></span>
+        {% for error in form.amount_paid.errors %}<div class="error-feedback">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="{{ form.payment_method.id_for_label }}">Mode de règlement <span class="required">*</span></label>
+        {{ form.payment_method }}
+        {% for error in form.payment_method.errors %}<div class="error-feedback">{{ error }}</div>{% endfor %}
+    </div>
+
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal>Annuler</button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Enregistrer
+        </button>
+    </div>
+</form>
+
+<script>
+(function () {
+    function f() {
+        var forms = document.querySelectorAll('form');
+        for (var i = 0; i < forms.length; i++) {
+            if (forms[i].querySelector('input[name="mode"]')) { return forms[i]; }
+        }
+        return null;
+    }
+    function refresh() {
+        var form = f();
+        if (!form) { return; }
+        var cls = form.querySelector('[name="classroom"]');
+        var mode = (form.querySelector('input[name="mode"]:checked') || {}).value || 'ELEVE';
+        var sel = form.querySelector('[name="student"]');
+        var rowStudent = document.getElementById('row-student');
+
+        // 1) La liste d'élèves ne montre QUE les élèves de la classe choisie
+        if (sel) {
+            var classId = cls ? cls.value : '';
+            var options = sel.querySelectorAll('option[data-class]');
+            var first = true;
+            options.forEach(function (opt) {
+                var show = classId && opt.getAttribute('data-class') === classId;
+                opt.style.display = show ? '' : 'none';
+                if (show && first && !sel.value) { sel.value = opt.value; first = false; }
+            });
+            var none = !classId;
+            sel.disabled = none;
+            if (none) { sel.value = ''; }
+            // Option d'aide en tête de liste
+            var helper = sel.querySelector('option[data-helper]');
+            if (!helper) {
+                helper = document.createElement('option');
+                helper.setAttribute('data-helper', '1');
+                helper.value = '';
+                sel.insertBefore(helper, sel.firstChild);
+            }
+            helper.textContent = none ? "— Choisissez d'abord la classe —"
+                                      : "— Choisir l'élève —";
+        }
+        // 2) Le choix « Un élève / Toute la classe » masque la liste d'élèves
+        if (rowStudent) { rowStudent.style.display = mode === 'CLASSE' ? 'none' : ''; }
+
+        // 3) Indication du montant attendu selon la classe et la périodicité
+        var per = form.querySelector('[name="periodicity"]');
+        var pl = form.querySelector('[name="period_label"]');
+        var hint = document.getElementById('tuition-hint');
+        var labels = { MOIS: 'Ex : Octobre 2026', TRIMESTRE: 'Ex : Trimestre 1',
+                       SEMESTRE: 'Ex : Semestre 1', ANNUEL: 'Ex : Année 2026-2027' };
+        if (pl && per && !pl.value) { pl.placeholder = labels[per.value] || ''; }
+        if (hint && cls && cls.value) {
+            hint.textContent = 'Recherche du frais attendu…';
+            if (window.fetch) {
+                fetch('/accounting/payments/ajax/tuition/?classroom=' + cls.value +
+                      '&periodicity=' + (per ? per.value : 'ANNUEL'))
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) { hint.textContent = d.hint || ''; })
+                    .catch(function () { hint.textContent = ''; });
+            }
+        } else if (hint) { hint.textContent = ''; }
+    }
+    document.addEventListener('change', function (e) {
+        if (!f()) { return; }
+        if (e.target.matches('[name="classroom"], [name="periodicity"], input[name="mode"]')) {
+            refresh();
+        }
+    });
+    setTimeout(refresh, 60);
+})();
+</script>

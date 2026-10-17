@@ -30,20 +30,38 @@ L'interface utilisateur web (`/`) offre un tableau de bord aux teintes chaleureu
 ```
 Projet_Gestion_Ecole/
 ├── django_config/        # Paramètres globaux settings.py, urls.py, wsgi/asgi
-├── core/                 # TimeStampMixin, permissions granulaires et utilitaires
+├── core/                 # TimeStampMixin, permissions, mixins, menu global
 ├── accounts/             # Utilisateurs, rôles (Admin, Prof, Élève, Parent), JWT
-├── students/             # Profils étudiants, classes et génération de bulletins
-├── teachers/             # Profils enseignants et spécialités
-├── courses/              # Cours, crédits, coefficients et inscriptions
-├── trs/                  # Emploi du temps, semestres, salles, anti-chevauchement
-├── assignments/          # Devoirs à rendre, fichiers joints et soumissions
-├── exams/                # Examens (QCM/Texte/Fichier) et relevés de notes [0-20]
-├── attendance/           # Prise de présence, justificatifs et export CSV
+├── dashboard/            # Tableau de bord (KPIs, graphiques, activités récentes)
+├── students/             # Élèves (matricule auto, QR code, code-barres)
+├── teachers/             # Enseignants et spécialités
+├── parents/              # Parents d'élèves
+├── classes/              # Classes (niveaux, sections, responsables)
+├── courses/              # Matières, programmes, cours & inscriptions
+├── grades/               # Notes, évaluations, bulletins (moyennes, rangs) + PDF/Excel
+├── timetable/            # Grille d'emploi du temps
+├── trs/                  # Planification des séances (API, anti-chevauchement)
+├── school_calendar/      # Calendrier académique (FullCalendar)
+├── school_settings/      # Paramètres de l'établissement
+├── documents/            # Documents scolaires (certificats, PDF)
 ├── finance/              # Frais, paiements Mobile Money et verrouillage des reçus
-├── admissions/           # Demandes d'admission d'élèves
-├── apis/                 # Routeur API master (/api/v1/)
-└── templates/            # Dashboard web au thème Afrique (index.html)
+├── admissions/           # Demandes d'admission
+├── assignments/          # Devoirs à rendre et soumissions
+├── exams/                # Examens (QCM/Texte/Fichier) et relevés de notes [0-20]
+├── apis/                 # Routeur API master (/api/) + Swagger/ReDoc
+└── templates/            # Interface web (sidebar, dashboard, bulletins...)
 ```
+
+### 🚀 Démarrage local rapide (sans Docker)
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env            # DB_ENGINE=sqlite3 par défaut en local
+python manage.py migrate
+python manage.py seed_demo      # Données de démonstration
+python manage.py runserver
+```
+Comptes de démo : `admin@ecole.africa / admin123` (admin), `parent@ecole.africa / parent123`.
 
 ---
 

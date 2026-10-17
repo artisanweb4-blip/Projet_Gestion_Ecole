@@ -1,0 +1,28 @@
+{# Contenu de modale générique : confirmation de suppression #}
+<div class="modal-head danger">
+    <h3>{{ modal_title|default:"Confirmer la suppression" }}</h3>
+    <button type="button" class="modal-close" data-close-modal aria-label="Fermer">&times;</button>
+</div>
+
+<form method="post"
+      hx-post="{{ modal_action }}"
+      hx-target="#modal-body"
+      hx-swap="innerHTML"
+      class="modal-form">
+    {% csrf_token %}
+
+    <div class="modal-delete-warning">
+        <span class="warning-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        <p>
+            Voulez-vous vraiment supprimer <strong>{{ object }}</strong> ?<br>
+            <span class="text-muted">Cette action est irréversible.</span>
+        </p>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal>Annuler</button>
+        <button type="submit" class="btn btn-danger">
+            <i class="fa-solid fa-trash"></i> Supprimer définitivement
+        </button>
+    </div>
+</form>

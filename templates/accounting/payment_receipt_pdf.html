@@ -1,0 +1,144 @@
+{% load fcfa_extras %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Reçu {{ payment.receipt_number }}</title>
+    <style>
+        /* Reçu de paiement A4 PORTRAIT — design professionnel */
+        @page {
+            size: A4 portrait;
+            margin: 1.2cm 1.2cm 1.2cm 1.2cm;
+        }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 9.5pt; color: #1e293b; }
+
+        .header-table { width: 100%; margin-bottom: 2px; }
+        .school-name { font-size: 15pt; font-weight: bold; color: #1d3557; line-height: 1.25; }
+        .school-meta { font-size: 7.8pt; color: #64748b; margin-top: 2px; }
+        .doc-title {
+            text-align: right; font-size: 13.5pt; font-weight: bold;
+            color: #e63946; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .doc-sub { text-align: right; font-size: 9.5pt; font-weight: bold; color: #457b9d; margin-top: 3px; }
+
+        .rule { border-bottom: 2.5pt solid #1d3557; margin: 6px 0 14px 0; }
+
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 3pt solid #1d3557;
+            padding: 8px 12px;
+            margin-bottom: 14px;
+            font-size: 9pt;
+        }
+
+        table.data { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+        table.data th.section {
+            background-color: #1d3557; color: #ffffff;
+            font-size: 8.5pt; font-weight: bold; text-align: left;
+            padding: 6px 8px; letter-spacing: 0.5px;
+        }
+        table.data th { text-align: left; padding: 7px 8px; font-size: 9pt; color: #334155; }
+        table.data td { border: 0.5pt solid #cbd5e1; padding: 7px 8px; font-size: 9.5pt; }
+        table.data th.k { background-color: #f8f9fa; width: 42%; }
+
+        .amount-big { font-size: 13pt; font-weight: bold; color: #059669; }
+        .reliquat { color: #b91c1c; font-weight: bold; }
+        .ok { color: #059669; font-weight: bold; }
+
+        .signatures { width: 100%; margin-top: 48px; font-size: 8.8pt; color: #334155; }
+        .sign-cell { text-align: center; }
+        .sign-line { border-top: 0.5pt solid #475569; margin-top: 48px; width: 200px; }
+        .sign-label { font-size: 7.2pt; color: #64748b; margin-top: 2px; }
+
+        .footer-note { margin-top: 18px; text-align: center; font-size: 7pt; color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td style="width: 55%; vertical-align: top;">
+                <div class="school-name">{{ school_name }}</div>
+                <div class="school-meta">
+                    {{ school_address|default:"—" }}{% if school_phone %} · Tél : {{ school_phone }}{% endif %}{% if school_email %} · {{ school_email }}{% endif %}
+                </div>
+            </td>
+            <td style="width: 45%; vertical-align: top;">
+                <div class="doc-title">Reçu de paiement</div>
+                <div class="doc-sub">N° {{ payment.receipt_number }}</div>
+                <div class="school-meta" style="text-align: right;">Année scolaire {{ academic_year }}</div>
+            </td>
+        </tr>
+    </table>
+    <div class="rule"></div>
+
+    <div class="info-box">
+        <b>Élève :</b> {{ student.last_name }} {{ student.first_name }} &nbsp;&nbsp;·&nbsp;&nbsp;
+        <b>Matricule :</b> {{ student.student_id }} &nbsp;&nbsp;·&nbsp;&nbsp;
+        <b>Classe :</b> {{ classroom|default:"—" }}{% if classroom %} ({{ classroom.get_level_display }}){% endif %}<br>
+        <b>Date du paiement :</b> {{ now|date:"d/m/Y à H:i" }}
+    </div>
+
+    <table class="data">
+        <tr><th class="section" colspan="2">DÉTAIL DU PAIEMENT</th></tr>
+        <tr>
+            <th class="k">Périodicité</th>
+            <td>{{ payment.get_periodicity_display }}</td>
+        </tr>
+        <tr>
+            <th class="k">Période concernée</th>
+            <td>{{ payment.period_label|default:"—" }}</td>
+        </tr>
+        <tr>
+            <th class="k">Mode de règlement</th>
+            <td>{{ payment.get_payment_method_display }}</td>
+        </tr>
+        <tr>
+            <th class="k"><b>Montant payé</b></th>
+            <td><span class="amount-big">{{ payment.amount_paid|fcfa }} FCFA</span></td>
+        </tr>
+    </table>
+
+    <table class="data">
+        <tr><th class="section" colspan="2">SITUATION FINANCIÈRE ({{ payment.get_periodicity_display|lower }})</th></tr>
+        <tr>
+            <th class="k">Frais de scolarité attendus</th>
+            <td>{% if expected %}{{ expected|fcfa }} FCFA{% else %}Non défini{% endif %}</td>
+        </tr>
+        <tr>
+            <th class="k">Total déjà payé</th>
+            <td>{{ paid_periodicity|fcfa }} FCFA</td>
+        </tr>
+        <tr>
+            <th class="k"><b>RELIQUAT restant</b></th>
+            <td class="{% if reliquat is None %}{% elif reliquat > 0 %}reliquat{% else %}ok{% endif %}">
+                {% if reliquat is None %}—
+                {% elif reliquat > 0 %}{{ reliquat|fcfa }} FCFA
+                {% else %}0 FCFA — SOLDE{% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th class="k">Total payé (année, toutes périodes)</th>
+            <td>{{ paid_total|fcfa }} FCFA</td>
+        </tr>
+    </table>
+
+    <table class="signatures">
+        <tr>
+            <td class="sign-cell">
+                Le Caissier
+                <div class="sign-line"></div>
+                <div class="sign-label">Nom et signature</div>
+            </td>
+            <td class="sign-cell">
+                Le Représentant du parent
+                <div class="sign-line"></div>
+                <div class="sign-label">Nom et signature</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="footer-note">
+        Reçu émis le {{ now|date:"d/m/Y H:i" }} — {{ school_name }} — à conserver.
+    </div>
+</body>
+</html>

@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Plateforme — Tableau de bord{% endblock %}
+
+{% block content %}
+<style>
+    .pdash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    .pdash-card {
+        background: #fff; border: 1px solid var(--border-color); border-radius: 16px;
+        padding: 18px; box-shadow: var(--shadow-card);
+    }
+    .pdash-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .pdash-ico { width: 40px; height: 40px; border-radius: 11px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem; }
+    .ico-green { background: #f0fdf4; color: #059669; }
+    .ico-blue { background: #eff6ff; color: #2563eb; }
+    .ico-violet { background: #f5f3ff; color: #7c3aed; }
+    .ico-orange { background: #fff7ed; color: #ea580c; }
+    .pdash-lbl { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); text-align: right; }
+    .pdash-val { font-size: 1.65rem; font-weight: 800; line-height: 1.15; }
+    .pdash-val.green { color: #059669; }
+    .pdash-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+    .vchart { display: flex; align-items: flex-end; gap: 7px; height: 150px; padding: 4px 2px 0; }
+    .vcol { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
+    .vcol-count { font-size: 0.66rem; font-weight: 800; color: #059669; margin-bottom: 3px; }
+    .vcol-bar { width: 100%; max-width: 26px; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, #34d399, #059669); min-height: 2px; }
+    .vcol-bar.dim { background: #e2e8f0; }
+    .vcol-lbl { font-size: 0.58rem; color: var(--text-muted); margin-top: 6px; white-space: nowrap; }
+
+    .pay-table th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); }
+    .pay-st { display: inline-block; margin-left: 5px; padding: 2px 8px;
+              border-radius: 999px; font-size: 0.62rem; font-weight: 800;
+              text-transform: uppercase; letter-spacing: 0.4px; }
+    .pay-st.pending { background: #fef3c7; color: #92400e; }
+    .pay-st.failed { background: #fee2e2; color: #991b1b; }
+    .src-badge { font-size: 0.68rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+    .src-manuel { background: #f0fdf4; color: #065f46; }
+    .src-api { background: #eff6ff; color: #1d4ed8; }
+</style>
+
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-gauge-high"></i></span>Tableau de bord — Super Admin</h1>
+        <p>Écoles créées, abonnements encaissés et visiteurs de la plateforme.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'platform_schools' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-school"></i> Toutes les écoles
+        </a>
+        <a href="{% url 'platform_school_add' %}" hx-get="{% url 'platform_school_add' %}"
+           hx-target="#modal-body" hx-swap="innerHTML" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Nouvelle école
+        </a>
+    </div>
+</div>
+
+<!-- ============ INDICATEURS ============ -->
+<div class="pdash-grid">
+    <div class="pdash-card">
+        <div class="pdash-top">
+            <span class="pdash-ico ico-green"><i class="fa-solid fa-school"></i></span>
+            <span class="pdash-lbl">Écoles créées</span>
+        </div>
+        <div class="pdash-val">{{ nb_schools_total }}</div>
+        <div class="pdash-hint">{{ nb_schools_active }} active(s) · +{{ nb_schools_month }} ce mois</div>
+    </div>
+    <div class="pdash-card">
+        <div class="pdash-top">
+            <span class="pdash-ico ico-green"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+            <span class="pdash-lbl">Abonnements manuels</span>
+        </div>
+        <div class="pdash-val green">{{ manual_total }} F</div>
+        <div class="pdash-hint">{{ manual_count }} paiement(s) saisi(s) sur la plateforme</div>
+    </div>
+    <div class="pdash-card">
+        <div class="pdash-top">
+            <span class="pdash-ico ico-blue"><i class="fa-solid fa-plug-circle-check"></i></span>
+            <span class="pdash-lbl">Abonnements par API</span>
+        </div>
+        <div class="pdash-val">{{ api_total }} F</div>
+        <div class="pdash-hint">{{ api_count }} paiement(s) reçu(s) via l'API (Mobile Money)</div>
+    </div>
+    <div class="pdash-card">
+        <div class="pdash-top">
+            <span class="pdash-ico ico-violet"><i class="fa-solid fa-user-clock"></i></span>
+            <span class="pdash-lbl">Visiteurs aujourd'hui</span>
+        </div>
+        <div class="pdash-val">{{ visits_today_users }}</div>
+        <div class="pdash-hint">{{ visits_today_views }} page(s) consultée(s)</div>
+    </div>
+    <div class="pdash-card">
+        <div class="pdash-top">
+            <span class="pdash-ico ico-orange"><i class="fa-solid fa-calendar-days"></i></span>
+            <span class="pdash-lbl">Visiteurs ce mois</span>
+        </div>
+        <div class="pdash-val">{{ visits_month_users }}</div>
+        <div class="pdash-hint">{{ visits_month_views }} page(s) consultée(s)</div>
+    </div>
+</div>
+
+<!-- ============ GRAPHIQUES VISITEURS ============ -->
+<div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-top: 18px;" class="two-col">
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-chart-column me-1 text-success"></i> Visiteurs — 14 derniers jours</h2>
+        </div>
+        <div class="vchart">
+            {% for d in visits_daily %}
+                <div class="vcol" title="{{ d.label }} : {{ d.views }} page(s)">
+                    {% if d.views %}<span class="vcol-count">{{ d.views }}</span>{% endif %}
+                    <div class="vcol-bar {% if not d.views %}dim{% endif %}" style="height: {% if d.views %}{{ d.pct }}{% else %}1{% endif %}%;"></div>
+                    <span class="vcol-lbl">{{ d.label }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-chart-line me-1 text-success"></i> Visiteurs par mois</h2>
+        </div>
+        <div class="vchart">
+            {% for m in visits_monthly %}
+                <div class="vcol" title="{{ m.label }} : {{ m.users }} visiteur(s)">
+                    {% if m.users %}<span class="vcol-count">{{ m.users }}</span>{% endif %}
+                    <div class="vcol-bar {% if not m.users %}dim{% endif %}" style="height: {% if m.users %}{{ m.pct }}{% else %}1{% endif %}%;"></div>
+                    <span class="vcol-lbl">{{ m.label }}</span>
+                </div>
+            {% endfor %}
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 10px; text-align: center;">
+            Visiteurs distincts par mois — 6 derniers mois
+        </p>
+    </div>
+</div>
+
+<!-- ============ DERNIERS PAIEMENTS D'ABONNEMENT ============ -->
+<div class="dashboard-card" style="margin-top: 18px;">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fa-solid fa-credit-card me-1 text-success"></i> Derniers paiements d'abonnement</h2>
+        <a href="{% url 'platform_subscriptions' %}" class="btn btn-outline btn-sm">
+            <i class="fa-solid fa-credit-card"></i> Gérer les abonnements
+        </a>
+    </div>
+    {% if last_payments %}
+        <div class="table-container">
+            <table class="custom-table pay-table">
+                <thead>
+                    <tr>
+                        <th>École</th>
+                        <th>Formule</th>
+                        <th class="text-center">Origine</th>
+                        <th>Référence</th>
+                        <th class="text-center">Date</th>
+                        <th class="text-center">Montant</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in last_payments %}
+                        <tr>
+                            <td><strong>{{ p.school.name }}</strong></td>
+                            <td>{{ p.plan.name|default:"—" }}</td>
+                            <td class="text-center">
+                                {% if p.source == 'API' %}
+                                    <span class="src-badge src-api"><i class="fa-solid fa-plug"></i> API</span>
+                                {% else %}
+                                    <span class="src-badge src-manuel"><i class="fa-solid fa-pen"></i> Manuel</span>
+                                {% endif %}
+                                {% if p.status == 'EN_ATTENTE' %}<span class="pay-st pending">En attente</span>
+                                {% elif p.status == 'ECHOUE' %}<span class="pay-st failed">Échoué</span>{% endif %}
+                            </td>
+                            <td>{{ p.reference|default:"—" }}</td>
+                            <td class="text-center">{{ p.created_at|date:"d/m/Y H:i" }}</td>
+                            <td class="text-center" style="font-weight: 800; color: #059669;">{{ p.amount|intcomma }} F</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-credit-card"></i>
+            <p>Aucun paiement d'abonnement enregistré.<br>
+               Les montants apparaissent ici dès qu'un abonnement payant est attribué manuellement ou reçu par API.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

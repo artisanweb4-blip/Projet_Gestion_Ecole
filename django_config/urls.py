@@ -1,22 +1,49 @@
 """
-URL configuration for django_config project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+URL configuration for django_config project (Gestion d'École).
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
+from django.contrib.auth import views as auth_views
+
+from accounts import views as accounts_views
+from django.urls import include, path
 
 urlpatterns = [
+    # Administration Django
     path('admin/', admin.site.urls),
+
+    # Site public (landing + inscription école) & plateforme super admin
+    path('', include('website.urls')),
+
+    # Tableau de bord
+    path('', include('dashboard.urls')),
+
+    # Authentification (session web)
+    path('accounts/login/', accounts_views.SchoolLoginView.as_view(
+        template_name='registration/login.html',
+        redirect_authenticated_user=True,
+    ), name='login'),
+    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
+
+    # API REST (JWT)
+    path('accounts/', include('accounts.urls')),
+    path('api/', include('apis.urls')),
+
+    # Modules web
+    path('students/', include('students.urls')),
+    path('teachers/', include('teachers.urls')),
+    path('parents/', include('parents.urls')),
+    path('classes/', include('classes.urls')),
+    path('courses/', include('courses.urls')),
+    path('grades/', include('grades.urls')),
+    path('accounting/', include('accounting.urls')),
+    path('timetable/', include('timetable.urls')),
+    path('calendar/', include('school_calendar.urls')),
+    path('settings/', include('school_settings.urls')),
+    path('documents/', include('documents.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

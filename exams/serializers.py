@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Exam, Question, ExamResult
 from courses.serializers import CourseSerializer
-from students.serializers import StudentProfileSerializer
+from students.serializers import StudentSerializer as StudentProfileSerializer
 
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:

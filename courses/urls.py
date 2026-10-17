@@ -31,6 +31,8 @@ urlpatterns = [
     
     # Création d'une matière : /courses/subjects/create/
     path('subjects/create/', views.SubjectCreateView.as_view(), name='subject_create'),
+    path('subjects/<int:pk>/edit/', views.SubjectUpdateView.as_view(), name='subject_edit'),
+    path('subjects/<int:pk>/delete/', views.SubjectDeleteView.as_view(), name='subject_delete'),
     path(
         'ajax/get-subjects-by-class/', 
         views.ajax_get_subjects_by_class, 

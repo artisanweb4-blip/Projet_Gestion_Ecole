@@ -7,11 +7,11 @@
 <!-- En-tête de la page -->
 <div class="header-top">
     <div class="page-title">
-        <h1>Suppression de classe</h1>
+        <h1><span class="page-icon"><i class="fa-solid fa-school"></i></span>Suppression de classe</h1>
         <p>Veuillez confirmer la suppression définitive de cette classe.</p>
     </div>
     <div>
-        <a href="{% url 'school_classes:list' %}" class="btn btn-secondary">
+        <a href="{% url 'classes:list' %}" class="btn btn-secondary">
             <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i> Annuler
         </a>
     </div>
@@ -57,7 +57,7 @@
     <!-- Formulaire de confirmation -->
     <form method="post" class="delete-actions">
         {% csrf_token %}
-        <a href="{% url 'school_classes:list' %}" class="btn btn-secondary">
+        <a href="{% url 'classes:list' %}" class="btn btn-secondary">
             Annuler
         </a>
         <button type="submit" class="btn btn-danger">

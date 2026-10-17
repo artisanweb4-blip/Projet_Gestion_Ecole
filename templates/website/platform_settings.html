@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Plateforme — Paramètres{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-sliders"></i></span>Paramètres de la plateforme</h1>
+        <p>Configuration globale appliquée à toutes les écoles.</p>
+    </div>
+    <a href="{% url 'platform_dashboard' %}" class="btn btn-secondary">
+        <i class="fa-solid fa-gauge-high"></i> Tableau de bord
+    </a>
+</div>
+
+<form method="post" class="dashboard-card" style="max-width: 680px;">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-error"><i class="fa-solid fa-circle-exclamation"></i> {{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="form-grid-2">
+        {% for field in form.visible_fields %}
+            <div class="form-group {% if field.errors %}is-invalid{% endif %} {% if field.field.widget.input_type == 'checkbox' %}full{% endif %}">
+                {% if field.field.widget.input_type != 'checkbox' %}
+                    <label class="form-label" for="{{ field.id_for_label }}">
+                        {{ field.label }}{% if field.field.required %} <span class="required">*</span>{% endif %}
+                    </label>
+                {% endif %}
+                {{ field }}
+                {% if field.field.widget.input_type == 'checkbox' %}
+                    <label class="form-label" for="{{ field.id_for_label }}" style="display: inline; margin-left: 8px;">{{ field.label }}</label>
+                {% endif %}
+                {% if field.help_text %}<div class="metric-hint">{{ field.help_text }}</div>{% endif %}
+                {% for error in field.errors %}
+                    <div class="error-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+        <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Enregistrer
+        </button>
+    </div>
+</form>
+{% endblock %}

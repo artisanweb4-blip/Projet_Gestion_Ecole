@@ -1,32 +1,227 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <title>{% block title %}Gestion École{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/custom.css' %}" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestion d'École{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23059669'/><text x='50' y='68' font-size='46' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'>G</text></svg>">
+    <!-- Toutes les ressources sont servies localement : aucun CDN, affichage instantané -->
+    <link rel="stylesheet" href="{% static 'vendor/fonts/plus-jakarta.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
+    <!-- CSS du projet -->
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}?v=20261005v">
     {% block extra_css %}{% endblock %}
+    <style>
+        /* Chargement de modale : styles inline = toujours à jour, même avec
+           un CSS en cache ancien. */
+        .modal-loading { display: flex; align-items: center; gap: 10px;
+            padding: 30px 26px; color: #64748b; font-size: 14px; font-weight: 600; }
+        .modal-spinner { width: 18px; height: 18px; flex: 0 0 auto;
+            border: 3px solid #e2e8f0; border-top-color: #059669;
+            border-radius: 50%; animation: gcespin .7s linear infinite; }
+        @keyframes gcespin { to { transform: rotate(360deg); } }
+    </style>
 </head>
 <body>
-    <header class="header">
-        <h1>Gestion École</h1>
-        <nav class="top-nav">
-            <!-- Top navigation items, e.g., user profile, logout -->
-        </nav>
-    </header>
-    <aside class="sidebar">
-        <ul class="menu">
-            {% for item in menu_items %}
-                <li><a href="{{ item.url }}" class="{% if request.path == item.url %}active{% endif %}">{{ item.label }}</a></li>
-            {% endfor %}
-        </ul>
-    </aside>
-    <main class="main-content">
-        {% block content %}{% endblock %}
-    </main>
-    <footer class="footer">
-        <p>&copy; {{ year }} Gestion École. Tous droits réservés.</p>
-    </footer>
-    <script src="{% static 'js/main.js' %}"></script>
+    <div class="app-layout">
+        <!-- ===================== SIDEBAR ===================== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <span class="brand-logo">GCE</span>
+                <span class="brand-text">
+                    <strong>Gestion d'École</strong>
+                    <small>Gestion complète d'école</small>
+                </span>
+            </div>
+
+            <nav class="menu">
+                {% for item in menu_items %}
+                    {% if item.is_section %}
+                        <div class="menu-section">{{ item.section }}</div>
+                    {% else %}
+                        <a href="{{ item.url }}" class="menu-link {% if item.is_active %}active{% endif %}">
+                            <i class="fa-solid {{ item.icon }} menu-icon"></i>
+                            <span class="menu-label">{{ item.label }}</span>
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </nav>
+
+            <div class="sidebar-footer">
+                <form method="post" action="{% url 'logout' %}" class="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout btn-block" title="Se déconnecter">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Déconnexion</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- ===================== ZONE PRINCIPALE ===================== -->
+        <div class="page-loader" id="pageLoader"></div>
+        <div class="main-area">
+            <div id="page-area" class="page-area">
+            <header class="topbar">
+                <button type="button" class="burger" id="sidebarToggle" aria-label="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="topbar-title">
+                    {% block topbar_title %}<span class="topbar-title-inner"><i class="fa-solid {{ active_page_icon }}" aria-hidden="true"></i> {{ active_page_label|default:"Tableau de bord" }}</span>{% endblock %}
+                </div>
+                <div class="topbar-right">
+                    <span class="topbar-user">
+                        <span class="avatar">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</span>
+                        <span class="topbar-user-info">
+                            <strong title="{{ user.email }}">{{ user.email|default:user.username }}</strong>
+                            <small>{{ user.get_role_display|default:"Utilisateur" }}</small>
+                        </span>
+                    </span>
+                    <a href="{% url 'subscription_page' %}" class="btn btn-outline btn-sm"
+                       style="border-color: #059669; color: #047857;" title="Voir l'abonnement de l'école">
+                        <i class="fa-solid fa-credit-card"></i> Voir abonnement
+                    </a>
+                    {% block topbar_actions %}{% endblock %}
+                </div>
+            </header>
+
+            <main class="content" id="main-content">
+                {% if messages %}
+                    <div class="messages-stack">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismiss">
+                                <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% elif message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                                <span>{{ message }}</span>
+                                <button type="button" class="alert-close" aria-label="Fermer">&times;</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </main>
+            </div><!-- /#page-area -->
+
+            <footer class="footer">
+                <p>Gestion d'École · &copy; {{ current_year }} Tous droits réservés
+                    · <span style="opacity:.55">Version 2026-10-05ag</span></p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- ===================== MODALE GLOBALE ===================== -->
+    <div class="modal-overlay" id="modalOverlay" aria-hidden="true">
+        <div class="modal-box" role="dialog" aria-modal="true">
+            <div class="modal-body" id="modal-body">
+                <!-- Contenu injecté par HTMX -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ================================================================
+    // MODALES : socle inline TOUJOURS à jour (le HTML n'est jamais mis
+    // en cache). Garantit l'ouverture des formulaires ajout / modifier
+    // / suppression, même si le JS en cache est ancien ou si la
+    // requête HTMX échoue : dans ce cas on bascule sur le formulaire
+    // en pleine page (fallback sans JavaScript).
+    // ================================================================
+    (function () {
+        'use strict';
+
+        function overlay() { return document.getElementById('modalOverlay'); }
+        function body() { return document.getElementById('modal-body'); }
+
+        window.gceOpenModal = function () {
+            var o = overlay();
+            if (!o) return;
+            o.classList.add('show');
+            o.setAttribute('aria-hidden', 'false');
+        };
+        window.gceCloseModal = function () {
+            var o = overlay();
+            if (!o) return;
+            o.classList.remove('show');
+            o.setAttribute('aria-hidden', 'true');
+            var b = body(); if (b) { b.innerHTML = ''; }
+            document.body.style.overflow = '';
+        };
+
+        // Mémorise le lien déclencheur (pour le secours pleine page)
+        var lastUrl = null;
+        var pendingNav = null;
+
+        // Indicateur de chargement injecté IMMÉDIATEMENT au clic : l'utilisateur
+        // voit un retour visuel instantané, même si le serveur est lent, et on
+        // sait à tout moment si le contenu est arrivé.
+        function showLoading() {
+            var b = body(); var o = overlay();
+            if (o && b) {
+                b.innerHTML = '<div class="modal-loading" data-loading="1">' +
+                    '<span class="modal-spinner"></span>Chargement du formulaire…</div>';
+                window.gceOpenModal();
+            }
+        }
+
+        document.addEventListener('click', function (e) {
+            var trig = e.target.closest('[hx-target="#modal-body"]');
+            if (trig) {
+                var url = trig.getAttribute('href') || trig.getAttribute('hx-get');
+                if (!url) { return; }
+                // Si HTMX n'est pas chargé (fichier manquant/bloqué) : ne rien
+                // faire → le navigateur suit le href → formulaire pleine page.
+                if (typeof window.htmx === 'undefined') { return; }
+                lastUrl = url;
+                clearTimeout(pendingNav);
+                showLoading();
+                // Garde anti-modale-vide : si le contenu n'est toujours pas
+                // arrivé après 2,5 s, on bascule sur le formulaire pleine page.
+                pendingNav = setTimeout(function () {
+                    var b = body();
+                    if (b && b.querySelector('[data-loading="1"]')) {
+                        window.gceCloseModal();
+                        window.location.href = lastUrl;
+                    }
+                }, 2500);
+                return;
+            }
+            // Fermetures (arrière-plan / croix)
+            clearTimeout(pendingNav);
+            if (e.target === overlay()) { window.gceCloseModal(); }
+            if (e.target.closest('[data-close-modal]')) { window.gceCloseModal(); }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { clearTimeout(pendingNav); window.gceCloseModal(); }
+        });
+
+        // Ouverture dès que le contenu de la modale est injecté
+        document.addEventListener('htmx:afterSwap', function (e) {
+            var b = body();
+            if (b && e.target && e.target.id === 'modal-body') {
+                window.gceOpenModal();
+            }
+        });
+
+        // Échec de la requête de modale → formulaire pleine page
+        function fallbackFullPage(e) {
+            var elt = e.detail && e.detail.elt;
+            if (elt && elt.getAttribute &&
+                elt.getAttribute('hx-target') === '#modal-body' &&
+                (elt.getAttribute('hx-get') || elt.getAttribute('href'))) {
+                window.location.href =
+                    elt.getAttribute('href') || elt.getAttribute('hx-get');
+            }
+        }
+        document.addEventListener('htmx:sendError', fallbackFullPage);
+        document.addEventListener('htmx:responseError', fallbackFullPage);
+    })();
+    </script>
+
+    <script defer src="{% static 'vendor/js/htmx.min.js' %}?v=20261005v"></script>
+    <script defer src="{% static 'js/main.js' %}?v=20261005v"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

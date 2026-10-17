@@ -9,9 +9,17 @@ class AssignmentViewSet(viewsets.ModelViewSet):
     filterset_fields = ['course']
     search_fields = ['title', 'description']
 
+    def get_queryset(self):
+        # Isolation multi-écoles : évalué par requête (gestionnaire filtrant)
+        return Assignment.objects.all().order_by('-due_date')
+
 
 class AssignmentSubmissionViewSet(viewsets.ModelViewSet):
     queryset = AssignmentSubmission.objects.all().order_by('-submission_date')
     serializer_class = AssignmentSubmissionSerializer
     permission_classes = [permissions.IsAuthenticated]
     filterset_fields = ['assignment', 'student']
+
+    def get_queryset(self):
+        # Isolation multi-écoles : évalué par requête (gestionnaire filtrant)
+        return AssignmentSubmission.objects.all().order_by('-submission_date')

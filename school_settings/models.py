@@ -1,5 +1,7 @@
 from django.db import models
 
+from core.scoping import NO_ACCESS, get_current_school
+
 
 class GeneralSetting(models.Model):
     """Configuration générale du système scolaire (Singleton)."""
@@ -63,7 +65,16 @@ class GeneralSetting(models.Model):
 
 
 class SchoolSetting(models.Model):
-    """Informations sur l'établissement scolaire (Singleton)."""
+    """Informations de l'établissement (une ligne par école inscrite)."""
+
+    school = models.OneToOneField(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='settings',
+        verbose_name="École",
+    )
 
     logo = models.ImageField(
         upload_to='school/',
@@ -101,13 +112,28 @@ class SchoolSetting(models.Model):
         verbose_name_plural = "Informations de l'école"
 
     def save(self, *args, **kwargs):
-        self.pk = 1
+        # Compatibilité : la ligne héritée (hors école) garde l'identifiant 1.
+        if self.school_id is None and not self.pk:
+            self.pk = 1
         super().save(*args, **kwargs)
 
     @classmethod
-    def load(cls):
-        obj, created = cls.objects.get_or_create(pk=1)
+    def load(cls, school=None):
+        """Paramètres de l'école courante (créés au besoin).
+
+        Hors contexte d'école (site public, commandes) : ligne héritée.
+        """
+        if school is None:
+            current = get_current_school()
+            school = None if current == NO_ACCESS else current
+        if school is not None:
+            obj, _ = cls.objects.get_or_create(school=school)
+            return obj
+        obj = cls.objects.filter(school__isnull=True).first() or cls.objects.first()
+        if obj is None:
+            obj = cls.objects.create(pk=1)
         return obj
+
 
     def __str__(self):
         return self.school_name or "Configuration de l'école"

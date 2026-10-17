@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer le frais - Comptabilité{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-trash"></i></span>Supprimer le frais</h1>
+        <p>Cette action est irréversible.</p>
+    </div>
+    <a href="{% url 'accounting:tuitions' %}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="dashboard-card" style="max-width: 680px;">
+    <div id="modal-body">
+        {% include "includes/delete_modal.html" %}
+    </div>
+</div>
+{% endblock %}

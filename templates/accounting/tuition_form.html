@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Frais de scolarité - Comptabilité{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-layer-group"></i></span>{{ modal_title|default:"Frais de scolarité" }}</h1>
+        <p>Version complète du formulaire (sans JavaScript).</p>
+    </div>
+    <a href="{% url 'accounting:tuitions' %}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="dashboard-card" style="max-width: 680px;">
+    <div id="modal-body">
+        {% include "includes/form_modal.html" %}
+    </div>
+</div>
+{% endblock %}

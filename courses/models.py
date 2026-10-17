@@ -1,10 +1,22 @@
 import uuid
 from django.core.exceptions import ValidationError
 from django.db import models
+
+from core.scoping import SchoolManager, scoped_manager
 from core.models import TimeStampMixin
 
 
 class Program(TimeStampMixin):
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='programs',
+        verbose_name="École",
+    )
     code = models.CharField(
         max_length=20, unique=True, verbose_name="Code du programme"
     )
@@ -22,6 +34,16 @@ class Program(TimeStampMixin):
 
 
 class Subject(TimeStampMixin):
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='subjects',
+        verbose_name="École",
+    )
     name = models.CharField(max_length=150, verbose_name="Nom de la matière")
     code = models.CharField(
         max_length=50,
@@ -61,6 +83,8 @@ class Subject(TimeStampMixin):
 
 
 class ProgramSubject(TimeStampMixin):
+    objects = scoped_manager('program__school')
+
     program = models.ForeignKey(
         Program, on_delete=models.CASCADE, related_name='program_subjects'
     )
@@ -99,3 +123,85 @@ class ProgramSubject(TimeStampMixin):
     def __str__(self):
         teacher_name = f" - {self.teacher}" if self.teacher else ""
         return f"{self.subject.name} ({self.program.code}){teacher_name}"
+
+
+class Course(TimeStampMixin):
+    """Un cours : une matière enseignée à une classe par un enseignant."""
+    objects = scoped_manager('school_class__school')
+
+    code = models.CharField(
+        max_length=20,
+        unique=True,
+        blank=True,
+        verbose_name="Code du cours",
+    )
+    name = models.CharField(max_length=150, verbose_name="Intitulé du cours")
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE,
+        related_name='courses',
+        verbose_name="Matière",
+    )
+    school_class = models.ForeignKey(
+        'classes.Class',
+        on_delete=models.CASCADE,
+        related_name='courses',
+        verbose_name="Classe",
+    )
+    teacher = models.ForeignKey(
+        'teachers.Teacher',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='courses',
+        verbose_name="Enseignant",
+    )
+    credits = models.PositiveSmallIntegerField(default=1, verbose_name="Crédits")
+    coefficient = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=1.0,
+        verbose_name="Coefficient",
+    )
+    description = models.TextField(blank=True, null=True, verbose_name="Description")
+
+    class Meta:
+        verbose_name = "Cours"
+        verbose_name_plural = "Cours"
+        unique_together = ('subject', 'school_class')
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            import uuid
+            base = self.subject.name[:4].upper() if self.subject and self.subject.name else "COUR"
+            self.code = f"{base}-{str(uuid.uuid4())[:4].upper()}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.subject.name} - {self.school_class.name} ({self.code})"
+
+
+class Enrollment(TimeStampMixin):
+    """Inscription d'un élève à un cours."""
+    objects = scoped_manager('student__school')
+
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name='enrollments',
+        verbose_name="Cours",
+    )
+    student = models.ForeignKey(
+        'students.Student',
+        on_delete=models.CASCADE,
+        related_name='enrollments',
+        verbose_name="Élève",
+    )
+
+    class Meta:
+        verbose_name = "Inscription à un cours"
+        verbose_name_plural = "Inscriptions aux cours"
+        unique_together = ('course', 'student')
+
+    def __str__(self):
+        return f"{self.student.full_name} → {self.course.code}"

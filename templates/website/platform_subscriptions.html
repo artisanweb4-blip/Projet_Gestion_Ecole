@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Plateforme — Abonnements{% endblock %}
+
+{% block extra_css %}
+<style>
+    .badge-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+                 margin-left: 6px; vertical-align: middle; }
+    .badge-dot.on { background: #16a34a; box-shadow: 0 0 0 3px rgba(22, 163, 74, .18); }
+    .badge-dot.off { background: #cbd5e1; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-credit-card"></i></span>Abonnements</h1>
+        <p>Les formules que vous créez ici sont proposées aux écoles lors de l'inscription et de l'attribution.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'platform_schools' %}" class="btn btn-secondary">
+            <i class="fa-solid fa-school"></i> Écoles
+        </a>
+        <button type="button" class="btn btn-primary"
+                hx-get="{% url 'platform_subscription_add' %}"
+                hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-plus"></i> Nouvel abonnement
+        </button>
+        <button type="button" class="btn btn-outline"
+                hx-get="{% url 'platform_saspay_config' %}"
+                hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-mobile-screen"></i> SasPay
+            {% if saspay_cfg.saspay_enabled %}
+                <span class="badge-dot on" title="Paiement en ligne activé"></span>
+            {% else %}
+                <span class="badge-dot off" title="Paiement en ligne désactivé"></span>
+            {% endif %}
+        </button>
+    </div>
+</div>
+
+<style>
+    .plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+    .plan-card {
+        background: #fff; border: 1px solid var(--border-color); border-radius: 14px;
+        box-shadow: var(--shadow-card); padding: 20px; display: flex; flex-direction: column; gap: 10px;
+        border-top: 4px solid var(--primary);
+    }
+    .plan-card.is-off { border-top-color: #cbd5e1; opacity: 0.75; }
+    .plan-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .plan-name { font-size: 1.05rem; font-weight: 800; color: var(--text-main); }
+    .plan-price { font-size: 1.5rem; font-weight: 800; color: var(--primary-dark); }
+    .plan-price small { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+    .plan-meta { font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 12px; flex-wrap: wrap; }
+    .plan-features { list-style: none; margin: 0; padding: 0; font-size: 0.82rem; color: var(--text-muted); }
+    .plan-features li { padding: 2px 0; }
+    .plan-features i { color: var(--primary); margin-right: 6px; }
+    .plan-desc { font-size: 0.83rem; color: var(--text-muted); }
+</style>
+
+<!-- Statistiques abonnements -->
+<div class="sub-stats" style="display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 22px;">
+    <div style="flex: 1; min-width: 190px; background: #fff; border: 1px solid var(--border-color); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow-card); display: flex; align-items: center; gap: 14px;">
+        <span style="width: 42px; height: 42px; border-radius: 11px; background: #f0fdf4; color: #059669; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem;"><i class="fa-solid fa-layer-group"></i></span>
+        <div>
+            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Formules actives</div>
+            <div style="font-size: 1.15rem; font-weight: 800;">{{ nb_active_plans }}</div>
+        </div>
+    </div>
+    <div style="flex: 1; min-width: 190px; background: #fff; border: 1px solid var(--border-color); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow-card); display: flex; align-items: center; gap: 14px;">
+        <span style="width: 42px; height: 42px; border-radius: 11px; background: #eff6ff; color: #2563eb; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem;"><i class="fa-solid fa-school"></i></span>
+        <div>
+            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Écoles abonnées</div>
+            <div style="font-size: 1.15rem; font-weight: 800;">{{ nb_subscribed }}</div>
+        </div>
+    </div>
+    <div style="flex: 1; min-width: 190px; background: #fff; border: 1px solid var(--border-color); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow-card); display: flex; align-items: center; gap: 14px;">
+        <span style="width: 42px; height: 42px; border-radius: 11px; background: #f5f3ff; color: #7c3aed; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem;"><i class="fa-solid fa-sack-dollar"></i></span>
+        <div>
+            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Revenu potentiel / période</div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: #059669;">{{ potential_revenue }} FCFA</div>
+        </div>
+    </div>
+</div>
+
+{% if plans %}
+    <div class="plan-grid">
+        {% for plan in plans %}
+            <div class="plan-card {% if not plan.is_active %}is-off{% endif %}">
+                <div class="plan-head">
+                    <div>
+                        <div class="plan-name"><i class="fa-solid fa-tag" style="color: var(--primary); margin-right: 6px;"></i>{{ plan.name }}</div>
+                        <div class="plan-meta">
+                            <span><i class="fa-solid fa-building"></i> {{ plan.nb }} école(s)</span>
+                            <span><i class="fa-solid fa-calendar-days"></i> {{ plan.duration_days }} j</span>
+                            {% if plan.max_students %}<span><i class="fa-solid fa-user-graduate"></i> ≤ {{ plan.max_students }} élèves</span>{% else %}<span><i class="fa-solid fa-infinity"></i> élèves illimités</span>{% endif %}
+                        </div>
+                    </div>
+                    {% if plan.is_active %}
+                        <span class="badge badge-success">Active</span>
+                    {% else %}
+                        <span class="badge badge-secondary">Masquée</span>
+                    {% endif %}
+                </div>
+                <div class="plan-price">{{ plan.price|intcomma }} <small>FCFA / {{ plan.duration_days }} jours</small></div>
+                {% if plan.description %}<p class="plan-desc">{{ plan.description }}</p>{% endif %}
+                {% if plan.features %}
+                    <ul class="plan-features">
+                        {% for line in plan.features.splitlines %}{% if line.strip %}<li><i class="fa-solid fa-check"></i>{{ line.strip }}</li>{% endif %}{% endfor %}
+                    </ul>
+                {% endif %}
+                <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 6px;">
+                    <button type="button" class="btn btn-outline btn-sm"
+                            hx-get="{% url 'platform_subscription_update' plan.pk %}"
+                            hx-target="#modal-body" hx-swap="innerHTML">
+                        <i class="fa-solid fa-pen"></i> Modifier
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm"
+                            hx-get="{% url 'platform_subscription_delete' plan.pk %}"
+                            hx-target="#modal-body" hx-swap="innerHTML">
+                        <i class="fa-solid fa-trash"></i> Supprimer
+                    </button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+<!-- Écoles abonnées -->
+<div class="dashboard-card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fa-solid fa-school me-1 text-success"></i> Écoles abonnées</h2>
+        <span class="badge badge-success">{{ subscriptions|length }} école(s)</span>
+    </div>
+    {% if subscriptions %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>École</th>
+                        <th>Formule</th>
+                        <th class="text-center">Valable jusqu'au</th>
+                        <th class="text-center">Jours restants</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-center">Fiche</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in subscriptions %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.school.name }}</strong>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ item.school.code }}</div>
+                            </td>
+                            <td>
+                                {% if item.school.subscription %}
+                                    <span class="badge badge-info">{{ item.school.subscription.name }}</span>
+                                {% else %}
+                                    <span style="color: var(--text-muted);">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.school.subscription_until %}{{ item.school.subscription_until|date:"d/m/Y" }}{% else %}—{% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.school.subscription_until %}
+                                    {% if item.expired %}<span style="color: #b91c1c; font-weight: 700;">Expiré</span>
+                                    {% else %}{{ item.school.subscription_until|timeuntil:today }}{% endif %}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if not item.school.subscription %}
+                                    <span class="badge badge-secondary">Sans abonnement</span>
+                                {% elif item.expired %}
+                                    <span class="badge badge-danger">Expiré</span>
+                                {% else %}
+                                    <span class="badge badge-success">Actif</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'platform_school_detail' item.school.pk %}" class="btn-action btn-view" title="Voir la fiche">
+                                    <i class="fa-regular fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state"><i class="fa-solid fa-school"></i><p>Aucune école inscrite pour le moment.</p></div>
+    {% endif %}
+</div>
+
+{% else %}
+    <div class="dashboard-card">
+        <div class="empty-state">
+            <i class="fa-solid fa-credit-card"></i>
+            <p>Aucun abonnement défini. Créez votre première formule (ex. Essai gratuit, Essentiel, Pro, Excellence).</p>
+            <button type="button" class="btn btn-primary" style="margin-top: 10px;"
+                    hx-get="{% url 'platform_subscription_add' %}"
+                    hx-target="#modal-body" hx-swap="innerHTML">
+                <i class="fa-solid fa-plus"></i> Créer un abonnement
+            </button>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

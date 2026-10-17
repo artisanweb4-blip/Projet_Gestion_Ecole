@@ -7,11 +7,11 @@
 <!-- En-tête de la page -->
 <div class="header-top">
     <div class="page-title">
-        <h1>Classes</h1>
+        <h1><span class="page-icon"><i class="fa-solid fa-school"></i></span>Classes</h1>
         <p>Gérez les classes, les niveaux et les enseignants responsables.</p>
     </div>
     <div>
-        <a href="{% url 'school_classes:add' %}" class="btn btn-primary">
+        <a href="{% url 'classes:add' %}" class="btn btn-primary" hx-get="{% url 'classes:add' %}" hx-target="#modal-body" hx-swap="innerHTML">
             <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Nouvelle classe
         </a>
     </div>
@@ -77,13 +77,13 @@
                     </td>
                     <td style="text-align: right;">
                         <div class="action-buttons">
-                            <a href="{% url 'school_classes:detail' class.pk %}" class="btn-action btn-view" title="Voir les détails">
+                            <a href="{% url 'classes:detail' class.pk %}" class="btn-action btn-view" title="Voir les détails">
                                 <i class="fa-regular fa-eye"></i>
                             </a>
-                            <a href="{% url 'school_classes:edit' class.pk %}" class="btn-action btn-edit" title="Modifier">
+                            <a href="{% url 'classes:edit' class.pk %}" class="btn-action btn-edit" title="Modifier" hx-get="{% url 'classes:edit' class.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                 <i class="fa-regular fa-pen-to-square"></i>
                             </a>
-                            <a href="{% url 'school_classes:delete' class.pk %}" class="btn-action btn-delete" title="Supprimer">
+                            <a href="{% url 'classes:delete' class.pk %}" class="btn-action btn-delete" title="Supprimer" hx-get="{% url 'classes:delete' class.pk %}" hx-target="#modal-body" hx-swap="innerHTML">
                                 <i class="fa-regular fa-trash-can"></i>
                             </a>
                         </div>

@@ -2,6 +2,51 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from core.models import TimeStampMixin
 
+
+class School(TimeStampMixin):
+    """École (tenant) inscrite sur la plateforme GCE."""
+    PLAN_CHOICES = [
+        ('GRATUIT', 'Gratuit'),
+        ('STANDARD', 'Standard'),
+        ('PREMIUM', 'Premium'),
+    ]
+
+    name = models.CharField(max_length=150, unique=True, verbose_name="Nom de l'école")
+    code = models.SlugField(max_length=30, unique=True, blank=True, verbose_name="Code")
+    address = models.CharField(max_length=255, blank=True, null=True, verbose_name="Adresse")
+    phone = models.CharField(max_length=30, blank=True, null=True, verbose_name="Téléphone")
+    email = models.EmailField(blank=True, null=True, verbose_name="Email de contact")
+    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default='STANDARD',
+                            verbose_name="Formule")
+    subscription = models.ForeignKey(
+        'SubscriptionPlan',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='schools',
+        verbose_name="Abonnement",
+    )
+    subscription_until = models.DateField(
+        null=True, blank=True,
+        verbose_name="Abonnement valable jusqu'au",
+    )
+
+    class Meta:
+        verbose_name = "École (plateforme)"
+        verbose_name_plural = "Écoles (plateforme)"
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            from django.utils.text import slugify
+            import uuid
+            base = slugify(self.name)[:20].strip('-') or 'ecole'
+            self.code = f"{base}-{str(uuid.uuid4())[:5]}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
 class UserManager(BaseUserManager):
     """Gestionnaire personnalisé pour la création d'utilisateurs et superutilisateurs."""
     def create_user(self, email, username, password=None, role='STUDENT', **extra_fields):
@@ -35,9 +80,30 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampMixin):
     """
     ROLE_CHOICES = (
         ('ADMIN', 'Administrateur / Direction'),
+        ('COMPTABLE', 'Comptable'),
         ('TEACHER', 'Enseignant'),
         ('STUDENT', 'Étudiant'),
         ('PARENT', 'Parent d\'élève'),
+    )
+
+    GENDER_CHOICES = (
+        ('M', 'Masculin'),
+        ('F', 'Féminin'),
+    )
+
+    REGION_CHOICES = (
+        ('Bamako', 'District de Bamako'),
+        ('Kayes', 'Kayes'),
+        ('Koulikoro', 'Koulikoro'),
+        ('Sikasso', 'Sikasso'),
+        ('Ségou', 'Ségou'),
+        ('Mopti', 'Mopti'),
+        ('Gao', 'Gao'),
+        ('Tombouctou', 'Tombouctou'),
+        ('Kidal', 'Kidal'),
+        ('Ménaka', 'Ménaka'),
+        ('Taoudénit', 'Taoudénit'),
+        ('Hors Mali', 'Hors Mali'),
     )
 
     email = models.EmailField(unique=True, verbose_name="Adresse Email")
@@ -46,6 +112,22 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampMixin):
     last_name = models.CharField(max_length=150, verbose_name="Nom de famille")
     phone = models.CharField(max_length=30, blank=True, null=True, verbose_name="Téléphone")
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='STUDENT', verbose_name="Rôle dans l'établissement")
+    gender = models.CharField(
+        max_length=1, choices=GENDER_CHOICES, blank=True,
+        verbose_name="Sexe",
+    )
+    region = models.CharField(
+        max_length=50, choices=REGION_CHOICES, blank=True,
+        verbose_name="Région",
+    )
+    school = models.ForeignKey(
+        School,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users',
+        verbose_name="École (rattachement)",
+    )
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, verbose_name="Photo de profil")
 
     is_staff = models.BooleanField(default=False, verbose_name="Membre du staff")
@@ -69,3 +151,153 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampMixin):
 
     def __str__(self):
         return f"{self.get_full_name()} ({self.get_role_display()})"
+
+
+class SubscriptionPayment(TimeStampMixin):
+    """Paiement d'un abonnement d'école (saisi manuellement ou reçu par API)."""
+
+    STATUS_PENDING = 'EN_ATTENTE'
+    STATUS_SUCCESS = 'REUSSI'
+    STATUS_FAILED = 'ECHOUE'
+    STATUS_CHOICES = (
+        (STATUS_PENDING, 'En attente'),
+        (STATUS_SUCCESS, 'Réussi'),
+        (STATUS_FAILED, 'Échoué'),
+    )
+
+    SOURCE_MANUAL = 'MANUEL'
+    SOURCE_API = 'API'
+    SOURCE_CHOICES = (
+        (SOURCE_MANUAL, 'Manuel (plateforme)'),
+        (SOURCE_API, 'API (paiement en ligne)'),
+    )
+
+    school = models.ForeignKey(
+        'accounts.School', on_delete=models.CASCADE, related_name='subscription_payments',
+        verbose_name="École",
+    )
+    plan = models.ForeignKey(
+        'accounts.SubscriptionPlan', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='payments', verbose_name="Formule",
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Montant (FCFA)")
+    source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default=SOURCE_MANUAL,
+                              verbose_name="Origine du paiement")
+    reference = models.CharField(max_length=100, blank=True, default='',
+                                 verbose_name="Référence (transaction)")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_SUCCESS,
+                              verbose_name="Statut")
+    provider = models.CharField(max_length=20, blank=True, default='',
+                                verbose_name="Passerelle de paiement")
+    provider_payment_id = models.CharField(max_length=100, blank=True, default='',
+                                           verbose_name="Identifiant session (passerelle)")
+    checkout_url = models.URLField(blank=True, verbose_name="Lien de paiement")
+    payer_msisdn = models.CharField(max_length=30, blank=True, default='',
+                                    verbose_name="Numéro payeur")
+    note = models.CharField(max_length=200, blank=True, default='', verbose_name="Note")
+
+    class Meta:
+        verbose_name = "Paiement d'abonnement"
+        verbose_name_plural = "Paiements d'abonnement"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.school.name} — {self.amount:g} FCFA ({self.get_source_display()})"
+
+
+class SubscriptionPlan(TimeStampMixin):
+    """Formule d'abonnement proposée aux écoles par la plateforme."""
+    name = models.CharField(max_length=100, unique=True, verbose_name="Nom de la formule")
+    code = models.SlugField(max_length=30, unique=True, blank=True, verbose_name="Code")
+    price = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        verbose_name="Prix (FCFA / période)",
+    )
+    duration_days = models.PositiveIntegerField(
+        default=30, verbose_name="Durée (jours)",
+    )
+    max_students = models.PositiveIntegerField(
+        null=True, blank=True,
+        verbose_name="Plafond d'élèves (vide = illimité)",
+    )
+    description = models.TextField(blank=True, null=True, verbose_name="Description")
+    features = models.TextField(
+        blank=True, null=True,
+        verbose_name="Fonctionnalités incluses",
+        help_text="Une fonctionnalité par ligne.",
+    )
+    is_active = models.BooleanField(default=True, verbose_name="Proposée à l'inscription")
+
+    class Meta:
+        verbose_name = "Abonnement"
+        verbose_name_plural = "Abonnements"
+        ordering = ['price']
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            from django.utils.text import slugify
+            self.code = slugify(self.name)[:30].strip('-') or 'formule'
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.name} ({int(self.price)} FCFA)"
+
+
+class PlatformSetting(TimeStampMixin):
+    """Paramètres généraux de la plateforme (singleton)."""
+    platform_name = models.CharField(
+        max_length=150, default="Gestion d'École",
+        verbose_name="Nom de la plateforme",
+    )
+    support_email = models.EmailField(blank=True, null=True, verbose_name="Email du support")
+    public_registration_enabled = models.BooleanField(
+        default=True,
+        verbose_name="Autoriser l'inscription publique des écoles",
+    )
+    default_plan = models.ForeignKey(
+        SubscriptionPlan,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='default_for_settings',
+        verbose_name="Abonnement attribué par défaut",
+    )
+    saspay_enabled = models.BooleanField(
+        default=False,
+        verbose_name="Activer le paiement en ligne (SasPay)",
+    )
+    saspay_secret_key = models.CharField(
+        max_length=200, blank=True,
+        verbose_name="Clé API secrète SasPay (sk_test_... / sk_live_...)",
+    )
+    saspay_webhook_secret = models.CharField(
+        max_length=200, blank=True,
+        verbose_name="Secret de signature du webhook SasPay",
+    )
+    saspay_country = models.CharField(
+        max_length=2, default='ML',
+        verbose_name="Pays de paiement (ISO 2)",
+    )
+    saspay_currency = models.CharField(
+        max_length=3, default='XOF',
+        verbose_name="Devise",
+    )
+    saspay_api_url = models.CharField(
+        max_length=200, default='https://api.saspay.me/api/v1',
+        verbose_name="URL de l'API SasPay (avancé)",
+    )
+
+    class Meta:
+        verbose_name = "Paramètre de la plateforme"
+        verbose_name_plural = "Paramètres de la plateforme"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return self.platform_name

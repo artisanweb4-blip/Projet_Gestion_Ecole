@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer l'évaluation - Gestion École{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-trash"></i></span>Supprimer l'évaluation</h1>
+        <p>Cette action est irréversible.</p>
+    </div>
+</div>
+
+<div class="dashboard-card" style="max-width: 560px;">
+    <p style="margin-bottom: 16px;">
+        Voulez-vous vraiment supprimer l'évaluation
+        <strong>« {{ evaluation.title }} »</strong>
+        ({{ evaluation.classroom.name }} · {{ evaluation.subject.name }}) ?
+        Toutes les notes associées seront également supprimées.
+    </p>
+    <form method="post" style="display: flex; gap: 10px; justify-content: flex-end;">
+        {% csrf_token %}
+        <a href="{% url 'grades:grade_list' %}" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-danger">
+            <i class="fa-solid fa-trash"></i> Supprimer définitivement
+        </button>
+    </form>
+</div>
+{% endblock %}

@@ -1,3 +1,5 @@
+from django.contrib.auth.views import LoginView as DjangoLoginView
+
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -53,8 +55,40 @@ class PasswordResetView(APIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     """ViewSet CRUD réservé à l'administrateur pour gérer l'ensemble des comptes utilisateurs."""
-    queryset = User.objects.all().order_by('-created_at')
     serializer_class = UserSerializer
     permission_classes = [IsAdminUserRole]
+
+    def get_queryset(self):
+        # Isolation multi-écoles : évalué par requête
+        user = self.request.user
+        if user.is_superuser:
+            return User.objects.all().order_by('-created_at')
+        if getattr(user, 'school_id', None):
+            return User.objects.filter(school_id=user.school_id).order_by('-created_at')
+        return User.objects.filter(pk=user.pk)
     search_fields = ['username', 'first_name', 'last_name', 'email', 'role']
     filterset_fields = ['role', 'is_active']
+
+
+class SchoolLoginView(DjangoLoginView):
+    """Connexion : refuse les comptes d'une école suspendue et envoie le
+    Super Admin directement sur son interface plateforme."""
+
+    def get_success_url(self):
+        user = getattr(self.request, 'user', None)
+        if user is not None and user.is_superuser:
+            from django.urls import reverse
+            return reverse('platform_dashboard')
+        return super().get_success_url()
+
+    def form_valid(self, form):
+        user = form.get_user()
+        school = getattr(user, 'school', None)
+        if school is not None and not school.is_active:
+            form.add_error(
+                None,
+                "Cet établissement est actuellement suspendu. "
+                "Merci de contacter l'administrateur de la plateforme."
+            )
+            return self.form_invalid(form)
+        return super().form_valid(form)

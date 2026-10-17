@@ -1,9 +1,21 @@
 from django.db import models
+
+from core.scoping import SchoolManager, scoped_manager
 from core.models import TimeStampMixin
-from students.models import ClassRoom
+from classes.models import Class as ClassRoom
 
 class AdmissionApplication(TimeStampMixin):
     """Candidature / Demande d'admission d'un nouvel élève."""
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='admissions',
+        verbose_name="École",
+    )
     STATUS_CHOICES = (
         ('PENDING', 'En attente d\'examen'),
         ('INTERVIEW', 'Entretien programmé'),

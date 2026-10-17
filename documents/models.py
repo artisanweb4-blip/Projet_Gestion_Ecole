@@ -1,4 +1,6 @@
 from django.db import models
+
+from core.scoping import SchoolManager, scoped_manager
 from django.conf import settings
 
 class DocumentCategorie(models.TextChoices):
@@ -17,6 +19,16 @@ class DocumentModele(models.Model):
     Modèles de documents téléchargeables ou consultables 
     (ex: Règlement intérieur, Modèle de contrat, Calendrier)
     """
+    objects = SchoolManager()
+
+    school = models.ForeignKey(
+        'accounts.School',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='document_modeles',
+        verbose_name="École",
+    )
     titre = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     categorie = models.CharField(max_length=50, choices=DocumentCategorie.choices)
@@ -38,6 +50,8 @@ class DemandeConge(models.Model):
     """
     Demandes de congé et d'autorisation d'absence du personnel
     """
+    objects = scoped_manager('employe__school')
+
     STATUT_CHOICES = [
         ('EN_ATTENTE', 'En attente'),
         ('APPROUVE', 'Approuvé'),

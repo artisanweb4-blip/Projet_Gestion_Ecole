@@ -9,4 +9,5 @@ urlpatterns = [
     path('grid/', views.timetable_view, name='grid'),
     path('timeslot/<int:pk>/delete/', views.timeslot_delete_view, name='timeslot_delete'),
     path('ajax/subjects/', views.ajax_get_subjects_by_class, name='ajax_get_subjects_by_class'),
+    path('export-pdf/', views.timetable_export_pdf, name='export_pdf'),
 ]

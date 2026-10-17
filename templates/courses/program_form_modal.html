@@ -1,0 +1,65 @@
+{# Modale : formulaire programme + ses matières (formset) #}
+<div class="modal-head">
+    <h3>{{ modal_title|default:"Programme" }}</h3>
+    <button type="button" class="modal-close" data-close-modal aria-label="Fermer">&times;</button>
+</div>
+
+<form method="post"
+      hx-post="{{ modal_action }}"
+      hx-target="#modal-body"
+      hx-swap="innerHTML"
+      class="modal-form">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-error"><span>{{ form.non_field_errors }}</span></div>
+    {% endif %}
+
+    <div class="form-grid-2">
+        {% for field in form.visible_fields %}
+            <div class="form-group {% if field.errors %}is-invalid{% endif %}">
+                <label class="form-label" for="{{ field.id_for_label }}">
+                    {{ field.label }}{% if field.field.required %} <span class="required">*</span>{% endif %}
+                </label>
+                {{ field }}
+                {% for error in field.errors %}<div class="error-feedback">{{ error }}</div>{% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+    <h4 class="card-section-title mt-2">Matières du programme</h4>
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+        <div class="alert alert-error"><span>{{ formset.non_form_errors }}</span></div>
+    {% endif %}
+    <div class="table-container">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Matière</th>
+                    <th style="width: 90px;">Coef.</th>
+                    <th style="width: 100px;">H/sem</th>
+                    <th style="width: 110px;">Volume (h)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fs in formset %}
+                    <tr class="{% if fs.non_form_errors %}is-invalid{% endif %}">
+                        <td>{{ fs.subject }}{% for e in fs.subject.errors %}<div class="error-feedback">{{ e }}</div>{% endfor %}</td>
+                        <td>{{ fs.coefficient }}</td>
+                        <td>{{ fs.hours_per_week }}</td>
+                        <td>{{ fs.total_hours }}{{ fs.id }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-close-modal>Annuler</button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Enregistrer
+        </button>
+    </div>
+</form>

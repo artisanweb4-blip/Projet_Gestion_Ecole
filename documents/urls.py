@@ -7,6 +7,10 @@ urlpatterns = [
     # Page principale des documents
     path('', views.index_documents, name='index'),
 
+    # Exemplaire PDF de démonstration par type
+    path('catalogue/<str:key>/exemple/', views.document_sample_pdf, name='document_sample'),
+    path('catalogue/<str:key>/exemple-word/', views.document_sample_word, name='document_sample_word'),
+
     # Génération des certificats & attestations
     path('certificat-scolarite/', views.generate_certificat_scolarite, name='generate_certificat_scolarite'),
     path('certificat-frequentation/', views.generate_certificat_frequentation, name='generate_certificat_frequentation'),

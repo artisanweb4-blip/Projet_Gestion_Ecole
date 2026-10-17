@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% load humanize %}{% load fcfa_extras %}
+
+{% block title %}Paiements - Comptabilité{% endblock %}
+
+{% block content %}
+<style>
+    .filter-bar {
+        display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+        background: #ffffff; border: 1px solid var(--border-color);
+        border-radius: 14px; padding: 16px 18px; margin-bottom: 18px;
+        box-shadow: var(--shadow-card);
+    }
+    .filter-bar label {
+        display: block; font-size: 0.72rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);
+        margin-bottom: 5px;
+    }
+    .filter-bar select {
+        min-width: 220px; padding: 8px 12px; border: 1px solid #d1d5db;
+        border-radius: 9px; font-size: 0.88rem; background: #fff; color: var(--text-main);
+    }
+    .pay-stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+    .pay-stat {
+        flex: 1; min-width: 200px; background: #ffffff;
+        border: 1px solid var(--border-color); border-radius: 14px;
+        padding: 14px 18px; box-shadow: var(--shadow-card);
+        display: flex; align-items: center; gap: 14px;
+    }
+    .pay-stat .ico {
+        width: 42px; height: 42px; border-radius: 11px; flex-shrink: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 1.05rem; background: #f0fdf4; color: #059669;
+    }
+    .pay-stat .ico.blue { background: #eff6ff; color: #2563eb; }
+    .pay-stat .ico.violet { background: #f5f3ff; color: #7c3aed; }
+    .pay-stat .lbl {
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.5px; color: var(--text-muted);
+    }
+    .pay-stat .val { font-size: 1.15rem; font-weight: 800; color: var(--text-main); line-height: 1.2; }
+    .pay-stat .val.green { color: #059669; }
+    .pagination-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+    .pagination { display: flex; gap: 6px; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; }
+    .page-link-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 34px; height: 34px; padding: 0 10px; border-radius: 8px;
+        border: 1px solid var(--border-color); background: #fff;
+        font-size: 0.85rem; font-weight: 700; color: var(--text-main);
+    }
+    .page-link-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .page-link-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .page-link-btn.disabled { opacity: 0.45; pointer-events: none; }
+</style>
+
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-money-bill-wave"></i></span>Paiements</h1>
+        <p>Historique des encaissements (espèces, Orange Money, Wave, MTN...) — 20 paiements par page.</p>
+    </div>
+    <a href="{% url 'accounting:payment_add' %}" class="btn btn-primary"
+            hx-get="{% url 'accounting:payment_add' %}" hx-target="#modal-body" hx-swap="innerHTML">
+        <i class="fa-solid fa-money-bill-wave"></i> Encaisser un paiement
+    </a>
+</div>
+
+<!-- Filtre par classe -->
+<form method="get" class="filter-bar">
+    <div>
+        <label for="classe"><i class="fa-solid fa-filter"></i> Filtrer par classe</label>
+        <select name="classe" id="classe" onchange="this.form.submit()">
+            <option value="">Toutes les classes</option>
+            {% for c in classrooms %}
+                <option value="{{ c.pk }}" {% if selected_class == c.pk %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% if selected_class %}
+        <a href="{% url 'accounting:payments' %}" class="btn btn-secondary btn-sm" style="align-self: flex-end;">
+            <i class="fa-solid fa-xmark"></i> Retirer le filtre
+        </a>
+    {% endif %}
+</form>
+
+<!-- Totaux -->
+<div class="pay-stats">
+    <div class="pay-stat">
+        <span class="ico"><i class="fa-solid fa-sack-dollar"></i></span>
+        <div>
+            <div class="lbl">Total encaissé{% if selected_class %} — classe sélectionnée{% else %} (toutes classes){% endif %}</div>
+            <div class="val green">{{ total_paye|fcfa }} FCFA</div>
+        </div>
+    </div>
+    <div class="pay-stat">
+        <span class="ico blue"><i class="fa-solid fa-receipt"></i></span>
+        <div>
+            <div class="lbl">Paiements</div>
+            <div class="val">{{ count_paiements }}</div>
+        </div>
+    </div>
+    <div class="pay-stat">
+        <span class="ico violet"><i class="fa-solid fa-graduation-cap"></i></span>
+        <div>
+            <div class="lbl">Classe</div>
+            <div class="val">{% if selected_class %}{% for c in classrooms %}{% if c.pk == selected_class %}{{ c.name }}{% endif %}{% endfor %}{% else %}Toutes{% endif %}</div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    {% if payments %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Reçu #</th>
+                        <th>Élève</th>
+                        <th class="text-center">Montant</th>
+                        <th class="text-center">Mode</th>
+                        <th class="text-center">Date</th>
+                        <th>Période</th>
+                        <th class="text-center">Reçu</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                        <tr>
+                            <td><strong>{{ payment.receipt_number }}</strong></td>
+                            <td>{{ payment.student.full_name }}</td>
+                            <td class="text-center">{{ payment.amount_paid|fcfa }} F</td>
+                            <td class="text-center"><span class="badge badge-success">{{ payment.get_payment_method_display }}</span></td>
+                            <td class="text-center">{{ payment.payment_date|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {{ payment.get_periodicity_display }}{% if payment.period_label %} · {{ payment.period_label }}{% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'accounting:payment_receipt' payment.pk %}" target="_blank" class="btn-action btn-view" title="Voir le reçu (PDF A4)">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </a>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'accounting:payment_delete' payment.pk %}" class="btn-action btn-delete" title="Supprimer">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+            <div class="pagination-bar">
+                <span class="text-muted" style="font-size: 0.82rem;">
+                    Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }} — {{ count_paiements }} paiement{{ count_paiements|pluralize }}
+                </span>
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li><a class="page-link-btn"
+                               href="?{% if selected_class %}classe={{ selected_class }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                            <i class="fa-solid fa-chevron-left"></i></a></li>
+                    {% else %}
+                        <li><span class="page-link-btn disabled"><i class="fa-solid fa-chevron-left"></i></span></li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                        <li><a class="page-link-btn {% if num == page_obj.number %}active{% endif %}"
+                               href="?{% if selected_class %}classe={{ selected_class }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <li><a class="page-link-btn"
+                               href="?{% if selected_class %}classe={{ selected_class }}&{% endif %}page={{ page_obj.next_page_number }}">
+                            <i class="fa-solid fa-chevron-right"></i></a></li>
+                    {% else %}
+                        <li><span class="page-link-btn disabled"><i class="fa-solid fa-chevron-right"></i></span></li>
+                    {% endif %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <p class="text-muted" style="font-size: 0.8rem; margin-top: 12px;">
+            <i class="fa-solid fa-circle-info"></i> Un paiement dont le reçu officiel a été émis ne peut plus être supprimé.
+        </p>
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-receipt"></i>
+            <p>{% if selected_class %}Aucun paiement pour cette classe.{% else %}Aucun paiement enregistré.<br>Cliquez sur « Encaisser un paiement » pour commencer.{% endif %}</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

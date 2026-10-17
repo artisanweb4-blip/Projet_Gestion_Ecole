@@ -7,13 +7,13 @@
 <!-- En-tête -->
 <div class="header-top" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
     <div class="page-title">
-        <h1 style="font-size: 24px; font-weight: 700; color: #0F172A; margin: 0 0 4px 0;">Paramètres</h1>
+        <h1 style="font-size: 24px; font-weight: 700; color: #0F172A; margin: 0 0 4px 0;"><span class="page-icon"><i class="fa-solid fa-gear"></i></span>Paramètres</h1>
         <p style="font-size: 14px; color: #64748B; margin: 0;">Configuration du système scolaire</p>
     </div>
     <div>
-        <button type="button" class="btn btn-success" style="background-color: #10B981; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600; color: white; display: flex; align-items: center; gap: 8px; cursor: pointer; opacity: 0.85;">
-            <i class="fa-solid fa-floppy-disk"></i> Sauvegarder maintenant
-        </button>
+        <a href="{% url 'school_settings:download_backup' %}" class="btn btn-success" style="background-color: #0F172A; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-file-excel"></i> Sauvegarde Excel
+        </a>
     </div>
 </div>
 
@@ -29,43 +29,120 @@
 
 <!-- Carte Gestion des Utilisateurs -->
 <div class="settings-card">
-    <h2 class="card-section-title">Gestion des utilisateurs</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 12px; flex-wrap: wrap;">
+        <h2 class="card-section-title" style="margin: 0;">Gestion des utilisateurs</h2>
+        {% if can_manage %}
+        <button type="button" onclick="document.getElementById('userModal').style.display='flex'" class="btn btn-success" style="background-color: #10B981; border: none; border-radius: 6px; padding: 9px 18px; font-weight: 600; color: white; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+            <i class="fa-solid fa-plus"></i> Ajouter un utilisateur
+        </button>
+        {% endif %}
+    </div>
 
-    <!-- Grille des statistiques des rôles -->
+    <!-- Statistiques réelles par rôle -->
     <div class="users-grid">
         <div class="role-card">
-            <span class="role-title">Administrateurs</span>
-            <span class="role-count">{{ admin_count|default:"2" }}</span>
+            <span class="role-title">Administrateurs / Direction</span>
+            <span class="role-count">{{ admin_count }}</span>
             <span class="role-access">Accès complet</span>
         </div>
-
         <div class="role-card">
             <span class="role-title">Enseignants</span>
-            <span class="role-count">{{ teacher_count|default:"15" }}</span>
+            <span class="role-count">{{ teacher_count }}</span>
             <span class="role-access">Accès pédagogique</span>
         </div>
-
         <div class="role-card">
             <span class="role-title">Parents</span>
-            <span class="role-count">{{ parent_count|default:"120" }}</span>
+            <span class="role-count">{{ parent_count }}</span>
             <span class="role-access">Accès consultation</span>
         </div>
-
         <div class="role-card">
             <span class="role-title">Comptables</span>
-            <span class="role-count">{{ accountant_count|default:"1" }}</span>
+            <span class="role-count">{{ accountant_count }}</span>
             <span class="role-access">Accès financier</span>
         </div>
     </div>
 
-    <!-- Bouton Gérer les rôles et permissions -->
-    <a href="#" class="btn-manage-roles">
-        <i class="fa-solid fa-user-gear"></i> Gérer les rôles et permissions
-    </a>
+    <!-- Liste réelle des utilisateurs -->
+    <div style="overflow-x: auto; border: 1px solid #E2E8F0; border-radius: 8px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background: #F8FAFC; color: #475569; text-align: left;">
+                    <th style="padding: 10px 14px; font-weight: 600;">Utilisateur</th>
+                    <th style="padding: 10px 14px; font-weight: 600;">Identifiant (email)</th>
+                    <th style="padding: 10px 14px; font-weight: 600;">Rôle</th>
+                    <th style="padding: 10px 14px; font-weight: 600;">Téléphone</th>
+                    <th style="padding: 10px 14px; font-weight: 600;">Statut</th>
+                    <th style="padding: 10px 14px; font-weight: 600;">Créé le</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users_list %}
+                <tr style="border-top: 1px solid #F1F5F9;">
+                    <td style="padding: 10px 14px; font-weight: 600; color: #0F172A;">{{ u.get_full_name|default:u.username }}</td>
+                    <td style="padding: 10px 14px; color: #475569;">{{ u.email }}</td>
+                    <td style="padding: 10px 14px;">
+                        <span style="background: {% if u.role == 'ADMIN' %}#ECFDF5; color: #065F46{% elif u.role == 'TEACHER' %}#EFF6FF; color: #1D4ED8{% elif u.role == 'COMPTABLE' %}#FEF3C7; color: #92400E{% elif u.role == 'PARENT' %}#FDF2F8; color: #9D174D{% else %}#F1F5F9; color: #334155{% endif %}; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600;">{{ u.get_role_display }}</span>
+                    </td>
+                    <td style="padding: 10px 14px; color: #475569;">{{ u.phone|default:"—" }}</td>
+                    <td style="padding: 10px 14px;">
+                        {% if u.is_active %}<span style="color: #059669; font-weight: 600;">● Actif</span>
+                        {% else %}<span style="color: #DC2626; font-weight: 600;">● Inactif</span>{% endif %}
+                    </td>
+                    <td style="padding: 10px 14px; color: #94A3B8;">{{ u.created_at|date:"d/m/Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="padding: 28px; text-align: center; color: #94A3B8;">
+                        Aucun utilisateur pour le moment. Cliquez sur « Ajouter un utilisateur » pour créer le premier compte.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
+{% if can_manage %}
+<!-- MODAL : Ajouter un utilisateur -->
+<div id="userModal" style="display: {% if form.errors %}flex{% else %}none{% endif %}; position: fixed; inset: 0; background: rgba(15,23,42,0.55); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 14px; width: 100%; max-width: 520px; padding: 0; overflow: hidden; max-height: 92vh; overflow-y: auto;">
+        <div style="padding: 16px 22px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 17px; color: #0F172A;">Ajouter un utilisateur</h3>
+            <button type="button" onclick="document.getElementById('userModal').style.display='none'" style="background:none;border:none;font-size:20px;color:#64748B;cursor:pointer;">&times;</button>
+        </div>
+        <form method="post" action="{% url 'school_settings:users' %}" style="padding: 20px 22px;">
+            {% csrf_token %}
+            <input type="hidden" name="add_user" value="1">
+            {% if form.non_field_errors %}
+            <div style="background:#FEF2F2; color:#B91C1C; border-radius:8px; padding:10px 12px; margin-bottom:12px; font-size:13px;">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <div style="display: flex; flex-direction: column; gap: 13px;">
+                {% for field in form.visible_fields %}
+                <div>
+                    <label for="{{ field.id_for_label }}" style="display:block; font-size:12.5px; font-weight:600; color:#334155; margin-bottom:5px;">
+                        {{ field.label }}{% if field.field.required %} <span style="color:#DC2626;">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}<small style="color:#94A3B8; font-size:11.5px;">{{ field.help_text }}</small>{% endif %}
+                    {% for error in field.errors %}
+                    <div style="color:#B91C1C; font-size:12px; margin-top:4px;">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+            <p style="margin: 12px 0 0; font-size: 12px; color: #64748B;">
+                Le nom d'utilisateur est généré automatiquement à partir de l'email. Communiquez l'email et le mot de passe à la personne pour sa première connexion.
+            </p>
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('userModal').style.display='none'">Annuler</button>
+                <button type="submit" class="btn btn-primary" style="background: #10B981; border: none;"><i class="fa-solid fa-floppy-disk" style="margin-right:6px;"></i>Créer l'utilisateur</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
 <style>
-    /* Structure globale & onglets */
     .settings-tabs-container {
         display: flex;
         align-items: center;
@@ -118,7 +195,6 @@
         margin: 0 0 20px 0;
     }
 
-    /* Grille 2x2 des Rôles */
     .users-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -152,28 +228,6 @@
     .role-access {
         font-size: 12px;
         color: #94A3B8;
-    }
-
-    /* Bouton d'action principal */
-    .btn-manage-roles {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        width: 100%;
-        padding: 10px 16px;
-        background-color: #10B981;
-        color: white;
-        font-size: 13px;
-        font-weight: 600;
-        border-radius: 6px;
-        text-decoration: none;
-        box-sizing: border-box;
-        transition: background-color 0.15s ease;
-    }
-
-    .btn-manage-roles:hover {
-        background-color: #059669;
     }
 </style>
 {% endblock %}

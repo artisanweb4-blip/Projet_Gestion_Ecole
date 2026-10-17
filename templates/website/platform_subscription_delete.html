@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer l'abonnement — Plateforme{% endblock %}
+
+{% block content %}
+<div class="header-top">
+    <div class="page-title">
+        <h1><span class="page-icon"><i class="fa-solid fa-credit-card"></i></span>Supprimer l'abonnement</h1>
+        <p>Cette action est irréversible. Les écoles concernées perdront leur formule.</p>
+    </div>
+    <a href="{% url 'platform_subscriptions' %}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Retour
+    </a>
+</div>
+
+<div class="dashboard-card" style="max-width: 680px;">
+    <div id="modal-body">
+        {% include "includes/delete_modal.html" %}
+    </div>
+</div>
+{% endblock %}
