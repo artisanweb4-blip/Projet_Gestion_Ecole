@@ -46,6 +46,21 @@ def landing(request):
         .exclude(school_name='').first()
     )
 
+    # Téléphones affichés (plusieurs numéros séparés par « / »), avec lien
+    # tel: normalisé — les numéros locaux maliens reçoivent l'indicatif +223.
+    contact_phones = []
+    if footer_school and footer_school.phone:
+        for raw in footer_school.phone.split('/'):
+            display = raw.strip()
+            if not display:
+                continue
+            digits = ''.join(c for c in display if c.isdigit() or c == '+')
+            if not digits:
+                continue
+            if not digits.startswith('+'):
+                digits = '+223' + digits.lstrip('0')
+            contact_phones.append({'display': display, 'href': digits})
+
     # Formules d'abonnement annuelles (affichage type « Tarification »)
     from accounts.models import SubscriptionPlan
     pricing_plans = []
@@ -80,6 +95,7 @@ def landing(request):
         'nb_teachers': Teacher.objects.filter(is_active=True).count(),
         'nb_classes': Class.objects.count(),
         'footer_school': footer_school,
+        'contact_phones': contact_phones,
         'form': form,
         'contact_sent': request.GET.get('sent') == '1',
         'pricing_plans': pricing_plans,

@@ -565,12 +565,12 @@
                                 </div>
                             </div>
                         {% endif %}
-                        {% if footer_school.phone %}
+                        {% if contact_phones %}
                             <div class="contact-card">
                                 <span class="ci"><i class="fa-solid fa-phone"></i></span>
                                 <div>
                                     <h4>Téléphone &amp; WhatsApp</h4>
-                                    <p><a href="tel:{{ footer_school.phone|cut:' ' }}">{{ footer_school.phone }}</a></p>
+                                    <p>{% for tel in contact_phones %}<a href="tel:{{ tel.href }}">{{ tel.display }}</a>{% if not forloop.last %} / {% endif %}{% endfor %}</p>
                                 </div>
                             </div>
                         {% endif %}
