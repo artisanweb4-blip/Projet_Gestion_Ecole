@@ -153,6 +153,40 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampMixin):
         return f"{self.get_full_name()} ({self.get_role_display()})"
 
 
+class SubscriptionPayment(TimeStampMixin):
+    """Paiement d'un abonnement d'école (saisi manuellement ou reçu par API)."""
+
+    SOURCE_MANUAL = 'MANUEL'
+    SOURCE_API = 'API'
+    SOURCE_CHOICES = (
+        (SOURCE_MANUAL, 'Manuel (plateforme)'),
+        (SOURCE_API, 'API (paiement en ligne)'),
+    )
+
+    school = models.ForeignKey(
+        'accounts.School', on_delete=models.CASCADE, related_name='subscription_payments',
+        verbose_name="École",
+    )
+    plan = models.ForeignKey(
+        'accounts.SubscriptionPlan', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='payments', verbose_name="Formule",
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Montant (FCFA)")
+    source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default=SOURCE_MANUAL,
+                              verbose_name="Origine du paiement")
+    reference = models.CharField(max_length=100, blank=True, default='',
+                                 verbose_name="Référence (transaction)")
+    note = models.CharField(max_length=200, blank=True, default='', verbose_name="Note")
+
+    class Meta:
+        verbose_name = "Paiement d'abonnement"
+        verbose_name_plural = "Paiements d'abonnement"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.school.name} — {self.amount:g} FCFA ({self.get_source_display()})"
+
+
 class SubscriptionPlan(TimeStampMixin):
     """Formule d'abonnement proposée aux écoles par la plateforme."""
     name = models.CharField(max_length=100, unique=True, verbose_name="Nom de la formule")

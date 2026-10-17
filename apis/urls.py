@@ -7,6 +7,8 @@ URLs en tête du projet (voir django_config/urls.py). L'authentification
 JWT est disponible sous /accounts/auth/login/ et /accounts/auth/refresh/.
 """
 from django.urls import include, path
+
+from website import api as website_api
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -25,4 +27,8 @@ urlpatterns = [
     path('v1/assignments/', include('assignments.urls')),
     path('v1/exams/', include('exams.urls')),
     path('v1/trs/', include('trs.urls')),
+
+    # Paiements d'abonnement (source API — Mobile Money...)
+    path('v1/subscriptions/payments/',
+         website_api.record_subscription_payment),
 ]

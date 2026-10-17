@@ -2,11 +2,12 @@
 Interface Super Admin : gestion globale de toutes les écoles.
 """
 import uuid
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q, Sum
+from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -21,7 +22,7 @@ from django.views.generic import (
     View,
 )
 
-from accounts.models import PlatformSetting, School, SubscriptionPlan, User
+from accounts.models import PlatformSetting, School, SubscriptionPlan, SubscriptionPayment, User
 from accounts.utils import unique_username
 from analytics.models import VisitLog
 from classes.models import Class
@@ -55,27 +56,26 @@ class SuperadminRequiredMixin(LoginRequiredMixin):
 
 
 class PlatformDashboardView(SuperadminRequiredMixin, TemplateView):
-    """Tableau de bord global de la plateforme (Super Admin)."""
+    """Tableau de bord global de la plateforme (Super Admin).
+
+    Indicateurs : écoles créées, montants des abonnements (manuel / API),
+    visiteurs par jour et par mois.
+    """
     template_name = 'website/platform_dashboard.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
         d14 = today - timedelta(days=13)
-        d30 = today - timedelta(days=29)
         month_start = today.replace(day=1)
 
-        role_counts = dict(
-            User.objects.values_list('role').annotate(n=Count('id'))
-        )
-
-        # --- Visites (analytique) ---
+        # --- Visiteurs (par jour / par mois) ---
         visit_today = VisitLog.objects.filter(day=today).aggregate(
             users=Count('user', distinct=True), views=Count('id'))
-        visit30 = VisitLog.objects.filter(day__gte=d30).aggregate(
+        visit_month = VisitLog.objects.filter(day__gte=month_start).aggregate(
             users=Count('user', distinct=True), views=Count('id'))
 
-        # --- Activité des 14 derniers jours (barres CSS) ---
+        # Activité des 14 derniers jours (graphique en barres)
         daily_qs = (VisitLog.objects.filter(day__gte=d14)
                     .values('day')
                     .annotate(users=Count('user', distinct=True), views=Count('id'))
@@ -87,46 +87,67 @@ class PlatformDashboardView(SuperadminRequiredMixin, TemplateView):
             day = d14 + timedelta(days=i)
             row = daily_map.get(day, {'users': 0, 'views': 0})
             max_views = max(max_views, row['views'])
-            visits_daily.append({
-                'label': day.strftime('%d/%m'),
-                'users': row['users'], 'views': row['views'],
-            })
+            visits_daily.append({'label': day.strftime('%d/%m'), 'views': row['views']})
         for row in visits_daily:
             row['pct'] = round(row['views'] * 100 / max_views)
 
-        # --- Abonnements ---
-        plan_stats = SubscriptionPlan.objects.annotate(
-            nb=Count('schools', distinct=True)
-        ).order_by('-nb')
-        max_plan = max([p.nb for p in plan_stats] or [1])
+        # Visiteurs des 6 derniers mois (visiteurs distincts par mois)
+        months = []
+        y, m = today.year, today.month
+        for _ in range(6):
+            months.append((y, m))
+            m -= 1
+            if m == 0:
+                y, m = y - 1, 12
+        months.reverse()
+        monthly_qs = (VisitLog.objects
+                      .annotate(month=TruncMonth('day'))
+                      .values('month')
+                      .annotate(users=Count('user', distinct=True), views=Count('id')))
+        monthly_map = {}
+        for row in monthly_qs:
+            key = row['month']
+            key = key.date() if hasattr(key, 'date') and not isinstance(key, date) else key
+            monthly_map[key.replace(day=1)] = row
+        visits_monthly = []
+        max_month = 1
+        for (y, m) in months:
+            first = date(y, m, 1)
+            row = monthly_map.get(first, {'users': 0, 'views': 0})
+            max_month = max(max_month, row['users'])
+            visits_monthly.append({
+                'label': first.strftime('%m/%y'),
+                'users': row['users'], 'views': row['views'],
+            })
+        for row in visits_monthly:
+            row['pct'] = round(row['users'] * 100 / max_month)
+
+        # --- Paiements d'abonnement : manuel vs API ---
+        totals = SubscriptionPayment.objects.values('source').annotate(
+            total=Sum('amount'), n=Count('id'))
+        by_source = {row['source']: row for row in totals}
+        manual = by_source.get('MANUEL', {'total': 0, 'n': 0})
+        api = by_source.get('API', {'total': 0, 'n': 0})
+        last_payments = SubscriptionPayment.objects.select_related(
+            'school', 'plan')[:8]
 
         context.update({
             'nb_schools_total': School.objects.count(),
             'nb_schools_active': School.objects.filter(is_active=True).count(),
-            'nb_schools_suspended': School.objects.filter(is_active=False).count(),
-            'nb_schools_month': School.objects.filter(created_at__gte=month_start).count(),
-            'nb_users': User.objects.count(),
-            'nb_students': Student.objects.filter(is_active=True).count(),
-            'nb_teachers': Teacher.objects.filter(is_active=True).count(),
-            'nb_classes': Class.objects.count(),
-            'nb_admins': role_counts.get('ADMIN', 0),
-            'nb_parents_users': role_counts.get('PARENT', 0),
-            'total_payments': StudentPayment.objects.aggregate(
-                t=Sum('amount_paid'))['t'] or 0,
-            'payments_month': StudentPayment.objects.filter(
-                payment_date__gte=month_start).aggregate(
-                t=Sum('amount_paid'))['t'] or 0,
+            'nb_schools_month': School.objects.filter(
+                created_at__month=month_start.month,
+                created_at__year=month_start.year).count(),
+            'manual_total': f"{int(manual['total']):,}".replace(',', ' '),
+            'manual_count': manual['n'],
+            'api_total': f"{int(api['total']):,}".replace(',', ' '),
+            'api_count': api['n'],
+            'last_payments': last_payments,
             'visits_today_users': visit_today['users'] or 0,
             'visits_today_views': visit_today['views'] or 0,
-            'visits30_users': visit30['users'] or 0,
-            'visits30_views': visit30['views'] or 0,
+            'visits_month_users': visit_month['users'] or 0,
+            'visits_month_views': visit_month['views'] or 0,
             'visits_daily': visits_daily,
-            'plan_stats': plan_stats,
-            'plan_max': max_plan,
-            'schools_without_plan': School.objects.filter(
-                subscription__isnull=True).count(),
-            'latest_schools': School.objects.select_related(
-                'subscription').order_by('-created_at')[:5],
+            'visits_monthly': visits_monthly,
         })
         return context
 
@@ -141,7 +162,19 @@ class PlatformSchoolCreateView(SuperadminRequiredMixin, HtmxCrudMixin, CreateVie
     success_message = "École créée avec succès."
 
     def form_valid(self, form):
+        sub = form.cleaned_data.get('subscription')
+        sub_until = form.cleaned_data.get('subscription_until')
         response = super().form_valid(form)
+        if sub:
+            self.object.subscription = sub
+            self.object.subscription_until = sub_until or (
+                timezone.localdate() + timedelta(days=sub.duration_days))
+            self.object.save(update_fields=['subscription', 'subscription_until'])
+            if sub.price and sub.price > 0:
+                SubscriptionPayment.objects.create(
+                    school=self.object, plan=sub, amount=sub.price,
+                    source=SubscriptionPayment.SOURCE_MANUAL,
+                    note="Abonnement attribué à la création de l'école.")
         admin = User.objects.create_user(
             email=form.cleaned_data['admin_email'],
             username=unique_username(form.cleaned_data['admin_email']),
@@ -383,8 +416,15 @@ class PlatformSchoolSubscriptionView(SuperadminRequiredMixin, HtmxCrudMixin, Upd
         return context
 
     def form_valid(self, form):
+        previous = School.objects.filter(pk=self.object.pk).first()
+        previous_plan = previous.subscription if previous else None
         response = super().form_valid(form)
         sub = self.object.subscription
+        if sub and sub != previous_plan and sub.price and sub.price > 0:
+            SubscriptionPayment.objects.create(
+                school=self.object, plan=sub, amount=sub.price,
+                source=SubscriptionPayment.SOURCE_MANUAL,
+                note=f"Abonnement « {sub.name} » attribué manuellement.")
         if sub:
             until = self.object.subscription_until or (
                 timezone.localdate() + timedelta(days=sub.duration_days))

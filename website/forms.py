@@ -72,10 +72,9 @@ class PlatformSchoolForm(_SchoolAdminFieldsMixin, forms.ModelForm):
 
     class Meta:
         model = School
-        fields = ['name', 'plan', 'address', 'phone', 'email']
+        fields = ['name', 'address', 'phone', 'email']
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': "Nom de l'école"}),
-            'plan': forms.Select(attrs={'class': 'form-control'}),
             'address': forms.TextInput(attrs={'placeholder': 'Adresse'}),
             'phone': forms.TextInput(attrs={'placeholder': 'Téléphone'}),
             'email': forms.EmailInput(attrs={'placeholder': 'Email'}),
@@ -85,12 +84,21 @@ class PlatformSchoolForm(_SchoolAdminFieldsMixin, forms.ModelForm):
 class PlatformSchoolUpdateForm(forms.ModelForm):
     """Modification d'une école existante par le super admin."""
 
+    subscription = forms.ModelChoiceField(
+        label="Abonnement", required=False, empty_label="— Aucun —",
+        queryset=SubscriptionPlan.objects.filter(is_active=True),
+    )
+    subscription_until = forms.DateField(
+        label="Valable jusqu'au", required=False,
+        widget=forms.DateInput(attrs={'type': 'date'}),
+    )
+
     class Meta:
         model = School
-        fields = ['name', 'plan', 'address', 'phone', 'email']
+        fields = ['name', 'address', 'phone', 'email',
+                  'subscription', 'subscription_until']
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': "Nom de l'école"}),
-            'plan': forms.Select(attrs={'class': 'form-control'}),
             'address': forms.TextInput(attrs={'placeholder': 'Adresse'}),
             'phone': forms.TextInput(attrs={'placeholder': 'Téléphone'}),
             'email': forms.EmailInput(attrs={'placeholder': 'Email'}),
