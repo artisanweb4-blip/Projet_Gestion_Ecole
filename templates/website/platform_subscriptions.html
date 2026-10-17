@@ -3,6 +3,15 @@
 
 {% block title %}Plateforme — Abonnements{% endblock %}
 
+{% block extra_css %}
+<style>
+    .badge-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+                 margin-left: 6px; vertical-align: middle; }
+    .badge-dot.on { background: #16a34a; box-shadow: 0 0 0 3px rgba(22, 163, 74, .18); }
+    .badge-dot.off { background: #cbd5e1; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="header-top">
     <div class="page-title">
@@ -13,9 +22,21 @@
         <a href="{% url 'platform_schools' %}" class="btn btn-secondary">
             <i class="fa-solid fa-school"></i> Écoles
         </a>
-        <a href="{% url 'platform_subscription_add' %}" class="btn btn-primary">
+        <button type="button" class="btn btn-primary"
+                hx-get="{% url 'platform_subscription_add' %}"
+                hx-target="#modal-body" hx-swap="innerHTML">
             <i class="fa-solid fa-plus"></i> Nouvel abonnement
-        </a>
+        </button>
+        <button type="button" class="btn btn-outline"
+                hx-get="{% url 'platform_saspay_config' %}"
+                hx-target="#modal-body" hx-swap="innerHTML">
+            <i class="fa-solid fa-mobile-screen"></i> SasPay
+            {% if saspay_cfg.saspay_enabled %}
+                <span class="badge-dot on" title="Paiement en ligne activé"></span>
+            {% else %}
+                <span class="badge-dot off" title="Paiement en ligne désactivé"></span>
+            {% endif %}
+        </button>
     </div>
 </div>
 
@@ -90,12 +111,16 @@
                     </ul>
                 {% endif %}
                 <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 6px;">
-                    <a href="{% url 'platform_subscription_update' plan.pk %}" class="btn btn-outline btn-sm">
+                    <button type="button" class="btn btn-outline btn-sm"
+                            hx-get="{% url 'platform_subscription_update' plan.pk %}"
+                            hx-target="#modal-body" hx-swap="innerHTML">
                         <i class="fa-solid fa-pen"></i> Modifier
-                    </a>
-                    <a href="{% url 'platform_subscription_delete' plan.pk %}" class="btn btn-danger btn-sm">
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm"
+                            hx-get="{% url 'platform_subscription_delete' plan.pk %}"
+                            hx-target="#modal-body" hx-swap="innerHTML">
                         <i class="fa-solid fa-trash"></i> Supprimer
-                    </a>
+                    </button>
                 </div>
             </div>
         {% endfor %}
@@ -171,9 +196,11 @@
         <div class="empty-state">
             <i class="fa-solid fa-credit-card"></i>
             <p>Aucun abonnement défini. Créez votre première formule (ex. Essai gratuit, Essentiel, Pro, Excellence).</p>
-            <a href="{% url 'platform_subscription_add' %}" class="btn btn-primary" style="margin-top: 10px;">
+            <button type="button" class="btn btn-primary" style="margin-top: 10px;"
+                    hx-get="{% url 'platform_subscription_add' %}"
+                    hx-target="#modal-body" hx-swap="innerHTML">
                 <i class="fa-solid fa-plus"></i> Créer un abonnement
-            </a>
+            </button>
         </div>
     </div>
 {% endif %}

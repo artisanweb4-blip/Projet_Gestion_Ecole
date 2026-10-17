@@ -6,6 +6,7 @@ Corps JSON : {"school": "<code ou nom>", "plan": "<code>",
               "amount": 150000 (optionnel), "reference": "..." (optionnel)}
 """
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -74,3 +75,98 @@ def record_subscription_payment(request):
         'reference': payment.reference,
         'subscription_until': school.subscription_until.isoformat() if school.subscription_until else None,
     }, status=status.HTTP_201_CREATED)
+
+
+# --------------------------------------------------------------------------
+# Webhook SasPay : notification temps réel des transactions.
+# Sécurité (doc SasPay) : en-têtes X-Webhook-Signature / X-Webhook-Timestamp /
+# X-Webhook-Event — HMAC-SHA256 du corps brut, âge ≤ 5 minutes.
+# --------------------------------------------------------------------------
+import json
+from datetime import timedelta
+
+from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+
+from website import saspay as saspay_client
+
+
+def _match_payment(data, config):
+    """Retrouve le paiement lié à une transaction SasPay.
+
+    1. metadata.payment_id (posé à la création de la session de checkout) ;
+    2. à défaut, les sessions SasPay « en attente » récentes dont le statut
+       réel est déjà PAID — acceptée seulement si l'identifiant de
+       transaction correspond, ou si une seule session est concernée.
+    """
+    metadata = data.get('metadata') if isinstance(data.get('metadata'), dict) else {}
+    ref = metadata.get('payment_id')
+    if ref:
+        payment = SubscriptionPayment.objects.filter(
+            pk=ref, provider='SASPAY').first()
+        if payment:
+            return payment
+    txn_id = data.get('id') or ''
+    candidates = list(SubscriptionPayment.objects.filter(
+        provider='SASPAY',
+        status=SubscriptionPayment.STATUS_PENDING,
+        created_at__gte=timezone.now() - timedelta(days=7),
+    ).exclude(provider_payment_id='').order_by('-created_at')[:20])
+    paid = []
+    for payment in candidates:
+        try:
+            session = saspay_client.get_session_status(
+                payment.provider_payment_id, config)
+        except saspay_client.SasPayError:
+            continue
+        if (session.get('status') or '').upper() != 'PAID':
+            continue
+        session_txn = session.get('transaction_id') or ''
+        if txn_id and session_txn and session_txn == txn_id:
+            return payment
+        paid.append(payment)
+    return paid[0] if (len(paid) == 1 and not txn_id) else None
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SasPayWebhookView(View):
+    """Récepteur du webhook SasPay (URL à déclarer dans le dashboard SasPay)."""
+
+    def post(self, request):
+        config = saspay_client.get_config()
+        if not config.saspay_webhook_secret:
+            return JsonResponse({'error': "Webhook SasPay non configuré."},
+                                status=400)
+        raw = request.body
+        signature = request.headers.get('X-Webhook-Signature', '')
+        timestamp = request.headers.get('X-Webhook-Timestamp', '')
+        if not saspay_client.verify_webhook_signature(
+                raw, signature, timestamp, config.saspay_webhook_secret):
+            return JsonResponse({'error': "Signature de webhook invalide."},
+                                status=401)
+        try:
+            payload = json.loads(raw.decode('utf-8'))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'error': "Corps JSON illisible."}, status=400)
+
+        event = payload.get('event') or request.headers.get('X-Webhook-Event', '')
+        data = payload.get('data') or {}
+        if event == 'webhook.test':
+            return JsonResponse({'received': True, 'event': event})
+
+        if event in ('transaction.success', 'transaction.failed',
+                     'transaction.cancelled'):
+            payment = _match_payment(data, config)
+            if payment is None:
+                # 200 : évite les relivraisons infinies d'un event non apparié
+                return JsonResponse({'received': True, 'matched': False})
+            if event == 'transaction.success':
+                saspay_client.confirm_payment(
+                    payment, (data.get('msisdn') or ''))
+            else:
+                saspay_client.fail_payment(payment)
+            return JsonResponse({'received': True, 'matched': True})
+
+        return JsonResponse({'received': True, 'event': event})

@@ -29,6 +29,11 @@
     .vcol-lbl { font-size: 0.58rem; color: var(--text-muted); margin-top: 6px; white-space: nowrap; }
 
     .pay-table th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); }
+    .pay-st { display: inline-block; margin-left: 5px; padding: 2px 8px;
+              border-radius: 999px; font-size: 0.62rem; font-weight: 800;
+              text-transform: uppercase; letter-spacing: 0.4px; }
+    .pay-st.pending { background: #fef3c7; color: #92400e; }
+    .pay-st.failed { background: #fee2e2; color: #991b1b; }
     .src-badge { font-size: 0.68rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
     .src-manuel { background: #f0fdf4; color: #065f46; }
     .src-api { background: #eff6ff; color: #1d4ed8; }
@@ -161,6 +166,8 @@
                                 {% else %}
                                     <span class="src-badge src-manuel"><i class="fa-solid fa-pen"></i> Manuel</span>
                                 {% endif %}
+                                {% if p.status == 'EN_ATTENTE' %}<span class="pay-st pending">En attente</span>
+                                {% elif p.status == 'ECHOUE' %}<span class="pay-st failed">Échoué</span>{% endif %}
                             </td>
                             <td>{{ p.reference|default:"—" }}</td>
                             <td class="text-center">{{ p.created_at|date:"d/m/Y H:i" }}</td>

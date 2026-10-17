@@ -252,3 +252,30 @@ class ContactMessageForm(forms.ModelForm):
         label="Message",
         widget=forms.Textarea(attrs={'placeholder': 'Comment pouvons-nous vous aider ?', 'rows': 5}),
     )
+
+class SasPayConfigForm(forms.ModelForm):
+    """Configuration du paiement en ligne SasPay (super admin)."""
+
+    class Meta:
+        model = PlatformSetting
+        fields = ['saspay_enabled', 'saspay_secret_key', 'saspay_webhook_secret',
+                  'saspay_country', 'saspay_currency', 'saspay_api_url']
+        widgets = {
+            'saspay_enabled': forms.CheckboxInput(),
+            'saspay_secret_key': forms.TextInput(attrs={
+                'placeholder': 'sk_test_xxxxxxxxxxxxxxxx'}),
+            'saspay_webhook_secret': forms.TextInput(attrs={
+                'placeholder': 'whsec_xxxxxxxxxxxxxxxx'}),
+            'saspay_country': forms.TextInput(attrs={'placeholder': 'ML'}),
+            'saspay_currency': forms.TextInput(attrs={'placeholder': 'XOF'}),
+            'saspay_api_url': forms.TextInput(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['saspay_enabled'].label = "Activer le paiement en ligne (SasPay)"
+        self.fields['saspay_secret_key'].label = "Clé API secrète"
+        self.fields['saspay_webhook_secret'].label = "Secret du webhook"
+        self.fields['saspay_country'].label = "Pays (ISO 2)"
+        self.fields['saspay_currency'].label = "Devise"
+        self.fields['saspay_api_url'].label = "URL de l'API (ne pas modifier)"

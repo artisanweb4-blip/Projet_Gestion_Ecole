@@ -31,4 +31,8 @@ urlpatterns = [
     # Paiements d'abonnement (source API — Mobile Money...)
     path('v1/subscriptions/payments/',
          website_api.record_subscription_payment),
+
+    # Webhook SasPay (notification temps réel des transactions)
+    path('v1/saspay/webhook/', website_api.SasPayWebhookView.as_view(),
+         name='saspay_webhook'),
 ]

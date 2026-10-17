@@ -156,6 +156,15 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampMixin):
 class SubscriptionPayment(TimeStampMixin):
     """Paiement d'un abonnement d'école (saisi manuellement ou reçu par API)."""
 
+    STATUS_PENDING = 'EN_ATTENTE'
+    STATUS_SUCCESS = 'REUSSI'
+    STATUS_FAILED = 'ECHOUE'
+    STATUS_CHOICES = (
+        (STATUS_PENDING, 'En attente'),
+        (STATUS_SUCCESS, 'Réussi'),
+        (STATUS_FAILED, 'Échoué'),
+    )
+
     SOURCE_MANUAL = 'MANUEL'
     SOURCE_API = 'API'
     SOURCE_CHOICES = (
@@ -176,6 +185,15 @@ class SubscriptionPayment(TimeStampMixin):
                               verbose_name="Origine du paiement")
     reference = models.CharField(max_length=100, blank=True, default='',
                                  verbose_name="Référence (transaction)")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_SUCCESS,
+                              verbose_name="Statut")
+    provider = models.CharField(max_length=20, blank=True, default='',
+                                verbose_name="Passerelle de paiement")
+    provider_payment_id = models.CharField(max_length=100, blank=True, default='',
+                                           verbose_name="Identifiant session (passerelle)")
+    checkout_url = models.URLField(blank=True, verbose_name="Lien de paiement")
+    payer_msisdn = models.CharField(max_length=30, blank=True, default='',
+                                    verbose_name="Numéro payeur")
     note = models.CharField(max_length=200, blank=True, default='', verbose_name="Note")
 
     class Meta:
@@ -242,6 +260,30 @@ class PlatformSetting(TimeStampMixin):
         null=True, blank=True,
         related_name='default_for_settings',
         verbose_name="Abonnement attribué par défaut",
+    )
+    saspay_enabled = models.BooleanField(
+        default=False,
+        verbose_name="Activer le paiement en ligne (SasPay)",
+    )
+    saspay_secret_key = models.CharField(
+        max_length=200, blank=True,
+        verbose_name="Clé API secrète SasPay (sk_test_... / sk_live_...)",
+    )
+    saspay_webhook_secret = models.CharField(
+        max_length=200, blank=True,
+        verbose_name="Secret de signature du webhook SasPay",
+    )
+    saspay_country = models.CharField(
+        max_length=2, default='ML',
+        verbose_name="Pays de paiement (ISO 2)",
+    )
+    saspay_currency = models.CharField(
+        max_length=3, default='XOF',
+        verbose_name="Devise",
+    )
+    saspay_api_url = models.CharField(
+        max_length=200, default='https://api.saspay.me/api/v1',
+        verbose_name="URL de l'API SasPay (avancé)",
     )
 
     class Meta:

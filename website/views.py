@@ -93,7 +93,8 @@ from django.contrib.auth.decorators import login_required
 @login_required
 def subscription_page(request):
     """Page « Mon abonnement » : formule actuelle de l'école + formules disponibles."""
-    from accounts.models import SubscriptionPlan
+    from accounts.models import PlatformSetting, SubscriptionPayment, SubscriptionPlan
+    from website import saspay
 
     school = getattr(request.user, 'school', None)
     current = school.subscription if school and school.subscription_id else None
@@ -127,6 +128,12 @@ def subscription_page(request):
         'days_left': days_left,
         'expired': expired,
         'plans_items': plans_items,
+        'saspay_ready': saspay.is_configured(),
+        'pending_payments': (
+            SubscriptionPayment.objects.filter(
+                school=school,
+                status=SubscriptionPayment.STATUS_PENDING,
+            ).select_related('plan')[:5] if school else []),
     })
 
 

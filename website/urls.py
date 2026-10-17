@@ -1,12 +1,26 @@
 from django.urls import path
 
-from . import platform_views, views
+from . import platform_views, saspay_views, views
 
 urlpatterns = [
     # Pages publiques
     path('', views.landing, name='landing'),
     path('register/school/', views.register_school, name='register_school'),
     path('abonnement/', views.subscription_page, name='subscription_page'),
+
+    # Paiement en ligne SasPay (école)
+    path('abonnement/saspay/payer/<int:plan_pk>/',
+         saspay_views.SubscriptionSasPayPayView.as_view(),
+         name='subscription_saspay_pay'),
+    path('abonnement/saspay/retour/<int:pk>/',
+         saspay_views.SubscriptionSasPayReturnView.as_view(),
+         name='subscription_saspay_return'),
+    path('abonnement/saspay/verifier/<int:pk>/',
+         saspay_views.SubscriptionSasPayReturnView.as_view(),
+         name='subscription_saspay_check'),
+    path('abonnement/saspay/relancer/<int:pk>/',
+         saspay_views.SasPayPaymentRetryView.as_view(),
+         name='subscription_saspay_retry'),
 
     # Plateforme Super Admin
     path('platform/', platform_views.PlatformDashboardView.as_view(), name='platform_dashboard'),
@@ -18,6 +32,9 @@ urlpatterns = [
     path('platform/schools/<int:pk>/subscription/', platform_views.PlatformSchoolSubscriptionView.as_view(), name='platform_school_subscription'),
     path('platform/schools/<int:pk>/delete/', platform_views.PlatformSchoolDeleteView.as_view(), name='platform_school_delete'),
     path('platform/subscriptions/', platform_views.PlatformSubscriptionsView.as_view(), name='platform_subscriptions'),
+    path('platform/settings/saspay/',
+         platform_views.PlatformSasPayConfigView.as_view(),
+         name='platform_saspay_config'),
     path('platform/subscriptions/add/', platform_views.PlatformSubscriptionCreateView.as_view(), name='platform_subscription_add'),
     path('platform/subscriptions/<int:pk>/update/', platform_views.PlatformSubscriptionUpdateView.as_view(), name='platform_subscription_update'),
     path('platform/subscriptions/<int:pk>/delete/', platform_views.PlatformSubscriptionDeleteView.as_view(), name='platform_subscription_delete'),

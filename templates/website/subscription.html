@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% load static %}
 
 {% block title %}Mon abonnement - Gestion d'École{% endblock %}
@@ -83,6 +84,45 @@
     </div>
 </div>
 
+{% if pending_payments %}
+<div class="dashboard-card" style="margin-bottom: 22px; border-left: 4px solid #f59e0b;">
+    <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 10px;">
+        <i class="fa-solid fa-hourglass-half" style="color: #f59e0b; margin-right: 8px;"></i>Paiements en attente de confirmation
+    </h3>
+    <table class="custom-table">
+        <thead>
+            <tr><th>Formule</th><th class="text-center">Montant</th><th class="text-center">Date</th><th class="text-center">Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for pay in pending_payments %}
+            <tr>
+                <td><strong>{{ pay.plan.name|default:"Abonnement" }}</strong></td>
+                <td class="text-center">{{ pay.amount|intcomma }} FCFA</td>
+                <td class="text-center">{{ pay.created_at|date:"d/m/Y H:i" }}</td>
+                <td class="text-center" style="display: flex; gap: 6px; justify-content: center;">
+                    <a href="{% url 'subscription_saspay_check' pay.pk %}" class="btn btn-outline btn-sm">
+                        <i class="fa-solid fa-rotate"></i> Vérifier
+                    </a>
+                    {% if pay.checkout_url %}
+                        <a href="{{ pay.checkout_url }}" class="btn btn-secondary btn-sm">
+                            <i class="fa-solid fa-up-right-from-square"></i> Reprendre le paiement
+                        </a>
+                    {% else %}
+                        <form method="post" action="{% url 'subscription_saspay_retry' pay.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary btn-sm">
+                                <i class="fa-solid fa-rotate-right"></i> Relancer
+                            </button>
+                        </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
 <h3 style="font-size: 1.02rem; font-weight: 800; margin-bottom: 14px;">
     <i class="fa-solid fa-layer-group" style="color: var(--primary); margin-right: 8px;"></i>Formules disponibles
 </h3>
@@ -108,6 +148,16 @@
             </ul>
             {% if item.is_current %}
                 <div class="current-note"><i class="fa-solid fa-circle-check"></i> Formule actuellement active</div>
+            {% elif item.plan.price and item.plan.price > 0 and saspay_ready %}
+                <form method="post" action="{% url 'subscription_saspay_pay' item.plan.pk %}" style="margin-bottom: 8px;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fa-solid fa-mobile-screen"></i> Payer en ligne (mobile money)
+                    </button>
+                </form>
+                <div class="upgrade-note" style="margin-top: 0;">
+                    <i class="fa-solid fa-shield-halved"></i> Paiement sécurisé SasPay — Orange Money, Wave, MTN, Moov… Vous revenez automatiquement ici.
+                </div>
             {% else %}
                 <div class="upgrade-note">
                     <i class="fa-solid fa-headset"></i> Contactez-nous pour souscrire ou changer de formule
@@ -119,7 +169,10 @@
 
 <p class="sub-info-note">
     <i class="fa-solid fa-circle-info"></i>
-    L'essai gratuit dure 15 jours et inclut toutes les fonctionnalités. Pour souscrire une formule annuelle
-    (Mobile Money — Orange Money, Wave, MTN, Moov), contactez l'équipe Gestion d'École.
+    L'essai gratuit dure 15 jours et inclut toutes les fonctionnalités.{% if saspay_ready %}
+    Souscrivez une formule annuelle directement en ligne (Mobile Money — Orange Money, Wave, MTN, Moov)
+    via le paiement sécurisé SasPay.{% else %}
+    Pour souscrire une formule annuelle (Mobile Money — Orange Money, Wave, MTN, Moov),
+    contactez l'équipe Gestion d'École.{% endif %}
 </p>
 {% endblock %}

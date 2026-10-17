@@ -39,6 +39,7 @@ from .forms import (
     PlatformSubscriptionForm,
     PlatformUserForm,
     PlatformUserPasswordForm,
+    SasPayConfigForm,
 )
 
 
@@ -122,9 +123,10 @@ class PlatformDashboardView(SuperadminRequiredMixin, TemplateView):
         for row in visits_monthly:
             row['pct'] = round(row['users'] * 100 / max_month)
 
-        # --- Paiements d'abonnement : manuel vs API ---
-        totals = SubscriptionPayment.objects.values('source').annotate(
-            total=Sum('amount'), n=Count('id'))
+        # --- Paiements d'abonnement : manuel vs API (confirmés uniquement) ---
+        totals = (SubscriptionPayment.objects
+                  .filter(status=SubscriptionPayment.STATUS_SUCCESS)
+                  .values('source').annotate(total=Sum('amount'), n=Count('id')))
         by_source = {row['source']: row for row in totals}
         manual = by_source.get('MANUEL', {'total': 0, 'n': 0})
         api = by_source.get('API', {'total': 0, 'n': 0})
@@ -451,6 +453,7 @@ class PlatformSubscriptionsView(SuperadminRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['saspay_cfg'] = PlatformSetting.load()
         today = timezone.localdate()
         subs = []
         for school in School.objects.select_related('subscription').order_by('name'):
@@ -599,3 +602,22 @@ class PlatformSettingsView(SuperadminRequiredMixin, FormView):
         form.save()
         messages.success(self.request, "Paramètres de la plateforme enregistrés.")
         return super().form_valid(form)
+
+
+class PlatformSasPayConfigView(SuperadminRequiredMixin, HtmxCrudMixin, UpdateView):
+    """Configuration du paiement en ligne SasPay (modale)."""
+    model = PlatformSetting
+    form_class = SasPayConfigForm
+    template_name = 'website/platform_saspay_config.html'
+    success_url = reverse_lazy('platform_subscriptions')
+    partial_template = 'includes/form_modal.html'
+    modal_title = 'Paiement en ligne (SasPay)'
+    success_message = "Configuration SasPay enregistrée."
+
+    def get_object(self, queryset=None):
+        return PlatformSetting.load()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Paiement en ligne (SasPay)'
+        return context
