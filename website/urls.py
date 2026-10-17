@@ -6,6 +6,7 @@ urlpatterns = [
     # Pages publiques
     path('', views.landing, name='landing'),
     path('register/school/', views.register_school, name='register_school'),
+    path('abonnement/', views.subscription_page, name='subscription_page'),
 
     # Plateforme Super Admin
     path('platform/', platform_views.PlatformDashboardView.as_view(), name='platform_dashboard'),

@@ -79,6 +79,10 @@
                             <small>{{ user.get_role_display|default:"Utilisateur" }}</small>
                         </span>
                     </span>
+                    <a href="{% url 'subscription_page' %}" class="btn btn-outline btn-sm"
+                       style="border-color: #059669; color: #047857;" title="Voir l'abonnement de l'école">
+                        <i class="fa-solid fa-credit-card"></i> Voir abonnement
+                    </a>
                     {% block topbar_actions %}{% endblock %}
                 </div>
             </header>
@@ -102,7 +106,7 @@
 
             <footer class="footer">
                 <p>Gestion d'École · &copy; {{ current_year }} Tous droits réservés
-                    · <span style="opacity:.55">Version 2026-10-05ad</span></p>
+                    · <span style="opacity:.55">Version 2026-10-05ae</span></p>
             </footer>
         </div>
     </div>

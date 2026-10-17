@@ -70,30 +70,52 @@
         .browser-bar { display: flex; gap: 7px; align-items: center; padding: 11px 16px; border-bottom: 1px solid var(--border); background: #f8fafc; }
         .dot { width: 11px; height: 11px; border-radius: 50%; }
         .browser-url { margin-left: 12px; flex: 1; background: #eef2f7; border-radius: 7px; font-size: 0.72rem; color: var(--muted); padding: 4px 12px; }
-        .app-frame { display: flex; min-height: 330px; }
-        .app-side { width: 178px; flex-shrink: 0; background: linear-gradient(180deg, #065f46, #059669); color: #d1fae5; padding: 16px 12px; font-size: 0.76rem; }
-        .app-side .side-brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 800; margin-bottom: 18px; font-size: 0.8rem; }
-        .app-side .side-brand span.logo { width: 26px; height: 26px; border-radius: 8px; background: #fff; color: #059669; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; }
-        .app-side .si { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; margin-bottom: 3px; }
-        .app-side .si.on { background: rgba(255,255,255,0.16); color: #fff; font-weight: 700; }
-        .app-side .si i { width: 15px; text-align: center; }
-        .app-main { flex: 1; padding: 18px; background: #f8fafc; }
-        .app-main h5 { font-size: 0.86rem; font-weight: 800; margin-bottom: 12px; }
-        .chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
-        .chip { flex: 1; min-width: 120px; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
-        .chip .c-l { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); }
-        .chip .c-v { font-size: 1.02rem; font-weight: 800; }
-        .chip .c-v.green { color: #059669; }
-        .chip .c-v.blue { color: #2563eb; }
-        .bars { display: flex; align-items: flex-end; gap: 12px; height: 92px; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px 0; }
-        .bar { flex: 1; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, #34d399, #059669); }
-        .bar.dim { background: #e2e8f0; }
-        .rows { margin-top: 12px; background: #fff; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-        .row { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; font-size: 0.75rem; border-bottom: 1px solid #f1f5f9; }
-        .row:last-child { border-bottom: none; }
-        .row b { font-weight: 700; }
-        .row .tag { background: var(--primary-light); color: #065f46; font-weight: 700; font-size: 0.65rem; padding: 3px 9px; border-radius: 999px; }
-        @media (max-width: 700px) { .app-side { display: none; } }
+        .app-frame { display: flex; min-height: 380px; }
+        .app-side { width: 190px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--border); padding: 12px 10px; font-size: 0.72rem; color: #334155; overflow: hidden; }
+        .side-brand { display: flex; align-items: center; gap: 8px; font-weight: 800; color: #111827; margin-bottom: 12px; padding: 0 8px; font-size: 0.74rem; }
+        .side-logo { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #059669, #10b981); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem; flex-shrink: 0; }
+        .side-sub { font-size: 0.56rem; color: #94a3b8; font-weight: 500; display: block; }
+        .side-group { font-size: 0.56rem; font-weight: 800; letter-spacing: 0.9px; color: #94a3b8; padding: 9px 8px 3px; }
+        .si { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; margin-bottom: 1px; }
+        .si.on { background: #d1fae5; color: #065f46; font-weight: 700; }
+        .si i { width: 14px; text-align: center; color: #64748b; font-size: 0.66rem; }
+        .si.on i { color: #059669; }
+        .app-top { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); background: #fff; }
+        .app-top .t { font-size: 0.8rem; font-weight: 700; color: #111827; }
+        .user-chip { display: flex; align-items: center; gap: 7px; background: #f8fafc; border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px 4px 4px; font-size: 0.64rem; }
+        .user-chip .av { width: 22px; height: 22px; border-radius: 50%; background: #059669; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 0.58rem; font-weight: 800; }
+        .user-chip b { display: block; font-size: 0.64rem; }
+        .user-chip small { color: #94a3b8; font-size: 0.55rem; }
+        .app-main { flex: 1; padding: 14px 16px; background: #f8fafc; text-align: left; }
+        .welcome { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 11px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+        .welcome .wi { width: 30px; height: 30px; border-radius: 9px; background: #d1fae5; color: #059669; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+        .welcome b { font-size: 0.84rem; display: block; }
+        .welcome span { font-size: 0.66rem; color: #64748b; }
+        .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+        .kpi { background: #fff; border: 1px solid var(--border); border-radius: 11px; padding: 11px 12px; }
+        .kpi .k-h { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+        .kpi .k-ic { width: 22px; height: 22px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.6rem; }
+        .kpi .k-l { font-size: 0.56rem; font-weight: 800; letter-spacing: 0.4px; color: #64748b; text-transform: uppercase; }
+        .kpi .k-v { font-size: 1rem; font-weight: 800; }
+        .kpi .k-v.green { color: #059669; }
+        .kpi .k-s { font-size: 0.56rem; color: #94a3b8; }
+        .dash-cols { display: grid; grid-template-columns: 1.25fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .panel { background: #fff; border: 1px solid var(--border); border-radius: 11px; padding: 12px 14px; }
+        .panel h6 { font-size: 0.72rem; font-weight: 800; margin-bottom: 9px; color: #111827; }
+        .perf .p-label { display: flex; justify-content: space-between; font-size: 0.68rem; margin-bottom: 4px; }
+        .perf .p-label b { font-weight: 700; }
+        .pbar { height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+        .pbar span { display: block; height: 100%; width: 85%; background: linear-gradient(90deg, #059669, #10b981); border-radius: 999px; }
+        .empty-sched { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 62px; color: #94a3b8; font-size: 0.66rem; gap: 4px; }
+        .lists3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .lists3 .panel h6 { display: flex; align-items: center; gap: 6px; }
+        .mini-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 5px 0; font-size: 0.64rem; border-bottom: 1px solid #f1f5f9; }
+        .mini-row:last-child { border: none; }
+        .mini-row .mr-l b { display: block; font-weight: 700; font-size: 0.64rem; }
+        .mini-row .mr-l small { color: #94a3b8; font-size: 0.56rem; }
+        .tag2 { background: #d1fae5; color: #065f46; font-weight: 700; font-size: 0.56rem; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+        .pay-ok { width: 18px; height: 18px; border-radius: 6px; background: #d1fae5; color: #059669; display: inline-flex; align-items: center; justify-content: center; font-size: 0.56rem; }
+        @media (max-width: 700px) { .app-side { display: none; } .kpis { grid-template-columns: repeat(2, 1fr); } .lists3 { grid-template-columns: 1fr; } .dash-cols { grid-template-columns: 1fr; } }
 
         /* ---------- Réassurance ---------- */
         .trust { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; padding: 34px 0 8px; }
@@ -170,7 +192,7 @@
         @media (max-width: 560px) { .form-row { grid-template-columns: 1fr; } }
 
         /* ---------- Tarification ---------- */
-        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; align-items: stretch; }
         .price-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 26px 22px; display: flex; flex-direction: column; position: relative; text-align: center; }
         .price-card.highlighted { border: 2px solid var(--primary); box-shadow: 0 20px 44px rgba(5,150,105,0.16); }
         .best-badge {
@@ -197,26 +219,27 @@
         .secure-note { font-size: 0.74rem; color: var(--muted); margin-top: 10px; }
         .pricing-mentions { display: flex; gap: 26px; justify-content: center; flex-wrap: wrap; margin-top: 26px; font-size: 0.83rem; color: var(--muted); }
         .pricing-mentions i { color: var(--primary); margin-right: 6px; }
-        @media (max-width: 900px) { .pricing-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 1100px) { .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 640px) { .pricing-grid { grid-template-columns: 1fr; } }
 
         /* ---------- Footer sombre ---------- */
-        footer { background: #0b1220; color: #94a3b8; margin-top: 10px; }
+        footer { background: linear-gradient(160deg, #065f46, #059669); color: rgba(255,255,255,0.88); margin-top: 10px; }
         .footer-grid {
             display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 34px;
             padding: 44px 24px 30px; text-align: left;
         }
-        .footer-grid h4 { color: #fff; font-size: 0.95rem; font-weight: 800; margin-bottom: 14px; }
-        .footer-grid p { font-size: 0.88rem; color: #94a3b8; line-height: 1.7; }
-        .footer-grid a { color: #94a3b8; display: inline-block; padding: 3px 0; font-size: 0.88rem; }
+        .footer-grid h4 { color: #ffffff; font-size: 0.95rem; font-weight: 800; margin-bottom: 14px; }
+        .footer-grid p { font-size: 0.88rem; color: rgba(255,255,255,0.85); line-height: 1.7; }
+        .footer-grid a { color: rgba(255,255,255,0.85); display: inline-block; padding: 3px 0; font-size: 0.88rem; }
         .footer-grid a:hover { color: #ffffff; }
-        .footer-brand-name { color: #fff; font-weight: 800; font-size: 1.05rem; }
-        .footer-tag { font-size: 0.82rem; color: #64748b; margin-top: 12px; }
+        .footer-brand-name { color: #ffffff; font-weight: 800; font-size: 1.05rem; }
+        .footer-tag { font-size: 0.82rem; color: rgba(255,255,255,0.65); margin-top: 12px; }
         .footer-bottom {
-            border-top: 1px solid rgba(255,255,255,0.08);
+            border-top: 1px solid rgba(255,255,255,0.18);
             display: flex; align-items: center; justify-content: space-between;
-            gap: 10px; flex-wrap: wrap; padding: 16px 24px; font-size: 0.8rem; color: #64748b;
+            gap: 10px; flex-wrap: wrap; padding: 16px 24px; font-size: 0.8rem; color: rgba(255,255,255,0.75);
         }
-        .heart { color: #f87171; }
+        .heart { color: #fecaca; }
         @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr; gap: 24px; } }
         @media (max-width: 640px) { .nav-actions .btn-ghost { display: none; } }
     </style>
@@ -263,33 +286,100 @@
                 </div>
                 <div class="app-frame">
                     <div class="app-side">
-                        <div class="side-brand"><span class="logo">G</span> Gestion d'École</div>
-                        <div class="si on"><i class="fa-solid fa-chart-column"></i> Tableau de bord</div>
+                        <div class="side-brand">
+                            <span class="side-logo">GCE</span>
+                            <span>Gestion d'École <span class="side-sub">Gestion complète d'école</span></span>
+                        </div>
+                        <div class="side-group">PILOTAGE</div>
+                        <div class="si on"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</div>
+                        <div class="side-group">SCOLARITÉ</div>
                         <div class="si"><i class="fa-solid fa-user-graduate"></i> Élèves</div>
-                        <div class="si"><i class="fa-solid fa-pen-to-square"></i> Notes &amp; bulletins</div>
+                        <div class="si"><i class="fa-solid fa-chalkboard-user"></i> Enseignants</div>
+                        <div class="si"><i class="fa-solid fa-users"></i> Parents</div>
+                        <div class="si"><i class="fa-solid fa-school"></i> Classes</div>
+                        <div class="si"><i class="fa-solid fa-book"></i> Matières &amp; Programmes</div>
+                        <div class="side-group">ÉVALUATIONS</div>
+                        <div class="si"><i class="fa-solid fa-pen-to-square"></i> Notes</div>
+                        <div class="si"><i class="fa-solid fa-file-invoice"></i> Bulletins</div>
+                        <div class="side-group">FINANCES</div>
+                        <div class="si"><i class="fa-solid fa-coins"></i> Comptabilité</div>
                         <div class="si"><i class="fa-solid fa-money-bill-wave"></i> Paiements</div>
+                        <div class="side-group">ADMINISTRATION</div>
                         <div class="si"><i class="fa-solid fa-folder-open"></i> Documents</div>
+                        <div class="si"><i class="fa-solid fa-gear"></i> Paramètres</div>
                     </div>
-                    <div class="app-main">
-                        <h5>Aujourd'hui — {{ nb_students }} élèves suivis</h5>
-                        <div class="chips">
-                            <div class="chip"><div class="c-l">Élèves actifs</div><div class="c-v">{{ nb_students }}</div></div>
-                            <div class="chip"><div class="c-l">Enseignants</div><div class="c-v blue">{{ nb_teachers }}</div></div>
-                            <div class="chip"><div class="c-l">Classes</div><div class="c-v green">{{ nb_classes }}</div></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+                        <div class="app-top">
+                            <span class="t"><i class="fa-solid fa-gauge-high" style="color: #059669; margin-right: 6px;"></i> Tableau de bord</span>
+                            <span class="user-chip"><span class="av">MA</span> <span><b>cimesecole@gmail.com</b><small>Administrateur</small></span></span>
                         </div>
-                        <div class="bars">
-                            <div class="bar dim" style="height: 34%;"></div>
-                            <div class="bar" style="height: 58%;"></div>
-                            <div class="bar dim" style="height: 42%;"></div>
-                            <div class="bar" style="height: 78%;"></div>
-                            <div class="bar" style="height: 64%;"></div>
-                            <div class="bar dim" style="height: 50%;"></div>
-                            <div class="bar" style="height: 92%;"></div>
-                        </div>
-                        <div class="rows">
-                            <div class="row"><b>Bulletins du trimestre</b><span class="tag">Prêts en Excel</span></div>
-                            <div class="row"><b>Reçu de paiement REC-2026-0158</b><span class="tag">Émis</span></div>
-                            <div class="row"><b>Registre de présence — L1</b><span class="tag">Généré</span></div>
+                        <div class="app-main">
+                            <div class="welcome">
+                                <span class="wi"><i class="fa-solid fa-gauge-high"></i></span>
+                                <div><b>Bonjour, Mahamadou 👋</b><span>Vue d'ensemble de l'établissement — Année 2026-2027</span></div>
+                            </div>
+                            <div class="kpis">
+                                <div class="kpi">
+                                    <div class="k-h"><span class="k-ic" style="background:#d1fae5;color:#059669;"><i class="fa-solid fa-user-graduate"></i></span><span class="k-l">Élèves actifs</span></div>
+                                    <div class="k-v">{{ nb_students }}</div>
+                                    <div class="k-s">Élèves</div>
+                                </div>
+                                <div class="kpi">
+                                    <div class="k-h"><span class="k-ic" style="background:#eff6ff;color:#2563eb;"><i class="fa-solid fa-chalkboard-user"></i></span><span class="k-l">Enseignants</span></div>
+                                    <div class="k-v">{{ nb_teachers }}</div>
+                                    <div class="k-s">Enseignants</div>
+                                </div>
+                                <div class="kpi">
+                                    <div class="k-h"><span class="k-ic" style="background:#fef9c3;color:#b45309;"><i class="fa-solid fa-school"></i></span><span class="k-l">Classes</span></div>
+                                    <div class="k-v">{{ nb_classes }}</div>
+                                    <div class="k-s">Année 2026-2027</div>
+                                </div>
+                                <div class="kpi">
+                                    <div class="k-h"><span class="k-ic" style="background:#f3e8ff;color:#7c3aed;"><i class="fa-solid fa-money-bill-wave"></i></span><span class="k-l">Recettes encaissées</span></div>
+                                    <div class="k-v green">128 500 F</div>
+                                    <div class="k-s">Paiements enregistrés</div>
+                                </div>
+                            </div>
+                            <div class="dash-cols">
+                                <div class="panel perf">
+                                    <h6><i class="fa-solid fa-chart-line" style="color:#059669;margin-right:5px;"></i> Performance académique</h6>
+                                    <div class="p-label"><b>L1 Informatique de gestion</b><span>17,0 / 20</span></div>
+                                    <div class="pbar"><span></span></div>
+                                </div>
+                                <div class="panel">
+                                    <h6><i class="fa-solid fa-calendar-days" style="color:#2563eb;margin-right:5px;"></i> À venir</h6>
+                                    <div class="empty-sched"><i class="fa-regular fa-calendar"></i> Aucun événement planifié</div>
+                                </div>
+                            </div>
+                            <div class="lists3">
+                                <div class="panel">
+                                    <h6><i class="fa-solid fa-user-graduate" style="color:#059669;margin-right:5px;"></i> Derniers élèves</h6>
+                                    <div class="mini-row">
+                                        <span class="mr-l"><b>OUMAROU MAIGA</b><small>STD-2026-0001 · L1 Informatique de gestion</small></span>
+                                        <span>15/10</span>
+                                    </div>
+                                </div>
+                                <div class="panel">
+                                    <h6><i class="fa-solid fa-pen-to-square" style="color:#2563eb;margin-right:5px;"></i> Évaluations récentes</h6>
+                                    <div class="mini-row">
+                                        <span class="mr-l"><b>Base de donnée — Devoir 1</b><small>L1 Informatique de gestion · Devoir</small></span>
+                                        <span>12/10</span>
+                                    </div>
+                                </div>
+                                <div class="panel">
+                                    <h6><i class="fa-solid fa-money-bill-wave" style="color:#059669;margin-right:5px;"></i> Paiements récents</h6>
+                                    <div class="mini-row">
+                                        <span class="pay-ok"><i class="fa-solid fa-check"></i></span>
+                                        <span class="mr-l" style="flex:1;"><b>OUMAROU MAIGA</b><small>Reçu #REC-2026-0001 · Espèces</small></span>
+                                        <span>28 500,00 F</span>
+                                    </div>
+                                    <div class="mini-row">
+                                        <span class="pay-ok"><i class="fa-solid fa-check"></i></span>
+                                        <span class="mr-l" style="flex:1;"><b>OUMAROU MAIGA</b><small>Reçu #REC-2026-0003 · Espèces</small></span>
+                                        <span>100 000,00 F</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -414,7 +504,7 @@
                         <div class="price-line">
                             <span class="amount">{{ item.price_display }}</span><span class="cur">FCFA</span>
                             <span class="per">{{ item.duration_label }}</span>
-                            <span class="per">soit <b>{{ item.monthly_display }} FCFA / mois</b></span>
+                            {% if item.show_monthly %}<span class="per">soit <b>{{ item.monthly_display }} FCFA / mois</b></span>{% endif %}
                         </div>
                         <ul class="price-feats">
                             {% for line in item.features %}
@@ -426,7 +516,7 @@
                             {% endfor %}
                         </ul>
                         <a href="{% url 'register_school' %}" class="btn {% if item.highlighted %}btn-primary{% else %}btn-outline{% endif %}">
-                            Choisir cette offre
+                            {{ item.cta }}
                         </a>
                         <div class="secure-note"><i class="fa-solid fa-shield-halved"></i> Paiement Mobile Money sécurisé</div>
                     </div>

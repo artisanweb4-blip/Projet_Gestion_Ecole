@@ -400,7 +400,7 @@ class PlatformSchoolSubscriptionView(SuperadminRequiredMixin, HtmxCrudMixin, Upd
 
 
 class PlatformSubscriptionsView(SuperadminRequiredMixin, ListView):
-    """Page Abonnements : toutes les formules proposées aux écoles."""
+    """Page Abonnements : formules proposées aux écoles + écoles abonnées."""
     template_name = 'website/platform_subscriptions.html'
     context_object_name = 'plans'
 
@@ -408,6 +408,23 @@ class PlatformSubscriptionsView(SuperadminRequiredMixin, ListView):
         return SubscriptionPlan.objects.annotate(
             nb=Count('schools', distinct=True),
         ).order_by('-is_active', 'price')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        subs = []
+        for school in School.objects.select_related('subscription').order_by('name'):
+            subs.append({
+                'school': school,
+                'expired': bool(school.subscription_until and school.subscription_until < today),
+            })
+        context['subscriptions'] = subs
+        context['today'] = today
+        context['nb_active_plans'] = self.get_queryset().filter(is_active=True).count()
+        context['nb_subscribed'] = School.objects.filter(subscription__isnull=False).count()
+        potential = sum((p.price or 0) * p.nb for p in self.get_queryset())
+        context['potential_revenue'] = f"{int(potential):,}".replace(',', ' ')
+        return context
 
 
 class PlatformSubscriptionCreateView(SuperadminRequiredMixin, HtmxCrudMixin, CreateView):

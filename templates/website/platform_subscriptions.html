@@ -38,6 +38,31 @@
     .plan-desc { font-size: 0.83rem; color: var(--text-muted); }
 </style>
 
+<!-- Statistiques abonnements -->
+<div class="sub-stats" style="display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 22px;">
+    <div style="flex: 1; min-width: 190px; background: #fff; border: 1px solid var(--border-color); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow-card); display: flex; align-items: center; gap: 14px;">
+        <span style="width: 42px; height: 42px; border-radius: 11px; background: #f0fdf4; color: #059669; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem;"><i class="fa-solid fa-layer-group"></i></span>
+        <div>
+            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Formules actives</div>
+            <div style="font-size: 1.15rem; font-weight: 800;">{{ nb_active_plans }}</div>
+        </div>
+    </div>
+    <div style="flex: 1; min-width: 190px; background: #fff; border: 1px solid var(--border-color); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow-card); display: flex; align-items: center; gap: 14px;">
+        <span style="width: 42px; height: 42px; border-radius: 11px; background: #eff6ff; color: #2563eb; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem;"><i class="fa-solid fa-school"></i></span>
+        <div>
+            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Écoles abonnées</div>
+            <div style="font-size: 1.15rem; font-weight: 800;">{{ nb_subscribed }}</div>
+        </div>
+    </div>
+    <div style="flex: 1; min-width: 190px; background: #fff; border: 1px solid var(--border-color); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow-card); display: flex; align-items: center; gap: 14px;">
+        <span style="width: 42px; height: 42px; border-radius: 11px; background: #f5f3ff; color: #7c3aed; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem;"><i class="fa-solid fa-sack-dollar"></i></span>
+        <div>
+            <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Revenu potentiel / période</div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: #059669;">{{ potential_revenue }} FCFA</div>
+        </div>
+    </div>
+</div>
+
 {% if plans %}
     <div class="plan-grid">
         {% for plan in plans %}
@@ -75,11 +100,77 @@
             </div>
         {% endfor %}
     </div>
+<!-- Écoles abonnées -->
+<div class="dashboard-card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fa-solid fa-school me-1 text-success"></i> Écoles abonnées</h2>
+        <span class="badge badge-success">{{ subscriptions|length }} école(s)</span>
+    </div>
+    {% if subscriptions %}
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>École</th>
+                        <th>Formule</th>
+                        <th class="text-center">Valable jusqu'au</th>
+                        <th class="text-center">Jours restants</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-center">Fiche</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in subscriptions %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.school.name }}</strong>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ item.school.code }}</div>
+                            </td>
+                            <td>
+                                {% if item.school.subscription %}
+                                    <span class="badge badge-info">{{ item.school.subscription.name }}</span>
+                                {% else %}
+                                    <span style="color: var(--text-muted);">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.school.subscription_until %}{{ item.school.subscription_until|date:"d/m/Y" }}{% else %}—{% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.school.subscription_until %}
+                                    {% if item.expired %}<span style="color: #b91c1c; font-weight: 700;">Expiré</span>
+                                    {% else %}{{ item.school.subscription_until|timeuntil:today }}{% endif %}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if not item.school.subscription %}
+                                    <span class="badge badge-secondary">Sans abonnement</span>
+                                {% elif item.expired %}
+                                    <span class="badge badge-danger">Expiré</span>
+                                {% else %}
+                                    <span class="badge badge-success">Actif</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'platform_school_detail' item.school.pk %}" class="btn-action btn-view" title="Voir la fiche">
+                                    <i class="fa-regular fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state"><i class="fa-solid fa-school"></i><p>Aucune école inscrite pour le moment.</p></div>
+    {% endif %}
+</div>
+
 {% else %}
     <div class="dashboard-card">
         <div class="empty-state">
             <i class="fa-solid fa-credit-card"></i>
-            <p>Aucun abonnement défini. Créez votre première formule (ex. Gratuit, Standard, Premium).</p>
+            <p>Aucun abonnement défini. Créez votre première formule (ex. Essai gratuit, Essentiel, Pro, Excellence).</p>
             <a href="{% url 'platform_subscription_add' %}" class="btn btn-primary" style="margin-top: 10px;">
                 <i class="fa-solid fa-plus"></i> Créer un abonnement
             </a>

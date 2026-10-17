@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
+from django.utils import timezone as dj_timezone
 
 from accounts.models import School, User
 from accounts.utils import unique_username
@@ -50,11 +51,25 @@ def landing(request):
     pricing_plans = []
     for p in SubscriptionPlan.objects.filter(is_active=True).order_by('price'):
         price = int(p.price) if p.price else 0
+        if p.duration_days == 15 and price == 0:
+            duration_label = "15 jours d'essai gratuit"
+            show_monthly = False
+            cta = "Essayer gratuitement"
+        elif p.duration_days == 365:
+            duration_label = "pour 12 mois"
+            show_monthly = True
+            cta = "Choisir cette offre"
+        else:
+            duration_label = f"pour {p.duration_days} jours"
+            show_monthly = price > 0
+            cta = "Choisir cette offre"
         pricing_plans.append({
             'plan': p,
             'price_display': f"{price:,}".replace(',', ' '),
             'monthly_display': f"{price // 12:,}".replace(',', ' ') if price else '0',
-            'duration_label': "pour 12 mois" if p.duration_days == 365 else f"pour {p.duration_days} jours",
+            'duration_label': duration_label,
+            'show_monthly': show_monthly,
+            'cta': cta,
             'features': p.features.splitlines() if p.features else [],
             'highlighted': p.code == 'pro',
         })
@@ -70,6 +85,49 @@ def landing(request):
         'pricing_plans': pricing_plans,
     }
     return render(request, 'website/landing.html', context)
+
+
+from django.contrib.auth.decorators import login_required
+
+
+@login_required
+def subscription_page(request):
+    """Page « Mon abonnement » : formule actuelle de l'école + formules disponibles."""
+    from accounts.models import SubscriptionPlan
+
+    school = getattr(request.user, 'school', None)
+    current = school.subscription if school and school.subscription_id else None
+    days_left = None
+    expired = False
+    if school and school.subscription_until:
+        delta = (school.subscription_until - dj_timezone.localdate()).days
+        days_left = max(delta, 0)
+        expired = delta < 0
+
+    plans_items = []
+    for p in SubscriptionPlan.objects.filter(is_active=True).order_by('price'):
+        price = int(p.price) if p.price else 0
+        if p.duration_days == 15 and price == 0:
+            duration_label = "15 jours"
+        elif p.duration_days == 365:
+            duration_label = "12 mois"
+        else:
+            duration_label = f"{p.duration_days} jours"
+        plans_items.append({
+            'plan': p,
+            'price_display': f"{price:,}".replace(',', ' '),
+            'duration_label': duration_label,
+            'features': p.features.splitlines() if p.features else [],
+            'is_current': current == p,
+        })
+
+    return render(request, 'website/subscription.html', {
+        'school': school,
+        'current': current,
+        'days_left': days_left,
+        'expired': expired,
+        'plans_items': plans_items,
+    })
 
 
 @require_http_methods(['GET', 'POST'])
@@ -107,12 +165,18 @@ def register_school(request):
         admin.save()
 
         # Abonnement par défaut configuré côté plateforme
-        if setting.default_plan:
+        # Période d'essai de 15 jours par défaut (toutes fonctionnalités)
+        default_plan = setting.default_plan
+        if default_plan is None:
+            from accounts.models import SubscriptionPlan
+            default_plan = SubscriptionPlan.objects.filter(
+                code='essai', is_active=True).first()
+        if default_plan:
             from datetime import timedelta
             from django.utils import timezone
-            school.subscription = setting.default_plan
+            school.subscription = default_plan
             school.subscription_until = timezone.localdate() + timedelta(
-                days=setting.default_plan.duration_days)
+                days=default_plan.duration_days)
             school.save(update_fields=['subscription', 'subscription_until'])
 
         # Paramètres de l'établissement dédiés à cette nouvelle école
